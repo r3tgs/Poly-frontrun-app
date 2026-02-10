@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
   teamSection: {
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   scoreContainer: {
     flexDirection: 'row',
@@ -104,6 +104,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '900',
     textAlign: 'center',
+    marginTop: 14, // 16px total with 2px gap
   },
   teamName: {
     color: '#FFFFFF',
