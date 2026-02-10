@@ -81,12 +81,14 @@ const styles = StyleSheet.create({
   },
   outerRing: {
     borderRadius: 18,
+    borderCurve: 'continuous',
     padding: 2,
     backgroundColor: '#101010',
   },
   button: {
     paddingVertical: 25,
     borderRadius: 16,
+    borderCurve: 'continuous',
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
