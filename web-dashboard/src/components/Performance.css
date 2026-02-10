@@ -5,9 +5,12 @@
 }
 
 .section-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #fff;
+  color: #FFF;
+  font-family: "SF Pro";
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 590;
+  line-height: normal;
 }
 
 .performance-top-row {
@@ -30,9 +33,12 @@
 }
 
 .stat-label {
-  font-size: 13px;
-  font-weight: 500;
   color: #868686;
+  font-family: "SF Pro";
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 510;
+  line-height: normal;
 }
 
 .stat-value-row {
@@ -42,9 +48,12 @@
 }
 
 .stat-value {
-  font-size: 22px;
-  font-weight: 700;
-  color: #fff;
+  color: #FFF;
+  font-family: "SF Pro";
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 510;
+  line-height: normal;
 }
 
 .stat-change {

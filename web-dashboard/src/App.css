@@ -39,8 +39,11 @@
 }
 
 .section-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #fff;
+  color: #FFF;
+  font-family: "SF Pro";
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 590;
+  line-height: normal;
   margin: 0;
 }
