@@ -1,4 +1,4 @@
-import type { DayData, PerformanceStats, SourceDelay, TradeEntry } from '../types';
+import type { DayData, DelayDataPoint, PerformanceStats, SourceDelay, TradeEntry } from '../types';
 
 export const mockStats: PerformanceStats = {
   totalProfit: 16490,
@@ -51,11 +51,47 @@ export const mockCalendarData: DayData[] = [
   { day: 2, pnl: 0, isCurrentMonth: false },
 ];
 
+const polyDelays: DelayDataPoint[] = [
+  { time: '8:01', delay: 2.1 }, { time: '8:14', delay: 3.4 }, { time: '8:22', delay: 2.8 },
+  { time: '8:35', delay: 4.1 }, { time: '8:41', delay: 3.2 }, { time: '8:55', delay: 5.3 },
+  { time: '9:03', delay: 4.0 }, { time: '9:18', delay: 6.2 }, { time: '9:25', delay: 3.1 },
+  { time: '9:40', delay: 7.4 }, { time: '9:52', delay: 5.0 }, { time: '10:05', delay: 4.3 },
+  { time: '10:18', delay: 6.1 }, { time: '10:30', delay: 8.2 }, { time: '10:42', delay: 5.1 },
+  { time: '10:55', delay: 7.0 },
+];
+
+const kalshiDelays: DelayDataPoint[] = [
+  { time: '8:01', delay: 3.5 }, { time: '8:14', delay: 4.2 }, { time: '8:22', delay: 3.9 },
+  { time: '8:35', delay: 5.0 }, { time: '8:41', delay: 4.5 }, { time: '8:55', delay: 3.8 },
+  { time: '9:03', delay: 4.8 }, { time: '9:18', delay: 3.2 }, { time: '9:25', delay: 4.6 },
+  { time: '9:40', delay: 5.5 }, { time: '9:52', delay: 3.9 }, { time: '10:05', delay: 4.1 },
+  { time: '10:18', delay: 3.7 }, { time: '10:30', delay: 5.2 }, { time: '10:42', delay: 4.0 },
+  { time: '10:55', delay: 4.8 },
+];
+
+const espnDelays: DelayDataPoint[] = [
+  { time: '8:01', delay: 1.8 }, { time: '8:14', delay: 2.5 }, { time: '8:22', delay: 2.1 },
+  { time: '8:35', delay: 3.0 }, { time: '8:41', delay: 2.3 }, { time: '8:55', delay: 3.5 },
+  { time: '9:03', delay: 2.7 }, { time: '9:18', delay: 3.8 }, { time: '9:25', delay: 2.9 },
+  { time: '9:40', delay: 4.2 }, { time: '9:52', delay: 3.1 }, { time: '10:05', delay: 2.6 },
+  { time: '10:18', delay: 3.9 }, { time: '10:30', delay: 7.5 }, { time: '10:42', delay: 4.8 },
+  { time: '10:55', delay: 3.2 },
+];
+
+const realDelays: DelayDataPoint[] = [
+  { time: '8:01', delay: 2.9 }, { time: '8:14', delay: 3.8 }, { time: '8:22', delay: 3.2 },
+  { time: '8:35', delay: 4.5 }, { time: '8:41', delay: 3.6 }, { time: '8:55', delay: 4.9 },
+  { time: '9:03', delay: 3.3 }, { time: '9:18', delay: 5.1 }, { time: '9:25', delay: 4.0 },
+  { time: '9:40', delay: 6.0 }, { time: '9:52', delay: 4.2 }, { time: '10:05', delay: 3.7 },
+  { time: '10:18', delay: 5.5 }, { time: '10:30', delay: 4.8 }, { time: '10:42', delay: 6.3 },
+  { time: '10:55', delay: 4.1 },
+];
+
 export const mockSourceDelays: SourceDelay[] = [
-  { source: 'polymarket', label: 'Polymarket Avg. Delay', delay: '4.23s' },
-  { source: 'kalshi', label: 'Kalshi Avg. Delay', delay: '4.23s' },
-  { source: 'espn', label: 'ESPN Avg. Delay', delay: '4.23s' },
-  { source: 'realsports', label: 'Realsports.io Avg. Delay', delay: '4.23s' },
+  { source: 'polymarket', label: 'Polymarket Avg. Delay', delay: '4.23s', dataPoints: polyDelays },
+  { source: 'kalshi', label: 'Kalshi Avg. Delay', delay: '4.23s', dataPoints: kalshiDelays },
+  { source: 'espn', label: 'ESPN Avg. Delay', delay: '4.23s', dataPoints: espnDelays },
+  { source: 'realsports', label: 'Realsports.io Avg. Delay', delay: '4.23s', dataPoints: realDelays },
 ];
 
 export const mockTrades: TradeEntry[] = [

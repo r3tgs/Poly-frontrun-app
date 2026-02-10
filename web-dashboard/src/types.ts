@@ -19,10 +19,16 @@ export type Platform = 'poly' | 'kalshi';
 
 export type Source = 'polymarket' | 'kalshi' | 'espn' | 'realsports';
 
+export interface DelayDataPoint {
+  time: string;
+  delay: number;
+}
+
 export interface SourceDelay {
   source: Source;
   label: string;
   delay: string;
+  dataPoints: DelayDataPoint[];
 }
 
 export interface TradeEntry {

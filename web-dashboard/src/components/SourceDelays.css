@@ -18,7 +18,6 @@
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
   overflow: hidden;
 }
 
@@ -29,6 +28,13 @@
   min-height: 40px;
   border-radius: 10px;
   overflow: hidden;
+}
+
+.delay-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 12px;
 }
 
 .delay-card-label {
@@ -54,7 +60,44 @@
   align-items: flex-end;
 }
 
-.delay-card-chart svg {
+.delay-chart-wrapper {
+  position: relative;
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.delay-chart-svg {
+  flex: 1;
+  height: 100%;
+}
+
+.delay-chart-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 100%;
+  padding-left: 4px;
+}
+
+.delay-chart-label {
+  color: #868686;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.delay-tooltip {
+  position: absolute;
+  transform: translateX(-50%);
+  background: #2D2D32;
+  color: #FFF;
+  font-size: 11px;
+  font-weight: 590;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
 }
