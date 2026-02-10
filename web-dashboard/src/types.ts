@@ -17,6 +17,14 @@ export type Period = 'Month' | 'Week' | 'Day';
 export type TradeAction = 'buy' | 'sell';
 export type Platform = 'poly' | 'kalshi';
 
+export type Source = 'polymarket' | 'kalshi' | 'espn' | 'realsports';
+
+export interface SourceDelay {
+  source: Source;
+  label: string;
+  delay: string;
+}
+
 export interface TradeEntry {
   id: string;
   action: TradeAction;

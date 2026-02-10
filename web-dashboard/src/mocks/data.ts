@@ -1,4 +1,4 @@
-import type { DayData, PerformanceStats, TradeEntry } from '../types';
+import type { DayData, PerformanceStats, SourceDelay, TradeEntry } from '../types';
 
 export const mockStats: PerformanceStats = {
   totalProfit: 16490,
@@ -49,6 +49,13 @@ export const mockCalendarData: DayData[] = [
   { day: 30, pnl: 1325, isCurrentMonth: true },
   { day: 1, pnl: 0, isCurrentMonth: false },
   { day: 2, pnl: 0, isCurrentMonth: false },
+];
+
+export const mockSourceDelays: SourceDelay[] = [
+  { source: 'polymarket', label: 'Polymarket Avg. Delay', delay: '4.23s' },
+  { source: 'kalshi', label: 'Kalshi Avg. Delay', delay: '4.23s' },
+  { source: 'espn', label: 'ESPN Avg. Delay', delay: '4.23s' },
+  { source: 'realsports', label: 'Realsports.io Avg. Delay', delay: '4.23s' },
 ];
 
 export const mockTrades: TradeEntry[] = [
