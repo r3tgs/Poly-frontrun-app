@@ -35,21 +35,28 @@ function TeamLogo({ teamId }: { teamId: string }) {
 
 export function Scoreboard({ game }: ScoreboardProps) {
   return (
-    <View style={styles.container}>
-      <View style={styles.teamSection}>
+    <View style={styles.wrapper}>
+      {/* Logo row: logos horizontally aligned with score */}
+      <View style={styles.scoreRow}>
         <TeamLogo teamId={game.homeTeam.id} />
-        <Text style={styles.abbreviation}>{game.homeTeam.abbreviation}</Text>
-        <Text style={styles.teamName}>{game.homeTeam.name.toUpperCase()}</Text>
+        <View style={styles.scoreContainer}>
+          <Text style={styles.score}>{game.homeScore}</Text>
+          <Text style={styles.score}>-</Text>
+          <Text style={styles.score}>{game.awayScore}</Text>
+        </View>
+        <TeamLogo teamId={game.awayTeam.id} />
       </View>
 
-      <Text style={styles.score}>
-        {game.homeScore}  -  {game.awayScore}
-      </Text>
-
-      <View style={styles.teamSection}>
-        <TeamLogo teamId={game.awayTeam.id} />
-        <Text style={styles.abbreviation}>{game.awayTeam.abbreviation}</Text>
-        <Text style={styles.teamName}>{game.awayTeam.name.toUpperCase()}</Text>
+      {/* Team labels row */}
+      <View style={styles.labelsRow}>
+        <View style={styles.teamLabel}>
+          <Text style={styles.abbreviation}>{game.homeTeam.abbreviation}</Text>
+          <Text style={styles.teamName}>{game.homeTeam.name.toUpperCase()}</Text>
+        </View>
+        <View style={styles.teamLabel}>
+          <Text style={styles.abbreviation}>{game.awayTeam.abbreviation}</Text>
+          <Text style={styles.teamName}>{game.awayTeam.name.toUpperCase()}</Text>
+        </View>
       </View>
     </View>
   );
@@ -58,17 +65,32 @@ export function Scoreboard({ game }: ScoreboardProps) {
 const LOGO_SIZE = 72;
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    gap: 8,
+  },
+  scoreRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    gap: 24,
+    gap: 20,
   },
-  teamSection: {
+  scoreContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 14,
+  },
+  labelsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 16,
+  },
+  teamLabel: {
+    alignItems: 'center',
+    gap: 2,
   },
   logoGlow: {
     borderRadius: 50,
@@ -101,10 +123,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   score: {
-    color: Colors.white,
-    fontSize: 56,
-    fontWeight: '700',
-    minWidth: 140,
-    textAlign: 'center',
+    color: '#FFFFFF',
+    fontSize: 48,
+    fontWeight: '900',
+    letterSpacing: -1.92,
   },
 });
