@@ -156,6 +156,7 @@
   flex: 1 0 0;
   align-self: stretch;
   border-radius: 10px;
+  min-height: 55px;
 }
 
 .calendar-cell.cell-positive {
