@@ -6,8 +6,8 @@
 
 .source-delays-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  grid-template-columns: 250px 250px;
+  gap: 10px;
 }
 
 .delay-card {
@@ -25,13 +25,15 @@
 .delay-card-icon {
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   border-radius: 10px;
   overflow: hidden;
 }
 
 .delay-card-label {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   font-style: normal;
   font-weight: 590;
   line-height: normal;
