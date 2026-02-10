@@ -30,6 +30,7 @@
 }
 
 .delay-card-label {
+  display: block;
   font-size: 12px;
   font-style: normal;
   font-weight: 590;
@@ -37,6 +38,7 @@
 }
 
 .delay-card-value {
+  display: block;
   color: #FFF;
   font-size: 16px;
   font-style: normal;
