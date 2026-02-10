@@ -150,7 +150,6 @@
 
 .calendar-cell {
   position: relative;
-  padding: 4px;
   flex: 1 0 0;
   align-self: stretch;
   border-radius: 10px;
@@ -170,9 +169,13 @@
 }
 
 .cell-day {
+  position: absolute;
+  top: 4px;
+  left: 4px;
   font-size: 12px;
   font-weight: 600;
   color: #868686;
+  line-height: 1;
 }
 
 .cell-day.day-positive {
