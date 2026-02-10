@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { PolyIcon } from './icons/PolyIcon';
 import { KalshiIcon } from './icons/KalshiIcon';
 import type { PlatformStatus } from '../types';
@@ -18,48 +17,46 @@ const TOGGLE_COLORS = {
 const CASING_WIDTH = 47;
 const CASING_PADDING = 2;
 const THUMB_WIDTH = 24;
-const SLIDE_DISTANCE = CASING_WIDTH - CASING_PADDING * 2 - THUMB_WIDTH; // 19px
+const SLIDE_DISTANCE = CASING_WIDTH - CASING_PADDING * 2 - THUMB_WIDTH;
 
 function ToggleSwitch({ enabled, platform }: { enabled: boolean; platform: 'poly' | 'kalshi' }) {
-  const slideAnim = useRef(new Animated.Value(enabled ? 1 : 0)).current;
-  const colorAnim = useRef(new Animated.Value(enabled ? 1 : 0)).current;
+  const anim = useRef(new Animated.Value(enabled ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(slideAnim, {
-        toValue: enabled ? 1 : 0,
-        useNativeDriver: true,
-        tension: 60,
-        friction: 8,
-      }),
-      Animated.timing(colorAnim, {
-        toValue: enabled ? 1 : 0,
-        duration: 200,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  }, [enabled, slideAnim, colorAnim]);
+    Animated.spring(anim, {
+      toValue: enabled ? 1 : 0,
+      useNativeDriver: false,
+      tension: 50,
+      friction: 9,
+    }).start();
+  }, [enabled, anim]);
 
-  const translateX = slideAnim.interpolate({
+  const translateX = anim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, SLIDE_DISTANCE],
   });
 
-  const casingBg = colorAnim.interpolate({
+  const casingBg = anim.interpolate({
     inputRange: [0, 1],
     outputRange: ['#2D2D32', TOGGLE_COLORS[platform]],
   });
 
+  const thumbBg = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#606068', '#F0F0F4'],
+  });
+
   return (
     <Animated.View style={[styles.switchCasing, { backgroundColor: casingBg }]}>
-      <Animated.View style={{ transform: [{ translateX }] }}>
-        <LinearGradient
-          colors={enabled ? ['#FFFFFF', '#D9D9E4'] : ['#787881', '#52525B']}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={styles.switchThumb}
-        />
-      </Animated.View>
+      <Animated.View
+        style={[
+          styles.switchThumb,
+          {
+            backgroundColor: thumbBg,
+            transform: [{ translateX }],
+          },
+        ]}
+      />
     </Animated.View>
   );
 }
