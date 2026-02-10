@@ -22,7 +22,7 @@ export interface PlatformStatus {
   kalshi: boolean;
 }
 
-export type LogEntryType = 'trade' | 'info';
+export type LogEntryType = 'trade' | 'sell' | 'info';
 
 export interface LogEntry {
   id: string;

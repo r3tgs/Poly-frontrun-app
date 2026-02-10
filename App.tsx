@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,15 +10,17 @@ import { ActivityLog } from './components/ActivityLog';
 import { Colors } from './constants/colors';
 import { mockGame, mockLogEntries, mockPlatformStatus } from './mocks/gameData';
 import { selectTeam, togglePlatform } from './api';
-import type { LogEntry, PlatformStatus } from './types';
+import type { GameState, LogEntry, PlatformStatus } from './types';
 
 const CARD_PADDING = 20;
 
 function GameScreen() {
   const insets = useSafeAreaInsets();
+  const [game, setGame] = useState<GameState>(mockGame);
   const [platformStatus, setPlatformStatus] =
     useState<PlatformStatus>(mockPlatformStatus);
   const [logEntries, setLogEntries] = useState<LogEntry[]>(mockLogEntries);
+  const pendingTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const handleTogglePlatform = useCallback(
     (platform: 'poly' | 'kalshi') => {
@@ -29,29 +31,65 @@ function GameScreen() {
     [platformStatus]
   );
 
+  const getTimestamp = () =>
+    new Date().toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+
+  const addLog = (message: string, type: LogEntry['type']) => {
+    setLogEntries((prev) => [
+      { id: String(Date.now() + Math.random()), timestamp: getTimestamp(), message, type },
+      ...prev,
+    ]);
+  };
+
   const handleSelectTeam = useCallback(
     (teamId: string) => {
-      const team =
-        teamId === mockGame.homeTeam.id
-          ? mockGame.homeTeam
-          : mockGame.awayTeam;
+      const isHome = teamId === game.homeTeam.id;
+      const team = isHome ? game.homeTeam : game.awayTeam;
+      const buyPrice = (Math.random() * 0.3 + 0.3).toFixed(2);
+      const sellPrice = (parseFloat(buyPrice) + Math.random() * 0.2 + 0.1).toFixed(2);
+      const contracts = Math.floor(Math.random() * 150 + 50);
 
-      const newEntry: LogEntry = {
-        id: String(Date.now()),
-        timestamp: new Date().toLocaleTimeString('en-US', {
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        }),
-        message: `User selected '${team.city} ${team.name}'`,
-        type: 'info',
-      };
+      // Clear any pending timers from previous rapid presses
+      pendingTimers.current.forEach(clearTimeout);
+      pendingTimers.current = [];
 
-      setLogEntries((prev) => [newEntry, ...prev]);
+      // Step 1: User selected (immediate)
+      addLog(`User selected '${team.city} ${team.name}'`, 'info');
       selectTeam(teamId);
+
+      // Step 2: Sent to bot (~400ms)
+      pendingTimers.current.push(
+        setTimeout(() => addLog('Sent to bot', 'info'), 400)
+      );
+
+      // Step 3: Bought contracts (~1200ms)
+      pendingTimers.current.push(
+        setTimeout(() => addLog(`Bought ${contracts} contracts @ ${buyPrice}`, 'trade'), 1200)
+      );
+
+      // Step 4: Score update (~2000ms) — increment the score
+      pendingTimers.current.push(
+        setTimeout(() => {
+          setGame((prev) => {
+            const newHome = isHome ? prev.homeScore + 1 : prev.homeScore;
+            const newAway = isHome ? prev.awayScore : prev.awayScore + 1;
+            addLog(`Poly updated score to ${newHome}-${newAway}`, 'info');
+            return { ...prev, homeScore: newHome, awayScore: newAway };
+          });
+        }, 2000)
+      );
+
+      // Step 5: Sold contracts (~2800ms)
+      pendingTimers.current.push(
+        setTimeout(() => addLog(`Sold ${contracts} contracts @ ${sellPrice}`, 'sell'), 2800)
+      );
     },
-    []
+    [game]
   );
 
   return (
@@ -60,7 +98,7 @@ function GameScreen() {
 
       <View style={styles.header}>
         <LiveBadge />
-        <Scoreboard game={mockGame} />
+        <Scoreboard game={game} />
       </View>
 
       <View style={styles.card}>
@@ -71,8 +109,8 @@ function GameScreen() {
             onToggle={handleTogglePlatform}
           />
           <TeamButtons
-            homeTeam={mockGame.homeTeam}
-            awayTeam={mockGame.awayTeam}
+            homeTeam={game.homeTeam}
+            awayTeam={game.awayTeam}
             onSelect={handleSelectTeam}
           />
         </View>

@@ -33,7 +33,7 @@ export const mockLogEntries: LogEntry[] = [
     id: '6',
     timestamp: '15:20:23',
     message: 'Sold 100 contracts @ 0.67',
-    type: 'trade',
+    type: 'sell',
   },
   {
     id: '5',

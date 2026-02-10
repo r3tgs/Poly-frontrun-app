@@ -18,7 +18,12 @@ export function ActivityLog({ entries, bottomInset = 0 }: ActivityLogProps) {
         showsVerticalScrollIndicator={false}
       >
         {entries.map((entry) => {
-          const color = entry.type === 'trade' ? Colors.green : Colors.gray;
+          const color =
+            entry.type === 'trade'
+              ? Colors.green
+              : entry.type === 'sell'
+                ? Colors.red
+                : Colors.gray;
           return (
             <Text key={entry.id} style={[styles.entry, { color }]}>
               {entry.timestamp} — {entry.message}
