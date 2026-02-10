@@ -14,8 +14,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
-  background-color: #1C1C1E;
+  height: 56px;
+  padding: 0 18px;
+  align-self: stretch;
+  background-color: #16161A;
   border-radius: 14px;
 }
 
@@ -28,6 +30,8 @@
 .trade-icon {
   width: 40px;
   height: 40px;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 .trade-info {
@@ -37,8 +41,10 @@
 }
 
 .trade-action {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 590;
+  line-height: normal;
 }
 
 .action-buy {
@@ -50,9 +56,11 @@
 }
 
 .trade-details {
-  font-size: 15px;
-  font-weight: 500;
-  color: #fff;
+  color: #FFF;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 590;
+  line-height: normal;
 }
 
 .trade-right {
@@ -75,15 +83,19 @@
 }
 
 .matchup-abbr {
-  font-size: 11px;
-  font-weight: 600;
   color: #868686;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 590;
+  line-height: normal;
 }
 
 .matchup-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
+  color: #FFF;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 590;
+  line-height: normal;
 }
 
 .matchup-vs {
@@ -96,4 +108,6 @@
 .platform-badge {
   width: 40px;
   height: 40px;
+  border-radius: 10px;
+  overflow: hidden;
 }
