@@ -108,8 +108,9 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: Colors.cardBackground,
-    borderTopLeftRadius: 48,
-    borderTopRightRadius: 48,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    borderCurve: 'continuous',
   },
   fixedContent: {
     paddingTop: CARD_PADDING,
