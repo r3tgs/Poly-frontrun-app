@@ -1,6 +1,5 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../constants/colors';
 import { FireIcon } from './icons/FireIcon';
 
 export function LiveBadge() {
@@ -15,16 +14,21 @@ export function LiveBadge() {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.liveBadge,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
     alignSelf: 'center',
-    gap: 4,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingLeft: 12,
+    paddingRight: 10,
+    gap: 6,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#FF7A00',
+    backgroundColor: 'rgba(255, 122, 0, 0.26)',
   },
   text: {
-    color: Colors.white,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

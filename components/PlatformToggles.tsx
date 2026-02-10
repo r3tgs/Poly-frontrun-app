@@ -15,7 +15,8 @@ export function PlatformToggles({ status, onToggle }: PlatformTogglesProps) {
     <View style={styles.container}>
       <Pressable
         style={({ pressed }) => [
-          styles.toggle,
+          styles.toggleBase,
+          styles.polyToggle,
           pressed ? styles.togglePressed : undefined,
         ]}
         onPress={() => onToggle('poly')}
@@ -29,7 +30,8 @@ export function PlatformToggles({ status, onToggle }: PlatformTogglesProps) {
 
       <Pressable
         style={({ pressed }) => [
-          styles.toggle,
+          styles.toggleBase,
+          styles.kalshiToggle,
           pressed ? styles.togglePressed : undefined,
         ]}
         onPress={() => onToggle('kalshi')}
@@ -50,17 +52,24 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 20,
   },
-  toggle: {
+  toggleBase: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.toggleBackground,
-    borderRadius: 12,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingLeft: 12,
+    paddingRight: 10,
+    gap: 4,
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: Colors.toggleBorder,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 6,
+    borderColor: '#2D2D32',
+  },
+  polyToggle: {
+    backgroundColor: '#000000',
+  },
+  kalshiToggle: {
+    backgroundColor: '#16161A',
   },
   togglePressed: {
     opacity: 0.7,
