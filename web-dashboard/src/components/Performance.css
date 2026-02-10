@@ -48,12 +48,20 @@
 }
 
 .stat-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
   font-size: 13px;
   font-weight: 600;
 }
 
 .stat-change.positive {
-  color: #34C759;
+  color: #15DF83;
+}
+
+.stat-chevron {
+  width: 6px;
+  height: 4px;
 }
 
 .stat-divider {
@@ -152,7 +160,7 @@
 }
 
 .cell-day.day-positive {
-  color: #34C759;
+  color: #15DF83;
 }
 
 .cell-day.day-negative {
@@ -166,7 +174,7 @@
 }
 
 .pnl-positive {
-  color: #34C759;
+  color: #15DF83;
 }
 
 .pnl-negative {

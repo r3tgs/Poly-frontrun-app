@@ -28,18 +28,6 @@
 .trade-icon {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.trade-icon-buy {
-  background-color: rgba(52, 199, 89, 0.2);
-}
-
-.trade-icon-sell {
-  background-color: rgba(255, 59, 48, 0.2);
 }
 
 .trade-info {
@@ -54,11 +42,11 @@
 }
 
 .action-buy {
-  color: #34C759;
+  color: #15DF83;
 }
 
 .action-sell {
-  color: #FF3B30;
+  color: #F63658;
 }
 
 .trade-details {
@@ -106,25 +94,6 @@
 
 /* Platform Badges */
 .platform-badge {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.platform-kalshi {
-  background-color: #21C891;
-}
-
-.platform-kalshi span {
-  font-size: 10px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: 0.3px;
-}
-
-.platform-poly {
-  background-color: #2E5CFF;
+  width: 40px;
+  height: 40px;
 }

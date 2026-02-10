@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { DayData, PerformanceStats, Period } from '../types';
+import chevronIcon from '../assets/PM chevron.svg';
 import './Performance.css';
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -18,7 +19,10 @@ function StatsRow({ stats }: { stats: PerformanceStats }) {
         <span className="stat-label">Total Profit</span>
         <div className="stat-value-row">
           <span className="stat-value">${stats.totalProfit.toLocaleString()}</span>
-          <span className="stat-change positive">+{stats.profitChange}%</span>
+          <span className="stat-change positive">
+            <img src={chevronIcon} alt="" className="stat-chevron" />
+            {stats.profitChange}%
+          </span>
         </div>
       </div>
       <div className="stat-divider" />
@@ -26,7 +30,10 @@ function StatsRow({ stats }: { stats: PerformanceStats }) {
         <span className="stat-label">ROI</span>
         <div className="stat-value-row">
           <span className="stat-value">{stats.roi}%</span>
-          <span className="stat-change positive">+{stats.roiChange}%</span>
+          <span className="stat-change positive">
+            <img src={chevronIcon} alt="" className="stat-chevron" />
+            {stats.roiChange}%
+          </span>
         </div>
       </div>
       <div className="stat-divider" />
