@@ -170,8 +170,8 @@
 
 .cell-day {
   position: absolute;
-  top: 4px;
-  left: 4px;
+  top: 8px;
+  left: 8px;
   font-size: 12px;
   font-weight: 600;
   color: #868686;
