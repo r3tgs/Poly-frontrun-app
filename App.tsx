@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LiveBadge } from './components/LiveBadge';
@@ -11,6 +11,8 @@ import { Colors } from './constants/colors';
 import { mockGame, mockLogEntries, mockPlatformStatus } from './mocks/gameData';
 import { selectTeam, togglePlatform } from './api';
 import type { LogEntry, PlatformStatus } from './types';
+
+const CARD_PADDING = 20;
 
 function GameScreen() {
   const insets = useSafeAreaInsets();
@@ -62,14 +64,8 @@ function GameScreen() {
       </View>
 
       <View style={styles.card}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={[
-            styles.cardContent,
-            { paddingBottom: insets.bottom + 24 },
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
+        {/* Fixed content: toggles + buttons */}
+        <View style={styles.fixedContent}>
           <PlatformToggles
             status={platformStatus}
             onToggle={handleTogglePlatform}
@@ -79,8 +75,13 @@ function GameScreen() {
             awayTeam={mockGame.awayTeam}
             onSelect={handleSelectTeam}
           />
-          <ActivityLog entries={logEntries} />
-        </ScrollView>
+        </View>
+
+        {/* Only the log scrolls */}
+        <ActivityLog
+          entries={logEntries}
+          bottomInset={insets.bottom}
+        />
       </View>
     </View>
   );
@@ -107,14 +108,11 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: Colors.cardBackground,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopLeftRadius: 48,
+    borderTopRightRadius: 48,
   },
-  scrollView: {
-    flex: 1,
-  },
-  cardContent: {
-    paddingTop: 24,
-    paddingHorizontal: 20,
+  fixedContent: {
+    paddingTop: CARD_PADDING,
+    paddingHorizontal: CARD_PADDING,
   },
 });

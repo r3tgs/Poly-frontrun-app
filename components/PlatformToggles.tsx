@@ -49,7 +49,7 @@ export function PlatformToggles({ status, onToggle }: PlatformTogglesProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
     marginBottom: 20,
   },
   toggleBase: {
