@@ -99,10 +99,12 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: Colors.background,
+    justifyContent: 'flex-end',
   },
   header: {
-    paddingTop: 8,
-    paddingBottom: 12,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     gap: 8,
   },
   card: {
