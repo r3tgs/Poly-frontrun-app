@@ -51,44 +51,44 @@ export const mockCalendarData: DayData[] = [
   { day: 2, pnl: 0, isCurrentMonth: false },
 ];
 
-// Polymarket: generally low, stable around 3-4s with a gradual drift upward
+// Polymarket: starts low, builds up, dips, then spikes late
 const polyDelays: DelayDataPoint[] = [
-  { time: '8:01', delay: 2.8 }, { time: '8:14', delay: 3.1 }, { time: '8:22', delay: 2.9 },
-  { time: '8:35', delay: 3.0 }, { time: '8:41', delay: 3.3 }, { time: '8:55', delay: 3.1 },
-  { time: '9:03', delay: 3.5 }, { time: '9:18', delay: 3.4 }, { time: '9:25', delay: 3.8 },
-  { time: '9:40', delay: 4.1 }, { time: '9:52', delay: 3.9 }, { time: '10:05', delay: 4.5 },
-  { time: '10:18', delay: 4.2 }, { time: '10:30', delay: 5.8 }, { time: '10:42', delay: 4.9 },
-  { time: '10:55', delay: 5.2 },
+  { time: '8:01', delay: 1.2 }, { time: '8:14', delay: 1.5 }, { time: '8:22', delay: 2.3 },
+  { time: '8:35', delay: 2.1 }, { time: '8:41', delay: 3.8 }, { time: '8:55', delay: 3.5 },
+  { time: '9:03', delay: 2.9 }, { time: '9:18', delay: 4.7 }, { time: '9:25', delay: 5.2 },
+  { time: '9:40', delay: 4.0 }, { time: '9:52', delay: 3.3 }, { time: '10:05', delay: 6.8 },
+  { time: '10:18', delay: 7.5 }, { time: '10:30', delay: 5.6 }, { time: '10:42', delay: 8.1 },
+  { time: '10:55', delay: 6.4 },
 ];
 
-// Kalshi: tighter range around 4s, very consistent
+// Kalshi: erratic, bouncing between low and high
 const kalshiDelays: DelayDataPoint[] = [
-  { time: '8:01', delay: 3.8 }, { time: '8:14', delay: 4.0 }, { time: '8:22', delay: 4.1 },
-  { time: '8:35', delay: 3.9 }, { time: '8:41', delay: 4.3 }, { time: '8:55', delay: 4.2 },
-  { time: '9:03', delay: 4.0 }, { time: '9:18', delay: 4.4 }, { time: '9:25', delay: 4.1 },
-  { time: '9:40', delay: 4.5 }, { time: '9:52', delay: 4.3 }, { time: '10:05', delay: 4.6 },
-  { time: '10:18', delay: 4.2 }, { time: '10:30', delay: 4.4 }, { time: '10:42', delay: 4.1 },
-  { time: '10:55', delay: 4.5 },
+  { time: '8:01', delay: 5.2 }, { time: '8:14', delay: 2.8 }, { time: '8:22', delay: 6.1 },
+  { time: '8:35', delay: 3.4 }, { time: '8:41', delay: 4.9 }, { time: '8:55', delay: 2.1 },
+  { time: '9:03', delay: 5.7 }, { time: '9:18', delay: 3.0 }, { time: '9:25', delay: 7.3 },
+  { time: '9:40', delay: 4.5 }, { time: '9:52', delay: 2.6 }, { time: '10:05', delay: 5.8 },
+  { time: '10:18', delay: 3.9 }, { time: '10:30', delay: 6.4 }, { time: '10:42', delay: 4.1 },
+  { time: '10:55', delay: 5.5 },
 ];
 
-// ESPN: mostly low ~2s, with a sudden spike mid-game then recovery
+// ESPN: flat baseline with dramatic spike and slow recovery
 const espnDelays: DelayDataPoint[] = [
-  { time: '8:01', delay: 1.5 }, { time: '8:14', delay: 1.8 }, { time: '8:22', delay: 1.6 },
-  { time: '8:35', delay: 2.0 }, { time: '8:41', delay: 1.9 }, { time: '8:55', delay: 2.2 },
-  { time: '9:03', delay: 2.1 }, { time: '9:18', delay: 2.4 }, { time: '9:25', delay: 2.3 },
-  { time: '9:40', delay: 2.5 }, { time: '9:52', delay: 2.8 }, { time: '10:05', delay: 5.9 },
-  { time: '10:18', delay: 7.8 }, { time: '10:30', delay: 6.1 }, { time: '10:42', delay: 3.5 },
-  { time: '10:55', delay: 2.4 },
+  { time: '8:01', delay: 0.8 }, { time: '8:14', delay: 1.1 }, { time: '8:22', delay: 0.9 },
+  { time: '8:35', delay: 1.4 }, { time: '8:41', delay: 1.2 }, { time: '8:55', delay: 1.6 },
+  { time: '9:03', delay: 1.3 }, { time: '9:18', delay: 1.8 }, { time: '9:25', delay: 2.0 },
+  { time: '9:40', delay: 1.7 }, { time: '9:52', delay: 4.5 }, { time: '10:05', delay: 8.9 },
+  { time: '10:18', delay: 7.2 }, { time: '10:30', delay: 9.4 }, { time: '10:42', delay: 5.8 },
+  { time: '10:55', delay: 3.1 },
 ];
 
-// Realsports: fluctuates in a wider band 3-6s, no clear trend
+// Realsports: generally mid-range with gradual wave pattern
 const realDelays: DelayDataPoint[] = [
-  { time: '8:01', delay: 3.6 }, { time: '8:14', delay: 4.2 }, { time: '8:22', delay: 3.9 },
-  { time: '8:35', delay: 5.1 }, { time: '8:41', delay: 4.8 }, { time: '8:55', delay: 4.4 },
-  { time: '9:03', delay: 3.7 }, { time: '9:18', delay: 3.5 }, { time: '9:25', delay: 4.6 },
-  { time: '9:40', delay: 5.3 }, { time: '9:52', delay: 4.9 }, { time: '10:05', delay: 5.7 },
-  { time: '10:18', delay: 5.0 }, { time: '10:30', delay: 4.3 }, { time: '10:42', delay: 3.8 },
-  { time: '10:55', delay: 4.1 },
+  { time: '8:01', delay: 4.8 }, { time: '8:14', delay: 5.6 }, { time: '8:22', delay: 6.3 },
+  { time: '8:35', delay: 5.9 }, { time: '8:41', delay: 4.2 }, { time: '8:55', delay: 3.1 },
+  { time: '9:03', delay: 2.4 }, { time: '9:18', delay: 1.8 }, { time: '9:25', delay: 2.9 },
+  { time: '9:40', delay: 4.5 }, { time: '9:52', delay: 6.7 }, { time: '10:05', delay: 7.9 },
+  { time: '10:18', delay: 8.5 }, { time: '10:30', delay: 6.2 }, { time: '10:42', delay: 4.0 },
+  { time: '10:55', delay: 3.3 },
 ];
 
 export const mockSourceDelays: SourceDelay[] = [

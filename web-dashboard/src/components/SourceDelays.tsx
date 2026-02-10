@@ -10,7 +10,7 @@ const SOURCE_CONFIG: Record<string, { icon: string; color: string }> = {
   polymarket: { icon: polyLogo, color: '#2E5CFF' },
   kalshi: { icon: kalshiLogo, color: '#21C891' },
   espn: { icon: espnLogo, color: '#E52534' },
-  realsports: { icon: realLogo, color: '#FEFEFE' },
+  realsports: { icon: realLogo, color: '#868686' },
 };
 
 function SparkLine({ color, dataPoints }: { color: string; dataPoints: DelayDataPoint[] }) {
