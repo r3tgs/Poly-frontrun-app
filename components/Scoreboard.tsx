@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, ImageSourcePropType, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/colors';
 import type { GameState } from '../types';
 
@@ -7,10 +7,28 @@ interface ScoreboardProps {
   game: GameState;
 }
 
-function TeamLogo({ color, letter }: { color: string; letter: string }) {
+const logos: Record<string, { source: ImageSourcePropType; bg: string; glow: string }> = {
+  dal: {
+    source: require('../assets/Stars logo.png'),
+    bg: '#006847',
+    glow: 'rgba(0, 104, 71, 0.30)',
+  },
+  nyr: {
+    source: require('../assets/Rangers logo.png'),
+    bg: '#0038A7',
+    glow: 'rgba(0, 56, 167, 0.30)',
+  },
+};
+
+function TeamLogo({ teamId }: { teamId: string }) {
+  const logo = logos[teamId];
+  if (!logo) return null;
+
   return (
-    <View style={[styles.logo, { backgroundColor: color }]}>
-      <Text style={styles.logoText}>{letter}</Text>
+    <View style={[styles.logoGlow, { backgroundColor: logo.glow }]}>
+      <View style={[styles.logoBorder, { backgroundColor: logo.bg }]}>
+        <Image source={logo.source} style={styles.logoImage} resizeMode="contain" />
+      </View>
     </View>
   );
 }
@@ -19,7 +37,7 @@ export function Scoreboard({ game }: ScoreboardProps) {
   return (
     <View style={styles.container}>
       <View style={styles.teamSection}>
-        <TeamLogo color={game.homeTeam.logoColor} letter="★" />
+        <TeamLogo teamId={game.homeTeam.id} />
         <Text style={styles.abbreviation}>{game.homeTeam.abbreviation}</Text>
         <Text style={styles.teamName}>{game.homeTeam.name.toUpperCase()}</Text>
       </View>
@@ -29,13 +47,15 @@ export function Scoreboard({ game }: ScoreboardProps) {
       </Text>
 
       <View style={styles.teamSection}>
-        <TeamLogo color={game.awayTeam.logoColor} letter="NYR" />
+        <TeamLogo teamId={game.awayTeam.id} />
         <Text style={styles.abbreviation}>{game.awayTeam.abbreviation}</Text>
         <Text style={styles.teamName}>{game.awayTeam.name.toUpperCase()}</Text>
       </View>
     </View>
   );
 }
+
+const LOGO_SIZE = 72;
 
 const styles = StyleSheet.create({
   container: {
@@ -50,17 +70,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  logo: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+  logoGlow: {
+    borderRadius: 50,
+    padding: 2,
+  },
+  logoBorder: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: '#000000',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
-  logoText: {
-    color: Colors.white,
-    fontSize: 24,
-    fontWeight: '700',
+  logoImage: {
+    width: LOGO_SIZE - 6,
+    height: LOGO_SIZE - 6,
   },
   abbreviation: {
     color: Colors.white,
