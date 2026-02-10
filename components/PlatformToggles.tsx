@@ -14,7 +14,7 @@ export function PlatformToggles({ status, onToggle }: PlatformTogglesProps) {
       <Pressable
         style={({ pressed }) => [
           styles.toggle,
-          pressed && styles.togglePressed,
+          pressed ? styles.togglePressed : undefined,
         ]}
         onPress={() => onToggle('poly')}
       >
@@ -28,7 +28,7 @@ export function PlatformToggles({ status, onToggle }: PlatformTogglesProps) {
       <Pressable
         style={({ pressed }) => [
           styles.toggle,
-          pressed && styles.togglePressed,
+          pressed ? styles.togglePressed : undefined,
         ]}
         onPress={() => onToggle('kalshi')}
       >

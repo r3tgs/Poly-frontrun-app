@@ -18,7 +18,7 @@ export function TeamButtons({ homeTeam, awayTeam, onSelect }: TeamButtonsProps) 
         style={({ pressed }) => [
           styles.button,
           { backgroundColor: homeTeam.buttonColor },
-          pressed && styles.buttonPressed,
+          pressed ? styles.buttonPressed : undefined,
         ]}
         onPress={() => onSelect(homeTeam.id)}
       >
@@ -31,7 +31,7 @@ export function TeamButtons({ homeTeam, awayTeam, onSelect }: TeamButtonsProps) 
         style={({ pressed }) => [
           styles.button,
           { backgroundColor: awayTeam.buttonColor },
-          pressed && styles.buttonPressed,
+          pressed ? styles.buttonPressed : undefined,
         ]}
         onPress={() => onSelect(awayTeam.id)}
       >
