@@ -51,23 +51,22 @@ export const mockCalendarData: DayData[] = [
   { day: 2, pnl: 0, isCurrentMonth: false },
 ];
 
-// Each value is an independent measurement — no correlation between points
 const polyDelays: DelayDataPoint[] = [
-  { time: '8:01', delay: 6.3 }, { time: '8:14', delay: 2.1 }, { time: '8:22', delay: 4.8 },
-  { time: '8:35', delay: 1.4 }, { time: '8:41', delay: 7.2 }, { time: '8:55', delay: 3.9 },
-  { time: '9:03', delay: 0.6 }, { time: '9:18', delay: 5.5 }, { time: '9:25', delay: 8.7 },
-  { time: '9:40', delay: 2.3 }, { time: '9:52', delay: 6.1 }, { time: '10:05', delay: 1.9 },
-  { time: '10:18', delay: 4.4 }, { time: '10:30', delay: 9.0 }, { time: '10:42', delay: 3.2 },
-  { time: '10:55', delay: 5.8 },
+  { time: '8:01', delay: 3.1 }, { time: '8:14', delay: 4.7 }, { time: '8:22', delay: 5.2 },
+  { time: '8:35', delay: 2.8 }, { time: '8:41', delay: 2.3 }, { time: '8:55', delay: 1.6 },
+  { time: '9:03', delay: 4.9 }, { time: '9:18', delay: 6.1 }, { time: '9:25', delay: 5.8 },
+  { time: '9:40', delay: 7.4 }, { time: '9:52', delay: 3.5 }, { time: '10:05', delay: 2.0 },
+  { time: '10:18', delay: 2.7 }, { time: '10:30', delay: 8.3 }, { time: '10:42', delay: 6.9 },
+  { time: '10:55', delay: 5.1 },
 ];
 
 const kalshiDelays: DelayDataPoint[] = [
-  { time: '8:01', delay: 3.7 }, { time: '8:14', delay: 8.4 }, { time: '8:22', delay: 1.2 },
-  { time: '8:35', delay: 5.9 }, { time: '8:41', delay: 0.8 }, { time: '8:55', delay: 7.1 },
-  { time: '9:03', delay: 4.3 }, { time: '9:18', delay: 2.6 }, { time: '9:25', delay: 9.2 },
-  { time: '9:40', delay: 1.5 }, { time: '9:52', delay: 6.8 }, { time: '10:05', delay: 3.4 },
-  { time: '10:18', delay: 7.7 }, { time: '10:30', delay: 0.9 }, { time: '10:42', delay: 5.1 },
-  { time: '10:55', delay: 4.6 },
+  { time: '8:01', delay: 4.2 }, { time: '8:14', delay: 3.8 }, { time: '8:22', delay: 5.5 },
+  { time: '8:35', delay: 7.1 }, { time: '8:41', delay: 6.6 }, { time: '8:55', delay: 3.0 },
+  { time: '9:03', delay: 1.4 }, { time: '9:18', delay: 1.9 }, { time: '9:25', delay: 4.8 },
+  { time: '9:40', delay: 8.2 }, { time: '9:52', delay: 7.5 }, { time: '10:05', delay: 6.3 },
+  { time: '10:18', delay: 2.7 }, { time: '10:30', delay: 3.4 }, { time: '10:42', delay: 5.0 },
+  { time: '10:55', delay: 4.1 },
 ];
 
 // ESPN: flat baseline with dramatic spike and slow recovery
