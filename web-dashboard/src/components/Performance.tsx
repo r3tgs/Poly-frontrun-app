@@ -70,6 +70,12 @@ function PeriodToggle({
 }
 
 function CalendarHeatmap({ data }: { data: DayData[] }) {
+  // Group days into rows of 7
+  const rows: DayData[][] = [];
+  for (let i = 0; i < data.length; i += 7) {
+    rows.push(data.slice(i, i + 7));
+  }
+
   return (
     <div className="calendar">
       <div className="calendar-header">
@@ -80,43 +86,47 @@ function CalendarHeatmap({ data }: { data: DayData[] }) {
         ))}
       </div>
       <div className="calendar-grid">
-        {data.map((d, i) => {
-          const isPositive = d.pnl > 0;
-          const isNegative = d.pnl < 0;
-          const hasValue = d.pnl !== 0;
+        {rows.map((row, rowIdx) => (
+          <div key={rowIdx} className="calendar-row">
+            {row.map((d, i) => {
+              const isPositive = d.pnl > 0;
+              const isNegative = d.pnl < 0;
+              const hasValue = d.pnl !== 0;
 
-          return (
-            <div
-              key={i}
-              className={`calendar-cell ${
-                hasValue
-                  ? isPositive
-                    ? 'cell-positive'
-                    : 'cell-negative'
-                  : ''
-              } ${!d.isCurrentMonth ? 'cell-dimmed' : ''}`}
-            >
-              <span
-                className={`cell-day ${
-                  hasValue
-                    ? isPositive
-                      ? 'day-positive'
-                      : 'day-negative'
-                    : ''
-                }`}
-              >
-                {d.day}
-              </span>
-              <span
-                className={`cell-pnl ${
-                  isPositive ? 'pnl-positive' : isNegative ? 'pnl-negative' : 'pnl-zero'
-                }`}
-              >
-                {formatPnl(d.pnl)}
-              </span>
-            </div>
-          );
-        })}
+              return (
+                <div
+                  key={i}
+                  className={`calendar-cell ${
+                    hasValue
+                      ? isPositive
+                        ? 'cell-positive'
+                        : 'cell-negative'
+                      : ''
+                  } ${!d.isCurrentMonth ? 'cell-dimmed' : ''}`}
+                >
+                  <span
+                    className={`cell-day ${
+                      hasValue
+                        ? isPositive
+                          ? 'day-positive'
+                          : 'day-negative'
+                        : ''
+                    }`}
+                  >
+                    {d.day}
+                  </span>
+                  <span
+                    className={`cell-pnl ${
+                      isPositive ? 'pnl-positive' : isNegative ? 'pnl-negative' : 'pnl-zero'
+                    }`}
+                  >
+                    {formatPnl(d.pnl)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );
