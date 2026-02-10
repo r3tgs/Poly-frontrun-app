@@ -89,16 +89,16 @@ const styles = StyleSheet.create({
     height: LOGO_SIZE - 6,
   },
   abbreviation: {
-    color: Colors.white,
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 1,
+    color: '#868686',
+    fontSize: 12,
+    fontWeight: '900',
+    textAlign: 'center',
   },
   teamName: {
-    color: Colors.white,
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   score: {
     color: Colors.white,
