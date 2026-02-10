@@ -1,11 +1,12 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/colors';
+import { FireIcon } from './icons/FireIcon';
 
 export function LiveBadge() {
   return (
     <View style={styles.container}>
-      <Text style={styles.flame}>🔥</Text>
+      <FireIcon width={14} height={18} />
       <Text style={styles.text}>Live</Text>
     </View>
   );
@@ -21,9 +22,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignSelf: 'center',
     gap: 4,
-  },
-  flame: {
-    fontSize: 14,
   },
   text: {
     color: Colors.white,

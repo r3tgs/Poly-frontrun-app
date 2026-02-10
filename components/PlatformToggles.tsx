@@ -1,6 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/colors';
+import { PolyIcon } from './icons/PolyIcon';
+import { KalshiIcon } from './icons/KalshiIcon';
 import type { PlatformStatus } from '../types';
 
 interface PlatformTogglesProps {
@@ -18,7 +20,7 @@ export function PlatformToggles({ status, onToggle }: PlatformTogglesProps) {
         ]}
         onPress={() => onToggle('poly')}
       >
-        <Text style={styles.icon}>◆</Text>
+        <PolyIcon width={16} height={16} color={Colors.white} />
         <Text style={styles.label}>Poly: </Text>
         <Text style={status.poly ? styles.statusOn : styles.statusOff}>
           {status.poly ? 'On' : 'Off'}
@@ -32,7 +34,7 @@ export function PlatformToggles({ status, onToggle }: PlatformTogglesProps) {
         ]}
         onPress={() => onToggle('kalshi')}
       >
-        <Text style={styles.kalshiIcon}>K</Text>
+        <KalshiIcon width={16} height={16} color={Colors.white} />
         <Text style={styles.label}>Kalshi: </Text>
         <Text style={status.kalshi ? styles.statusOn : styles.statusOff}>
           {status.kalshi ? 'On' : 'Off'}
@@ -62,15 +64,6 @@ const styles = StyleSheet.create({
   },
   togglePressed: {
     opacity: 0.7,
-  },
-  icon: {
-    color: Colors.white,
-    fontSize: 16,
-  },
-  kalshiIcon: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: '800',
   },
   label: {
     color: Colors.white,
