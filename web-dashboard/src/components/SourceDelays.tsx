@@ -20,28 +20,39 @@ function SparkLine({ color, dataPoints }: { color: string; dataPoints: DelayData
   const max = 10;
   const width = 200;
   const height = 50;
-  const paddingRight = 28;
-  const chartWidth = width - paddingRight;
-  const stepX = chartWidth / (dataPoints.length - 1);
+  const stepX = width / (dataPoints.length - 1);
 
   const points = dataPoints.map((dp, i) => ({
     x: i * stepX,
     y: height - (dp.delay / max) * height,
   }));
 
-  // Build smooth path with rounded corners using cardinal spline
-  const pathParts: string[] = [`M${points[0].x},${points[0].y}`];
-  for (let i = 1; i < points.length; i++) {
-    pathParts.push(`L${points[i].x},${points[i].y}`);
+  // Build smooth path using catmull-rom to cubic bezier
+  function catmullRomToBezier(pts: { x: number; y: number }[]): string {
+    if (pts.length < 2) return '';
+    const tension = 0.3;
+    let d = `M${pts[0].x},${pts[0].y}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[Math.min(pts.length - 1, i + 2)];
+      const cp1x = p1.x + (p2.x - p0.x) * tension;
+      const cp1y = p1.y + (p2.y - p0.y) * tension;
+      const cp2x = p2.x - (p3.x - p1.x) * tension;
+      const cp2y = p2.y - (p3.y - p1.y) * tension;
+      d += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
+    }
+    return d;
   }
-  const pathData = pathParts.join(' ');
+
+  const pathData = catmullRomToBezier(points);
 
   function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
     const svg = svgRef.current;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
     const mouseX = ((e.clientX - rect.left) / rect.width) * width;
-    // Find closest point
     let closest = 0;
     let closestDist = Infinity;
     for (let i = 0; i < points.length; i++) {
@@ -69,7 +80,7 @@ function SparkLine({ color, dataPoints }: { color: string; dataPoints: DelayData
         onMouseLeave={handleMouseLeave}
       >
         {/* Baseline */}
-        <line x1="0" y1={height} x2={chartWidth} y2={height} stroke="#232327" strokeWidth="1" />
+        <line x1="0" y1={height} x2={width} y2={height} stroke="#232327" strokeWidth="1" />
         {/* Line */}
         <path
           d={pathData}
