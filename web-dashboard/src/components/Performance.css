@@ -1,0 +1,178 @@
+.performance {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.performance-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Stats Row */
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #868686;
+}
+
+.stat-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.stat-change {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stat-change.positive {
+  color: #34C759;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 36px;
+  background-color: #2D2D32;
+}
+
+/* Period Toggle */
+.period-toggle {
+  display: flex;
+  align-items: center;
+  background-color: #1C1C1E;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.period-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #868686;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.period-btn.active {
+  background-color: #2D2D32;
+  color: #fff;
+}
+
+.period-btn:hover:not(.active) {
+  color: #aaa;
+}
+
+/* Calendar Heatmap */
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.calendar-weekday {
+  font-size: 13px;
+  font-weight: 600;
+  color: #868686;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border-radius: 10px;
+  min-height: 64px;
+  gap: 6px;
+  position: relative;
+}
+
+.calendar-cell.cell-positive {
+  background-color: rgba(0, 104, 71, 0.35);
+}
+
+.calendar-cell.cell-negative {
+  background-color: rgba(255, 59, 48, 0.25);
+}
+
+.calendar-cell.cell-dimmed {
+  opacity: 0.4;
+}
+
+.cell-day {
+  font-size: 12px;
+  font-weight: 600;
+  color: #868686;
+}
+
+.cell-day.day-positive {
+  color: #34C759;
+}
+
+.cell-day.day-negative {
+  color: #FF3B30;
+}
+
+.cell-pnl {
+  font-size: 14px;
+  font-weight: 600;
+  align-self: center;
+}
+
+.pnl-positive {
+  color: #34C759;
+}
+
+.pnl-negative {
+  color: #FF3B30;
+}
+
+.pnl-zero {
+  color: #555;
+}

@@ -1,0 +1,130 @@
+.trade-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trade-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background-color: #1C1C1E;
+  border-radius: 14px;
+}
+
+.trade-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.trade-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trade-icon-buy {
+  background-color: rgba(52, 199, 89, 0.2);
+}
+
+.trade-icon-sell {
+  background-color: rgba(255, 59, 48, 0.2);
+}
+
+.trade-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trade-action {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.action-buy {
+  color: #34C759;
+}
+
+.action-sell {
+  color: #FF3B30;
+}
+
+.trade-details {
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.trade-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.trade-matchup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.matchup-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.matchup-abbr {
+  font-size: 11px;
+  font-weight: 600;
+  color: #868686;
+}
+
+.matchup-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.matchup-vs {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+/* Platform Badges */
+.platform-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.platform-kalshi {
+  background-color: #21C891;
+}
+
+.platform-kalshi span {
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.platform-poly {
+  background-color: #2E5CFF;
+}
