@@ -6,7 +6,6 @@
 
 .section-title {
   color: #FFF;
-  font-family: "SF Pro";
   font-size: 20px;
   font-style: normal;
   font-weight: 590;
@@ -34,7 +33,7 @@
 
 .stat-label {
   color: #868686;
-  font-family: "SF Pro";
+
   font-size: 13px;
   font-style: normal;
   font-weight: 510;
@@ -49,7 +48,7 @@
 
 .stat-value {
   color: #FFF;
-  font-family: "SF Pro";
+
   font-size: 16px;
   font-style: normal;
   font-weight: 510;
