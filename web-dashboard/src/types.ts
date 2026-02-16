@@ -51,4 +51,5 @@ export interface TradeEntry {
   homeAbbr: string;
   homeName: string;
   platform: Platform;
+  timestamp: string;
 }

@@ -5,13 +5,16 @@ import kalshiLogo from '../assets/PM Kalshi.svg';
 import polyLogo from '../assets/PM Poly.svg';
 import './TradeFeed.css';
 
-function PlatformBadge({ platform }: { platform: 'poly' | 'kalshi' }) {
+function PlatformBadge({ platform, timestamp }: { platform: 'poly' | 'kalshi'; timestamp: string }) {
   return (
-    <img
-      src={platform === 'kalshi' ? kalshiLogo : polyLogo}
-      alt={platform}
-      className="platform-badge"
-    />
+    <div className="platform-badge-wrapper">
+      <img
+        src={platform === 'kalshi' ? kalshiLogo : polyLogo}
+        alt={platform}
+        className="platform-badge"
+      />
+      <span className="trade-timestamp">{timestamp}</span>
+    </div>
   );
 }
 
@@ -47,7 +50,7 @@ function TradeRow({ trade }: { trade: TradeEntry }) {
             <span className="matchup-name">{trade.homeName}</span>
           </div>
         </div>
-        <PlatformBadge platform={trade.platform} />
+        <PlatformBadge platform={trade.platform} timestamp={trade.timestamp} />
       </div>
     </div>
   );
