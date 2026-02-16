@@ -1,4 +1,4 @@
-import type { DayData, DelayDataPoint, PerformanceStats, SourceDelay, TradeEntry } from '../types';
+import type { DayData, DelayDataPoint, LiveInstance, PerformanceStats, SourceDelay, TradeEntry } from '../types';
 
 export const mockStats: PerformanceStats = {
   totalProfit: 16490,
@@ -94,6 +94,12 @@ export const mockSourceDelays: SourceDelay[] = [
   { source: 'kalshi', label: 'Kalshi Avg. Delay', delay: '4.23s', dataPoints: kalshiDelays },
   { source: 'espn', label: 'ESPN Avg. Delay', delay: '4.23s', dataPoints: espnDelays },
   { source: 'realsports', label: 'Realsports.io Avg. Delay', delay: '4.23s', dataPoints: realDelays },
+];
+
+export const mockInstances: LiveInstance[] = [
+  { id: '1', device: 'iPhone 16 Pro', location: 'Dallas, TX', status: 'connected' },
+  { id: '2', device: 'iPhone 16 Pro', location: 'Dallas, TX', status: 'connected' },
+  { id: '3', device: 'iPhone 16 Pro', location: 'Dallas, TX', status: 'disconnected' },
 ];
 
 export const mockTrades: TradeEntry[] = [

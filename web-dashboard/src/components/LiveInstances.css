@@ -1,0 +1,78 @@
+.live-instances {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.instances-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.instance-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #16161A;
+}
+
+.instance-icon {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 10px;
+}
+
+.instance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.instance-device {
+  color: #FFF;
+  font-size: 14px;
+  font-weight: 590;
+  line-height: normal;
+}
+
+.instance-location {
+  color: #868686;
+  font-size: 13px;
+  font-weight: 510;
+  line-height: normal;
+}
+
+.instance-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 590;
+  white-space: nowrap;
+}
+
+.instance-badge.badge-connected {
+  background-color: rgba(21, 223, 131, 0.12);
+  color: #15DF83;
+}
+
+.instance-badge.badge-disconnected {
+  background-color: rgba(255, 59, 48, 0.12);
+  color: #FF3B30;
+}
+
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}

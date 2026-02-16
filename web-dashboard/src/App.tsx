@@ -1,7 +1,8 @@
 import { Performance } from './components/Performance';
 import { TradeFeed } from './components/TradeFeed';
 import { SourceDelays } from './components/SourceDelays';
-import { mockStats, mockCalendarData, mockTrades, mockSourceDelays } from './mocks/data';
+import { LiveInstances } from './components/LiveInstances';
+import { mockStats, mockCalendarData, mockTrades, mockSourceDelays, mockInstances } from './mocks/data';
 import './App.css';
 
 function App() {
@@ -13,9 +14,7 @@ function App() {
       </div>
       <div className="right-column">
         <SourceDelays delays={mockSourceDelays} />
-        <div className="placeholder-card">
-          <span className="placeholder-text">Live instances</span>
-        </div>
+        <LiveInstances instances={mockInstances} />
       </div>
     </div>
   );

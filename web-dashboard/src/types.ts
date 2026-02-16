@@ -31,6 +31,15 @@ export interface SourceDelay {
   dataPoints: DelayDataPoint[];
 }
 
+export type InstanceStatus = 'connected' | 'disconnected';
+
+export interface LiveInstance {
+  id: string;
+  device: string;
+  location: string;
+  status: InstanceStatus;
+}
+
 export interface TradeEntry {
   id: string;
   action: TradeAction;
