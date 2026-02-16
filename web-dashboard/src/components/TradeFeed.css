@@ -14,7 +14,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
   padding: 8px;
   align-self: stretch;
   background-color: #16161A;
@@ -61,12 +60,6 @@
   font-style: normal;
   font-weight: 590;
   line-height: normal;
-}
-
-.trade-right {
-  display: flex;
-  align-items: flex-start;
-  gap: 18px;
 }
 
 .trade-matchup {

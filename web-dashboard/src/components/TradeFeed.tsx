@@ -38,20 +38,18 @@ function TradeRow({ trade }: { trade: TradeEntry }) {
           </span>
         </div>
       </div>
-      <div className="trade-right">
-        <div className="trade-matchup">
-          <div className="matchup-team">
-            <span className="matchup-abbr">{trade.awayAbbr}</span>
-            <span className="matchup-name">{trade.awayName}</span>
-          </div>
-          <span className="matchup-vs">VS</span>
-          <div className="matchup-team">
-            <span className="matchup-abbr">{trade.homeAbbr}</span>
-            <span className="matchup-name">{trade.homeName}</span>
-          </div>
+      <div className="trade-matchup">
+        <div className="matchup-team">
+          <span className="matchup-abbr">{trade.awayAbbr}</span>
+          <span className="matchup-name">{trade.awayName}</span>
         </div>
-        <PlatformBadge platform={trade.platform} timestamp={trade.timestamp} />
+        <span className="matchup-vs">VS</span>
+        <div className="matchup-team">
+          <span className="matchup-abbr">{trade.homeAbbr}</span>
+          <span className="matchup-name">{trade.homeName}</span>
+        </div>
       </div>
+      <PlatformBadge platform={trade.platform} timestamp={trade.timestamp} />
     </div>
   );
 }

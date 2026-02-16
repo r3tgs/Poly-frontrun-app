@@ -114,7 +114,7 @@ export const mockTrades: TradeEntry[] = [
     homeAbbr: 'DAL',
     homeName: 'Stars',
     platform: 'kalshi',
-    timestamp: '10:42 AM',
+    timestamp: '10:42:15 AM',
   },
   {
     id: '2',
@@ -127,7 +127,7 @@ export const mockTrades: TradeEntry[] = [
     homeAbbr: 'DAL',
     homeName: 'Stars',
     platform: 'poly',
-    timestamp: '10:38 AM',
+    timestamp: '10:38:47 AM',
   },
   {
     id: '3',
@@ -140,7 +140,7 @@ export const mockTrades: TradeEntry[] = [
     homeAbbr: 'DAL',
     homeName: 'Stars',
     platform: 'poly',
-    timestamp: '10:35 AM',
+    timestamp: '10:35:22 AM',
   },
   {
     id: '4',
@@ -153,7 +153,7 @@ export const mockTrades: TradeEntry[] = [
     homeAbbr: 'DAL',
     homeName: 'Stars',
     platform: 'poly',
-    timestamp: '10:31 AM',
+    timestamp: '10:31:09 AM',
   },
   {
     id: '5',
@@ -166,7 +166,7 @@ export const mockTrades: TradeEntry[] = [
     homeAbbr: 'DAL',
     homeName: 'Stars',
     platform: 'poly',
-    timestamp: '10:28 AM',
+    timestamp: '10:28:33 AM',
   },
   {
     id: '6',
@@ -179,6 +179,6 @@ export const mockTrades: TradeEntry[] = [
     homeAbbr: 'DAL',
     homeName: 'Stars',
     platform: 'poly',
-    timestamp: '10:24 AM',
+    timestamp: '10:24:51 AM',
   },
 ];
