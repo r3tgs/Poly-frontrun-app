@@ -70,10 +70,35 @@ function PeriodToggle({
 }
 
 function CalendarHeatmap({ data }: { data: DayData[] }) {
+  // Compute average profit and average loss from current month days
+  const currentMonthDays = data.filter((d) => d.isCurrentMonth);
+  const profitDays = currentMonthDays.filter((d) => d.pnl > 0);
+  const lossDays = currentMonthDays.filter((d) => d.pnl < 0);
+
+  const avgProfit =
+    profitDays.length > 0
+      ? profitDays.reduce((sum, d) => sum + d.pnl, 0) / profitDays.length
+      : 0;
+  const avgLoss =
+    lossDays.length > 0
+      ? lossDays.reduce((sum, d) => sum + Math.abs(d.pnl), 0) / lossDays.length
+      : 0;
+
   // Group days into rows of 7
   const rows: DayData[][] = [];
   for (let i = 0; i < data.length; i += 7) {
     rows.push(data.slice(i, i + 7));
+  }
+
+  function getCellClass(d: DayData): string {
+    if (!d.isCurrentMonth) return 'calendar-cell cell-dimmed';
+    if (d.pnl > 0) {
+      return `calendar-cell ${d.pnl >= avgProfit ? 'cell-positive-high' : 'cell-positive-low'}`;
+    }
+    if (d.pnl < 0) {
+      return `calendar-cell ${Math.abs(d.pnl) >= avgLoss ? 'cell-negative-high' : 'cell-negative-low'}`;
+    }
+    return 'calendar-cell cell-zero';
   }
 
   return (
@@ -91,37 +116,29 @@ function CalendarHeatmap({ data }: { data: DayData[] }) {
             {row.map((d, i) => {
               const isPositive = d.pnl > 0;
               const isNegative = d.pnl < 0;
-              const hasValue = d.pnl !== 0;
 
               return (
-                <div
-                  key={i}
-                  className={`calendar-cell ${
-                    hasValue
-                      ? isPositive
-                        ? 'cell-positive'
-                        : 'cell-negative'
-                      : ''
-                  } ${!d.isCurrentMonth ? 'cell-dimmed' : ''}`}
-                >
+                <div key={i} className={getCellClass(d)}>
                   <span
                     className={`cell-day ${
-                      hasValue
-                        ? isPositive
-                          ? 'day-positive'
-                          : 'day-negative'
-                        : ''
+                      d.isCurrentMonth && isPositive
+                        ? 'day-positive'
+                        : d.isCurrentMonth && isNegative
+                          ? 'day-negative'
+                          : ''
                     }`}
                   >
                     {d.day}
                   </span>
-                  <span
-                    className={`cell-pnl ${
-                      isPositive ? 'pnl-positive' : isNegative ? 'pnl-negative' : 'pnl-zero'
-                    }`}
-                  >
-                    {formatPnl(d.pnl)}
-                  </span>
+                  {d.isCurrentMonth && (
+                    <span
+                      className={`cell-pnl ${
+                        isPositive ? 'pnl-positive' : isNegative ? 'pnl-negative' : 'pnl-zero'
+                      }`}
+                    >
+                      {formatPnl(d.pnl)}
+                    </span>
+                  )}
                 </div>
               );
             })}
