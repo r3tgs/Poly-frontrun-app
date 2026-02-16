@@ -156,12 +156,24 @@
   min-height: 76px;
 }
 
-.calendar-cell.cell-positive {
-  background-color: rgba(0, 104, 71, 0.35);
+.calendar-cell.cell-positive-low {
+  background-color: rgba(0, 104, 71, 0.10);
 }
 
-.calendar-cell.cell-negative {
-  background-color: rgba(255, 59, 48, 0.25);
+.calendar-cell.cell-positive-high {
+  background-color: rgba(0, 104, 71, 0.20);
+}
+
+.calendar-cell.cell-negative-low {
+  background-color: rgba(255, 59, 48, 0.10);
+}
+
+.calendar-cell.cell-negative-high {
+  background-color: rgba(255, 59, 48, 0.20);
+}
+
+.calendar-cell.cell-zero {
+  background-color: #16161A;
 }
 
 .calendar-cell.cell-dimmed {
