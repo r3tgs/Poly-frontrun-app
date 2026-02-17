@@ -7,17 +7,17 @@ import { PlatformToggles } from '../components/PlatformToggles';
 import { TeamButtons } from '../components/TeamButtons';
 import { ActivityLog } from '../components/ActivityLog';
 import { ConnectionBadge } from '../components/ConnectionBadge';
+import { BotUrlBar } from '../components/BotUrlBar';
 import { Colors } from '../constants/colors';
 import { mockGame, mockPlatformStatus } from '../mocks/gameData';
 import { useBotConnection } from '../hooks/useBotConnection';
 import type { LogEntry, PlatformStatus } from '../types';
 
-// Point this at your bot backend. When running on a physical device,
-// replace "localhost" with your computer's LAN IP (e.g. 192.168.1.42).
-const BOT_WS_URL = 'ws://localhost:8080';
+const DEFAULT_BOT_URL = 'ws://localhost:8080';
 
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
+  const [botUrl, setBotUrl] = useState(DEFAULT_BOT_URL);
   const [platformStatus, setPlatformStatus] =
     useState<PlatformStatus>(mockPlatformStatus);
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
@@ -27,7 +27,7 @@ export default function GameScreen() {
   }, []);
 
   const { status, sendSignal } = useBotConnection({
-    url: BOT_WS_URL,
+    url: botUrl,
     homeLabel: `${mockGame.homeTeam.city} ${mockGame.homeTeam.name}`,
     awayLabel: `${mockGame.awayTeam.city} ${mockGame.awayTeam.name}`,
     onLogEntry: addLogEntry,
@@ -73,6 +73,7 @@ export default function GameScreen() {
           <LiveBadge />
           <ConnectionBadge status={status} />
         </View>
+        <BotUrlBar onUrlChange={setBotUrl} />
         <Scoreboard game={mockGame} />
       </View>
 
