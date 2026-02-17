@@ -2,7 +2,6 @@ import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LiveBadge } from './components/LiveBadge';
 import { Scoreboard } from './components/Scoreboard';
 import { PlatformToggles } from './components/PlatformToggles';
 import { TeamButtons } from './components/TeamButtons';
@@ -28,7 +27,7 @@ function GameScreen() {
     setLogEntries((prev) => [entry, ...prev]);
   }, []);
 
-  const { status, sendSignal } = useBotConnection({
+  const { status, sendSignal, sendSell } = useBotConnection({
     url: botUrl,
     homeLabel: `${mockGame.homeTeam.city} ${mockGame.homeTeam.name}`,
     awayLabel: `${mockGame.awayTeam.city} ${mockGame.awayTeam.name}`,
@@ -71,13 +70,29 @@ function GameScreen() {
     [addLogEntry, sendSignal]
   );
 
+  const handleSellTeam = useCallback(
+    (teamId: string) => {
+      const isHome = teamId === mockGame.homeTeam.id;
+      const team = isHome ? mockGame.homeTeam : mockGame.awayTeam;
+
+      addLogEntry({
+        id: String(Date.now()),
+        timestamp: getTimestamp(),
+        message: `Sell '${team.city} ${team.name}'`,
+        type: 'info',
+      });
+
+      // Send sell signal to the bot backend (size=0 means sell all)
+      sendSell(isHome ? 'home' : 'away', 0);
+    },
+    [addLogEntry, sendSell]
+  );
+
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <StatusBar style="light" />
 
       <View style={styles.header}>
-        <LiveBadge />
-        {/* Big connection banner with IP input */}
         <ConnectionBanner status={status} onUrlChange={setBotUrl} />
         <Scoreboard game={mockGame} />
       </View>
@@ -93,6 +108,7 @@ function GameScreen() {
             homeTeam={mockGame.homeTeam}
             awayTeam={mockGame.awayTeam}
             onSelect={handleSelectTeam}
+            onSell={handleSellTeam}
           />
         </View>
 

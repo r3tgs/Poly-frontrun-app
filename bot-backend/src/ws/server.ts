@@ -199,17 +199,36 @@ async function handleMessage(
         return activeMarket;
       }
 
-      const { team, size, price } = message.data;
+      const { team, price } = message.data;
+      let sellSize = message.data.size;
       const tokenId =
         team === "home"
           ? activeMarket.homeTokenId
           : activeMarket.awayTokenId;
 
-      log.info(`SELL signal — team=${team}  token=${tokenId}`);
+      // size=0 means "sell all open contracts for this token"
+      if (!sellSize || sellSize <= 0) {
+        const snap = pnl.getSnapshot();
+        const pos = snap.positions.find((p) => p.tokenId === tokenId);
+        sellSize = pos ? pos.contracts : 0;
+        if (sellSize <= 0) {
+          send(ws, {
+            type: "error",
+            data: {
+              message: `No open position to sell for team=${team}`,
+              timestamp: Date.now(),
+            },
+          });
+          return activeMarket;
+        }
+        log.info(`SELL ALL — team=${team}  contracts=${sellSize}  token=${tokenId}`);
+      } else {
+        log.info(`SELL signal — team=${team}  size=${sellSize}  token=${tokenId}`);
+      }
 
       broadcast(wss, pendingUpdate("sell", team));
 
-      const result = await trading.executeSell(client, config, tokenId, size, price);
+      const result = await trading.executeSell(client, config, tokenId, sellSize, price);
 
       if (result.success && result.price && result.size) {
         pnl.recordSell(tokenId, result.size, result.price);

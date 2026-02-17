@@ -94,6 +94,7 @@ export default function GameScreen() {
             homeTeam={mockGame.homeTeam}
             awayTeam={mockGame.awayTeam}
             onSelect={handleSelectTeam}
+            onSell={() => {}}
           />
           <ActivityLog entries={logEntries} />
         </ScrollView>

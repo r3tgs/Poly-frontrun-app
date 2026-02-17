@@ -8,9 +8,10 @@ interface TeamButtonsProps {
   homeTeam: Team;
   awayTeam: Team;
   onSelect: (teamId: string) => void;
+  onSell: (teamId: string) => void;
 }
 
-const buttonStyles: Record<string, {
+const buyStyles: Record<string, {
   gradientColors: [string, string];
   borderColor: string;
 }> = {
@@ -24,24 +25,23 @@ const buttonStyles: Record<string, {
   },
 };
 
-function TeamButton({
+function BuyButton({
   team,
   onPress,
 }: {
   team: Team;
   onPress: () => void;
 }) {
-  const config = buttonStyles[team.id] ?? {
+  const config = buyStyles[team.id] ?? {
     gradientColors: [team.buttonColor, team.buttonColor] as [string, string],
     borderColor: team.buttonColor,
   };
 
   return (
     <Pressable
-      style={({ pressed }) => [pressed ? styles.buttonPressed : undefined]}
+      style={({ pressed }) => [styles.buyPressable, pressed ? styles.buttonPressed : undefined]}
       onPress={onPress}
     >
-      {/* Outer ring: box-shadow 0 0 0 2px #101010 */}
       <View style={styles.outerRing}>
         <LinearGradient
           colors={config.gradientColors}
@@ -58,12 +58,38 @@ function TeamButton({
   );
 }
 
-export function TeamButtons({ homeTeam, awayTeam, onSelect }: TeamButtonsProps) {
+function SellButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [pressed ? styles.buttonPressed : undefined]}
+      onPress={onPress}
+    >
+      <View style={styles.outerRing}>
+        <LinearGradient
+          colors={['#F63658', '#B71431']}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={[styles.button, styles.sellButton]}
+        >
+          <Text style={styles.sellText}>Sell</Text>
+        </LinearGradient>
+      </View>
+    </Pressable>
+  );
+}
+
+export function TeamButtons({ homeTeam, awayTeam, onSelect, onSell }: TeamButtonsProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Who scored?</Text>
-      <TeamButton team={homeTeam} onPress={() => onSelect(homeTeam.id)} />
-      <TeamButton team={awayTeam} onPress={() => onSelect(awayTeam.id)} />
+      <View style={styles.row}>
+        <BuyButton team={homeTeam} onPress={() => onSelect(homeTeam.id)} />
+        <SellButton onPress={() => onSell(homeTeam.id)} />
+      </View>
+      <View style={styles.row}>
+        <BuyButton team={awayTeam} onPress={() => onSelect(awayTeam.id)} />
+        <SellButton onPress={() => onSell(awayTeam.id)} />
+      </View>
     </View>
   );
 }
@@ -79,6 +105,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 2,
   },
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  buyPressable: {
+    flex: 1,
+  },
   outerRing: {
     borderRadius: 18,
     borderCurve: 'continuous',
@@ -93,12 +126,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  sellButton: {
+    borderColor: '#FF637F',
+    paddingHorizontal: 20,
+  },
   buttonPressed: {
     opacity: 0.8,
   },
   buttonText: {
     color: Colors.white,
     fontSize: 20,
+    fontWeight: '700',
+  },
+  sellText: {
+    color: Colors.white,
+    fontSize: 18,
     fontWeight: '700',
   },
 });
