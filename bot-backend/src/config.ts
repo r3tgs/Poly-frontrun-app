@@ -4,11 +4,14 @@ import path from "path";
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 export interface Config {
+  // Mode
+  testMode: boolean;
+
   // Polymarket CLOB
   clobApiUrl: string;
   chainId: number;
 
-  // Wallet
+  // Wallet (not required in test mode)
   privateKey: string;
 
   // API credentials (optional on first run — bot will generate them)
@@ -38,10 +41,14 @@ function optionalEnv(key: string): string | undefined {
 }
 
 export function loadConfig(): Config {
+  const testMode =
+    process.env.TEST_MODE === "true" || process.env.TEST_MODE === "1";
+
   return {
+    testMode,
     clobApiUrl: process.env.CLOB_API_URL || "https://clob.polymarket.com",
     chainId: parseInt(process.env.CHAIN_ID || "137", 10),
-    privateKey: requireEnv("PRIVATE_KEY"),
+    privateKey: testMode ? (process.env.PRIVATE_KEY || "0x_TEST_KEY") : requireEnv("PRIVATE_KEY"),
     apiKey: optionalEnv("CLOB_API_KEY"),
     apiSecret: optionalEnv("CLOB_API_SECRET"),
     apiPassphrase: optionalEnv("CLOB_API_PASSPHRASE"),

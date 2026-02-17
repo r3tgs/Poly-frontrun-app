@@ -1,7 +1,7 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { Config } from "../config";
-import { PolymarketClient } from "../polymarket/client";
-import { executeBuy, executeSell } from "../polymarket/trading";
+import { TradeResult } from "../polymarket/trading";
+import { PnLTracker } from "../pnl";
 import {
   AppMessage,
   BotMessage,
@@ -13,12 +13,35 @@ import { createLogger } from "../logger";
 const log = createLogger("WS");
 
 // ============================================================
+// Trading backend interface (real or simulated)
+// ============================================================
+
+export interface TradingBackend {
+  executeBuy(
+    client: any,
+    config: Config,
+    tokenId: string,
+    usdcAmount?: number,
+  ): Promise<TradeResult>;
+  executeSell(
+    client: any,
+    config: Config,
+    tokenId: string,
+    size: number,
+    price?: number,
+  ): Promise<TradeResult>;
+}
+
+// ============================================================
 // Public API
 // ============================================================
 
 export function startWebSocketServer(
   config: Config,
-  client: PolymarketClient,
+  client: any,
+  walletAddress: string,
+  trading: TradingBackend,
+  pnl: PnLTracker,
 ): WebSocketServer {
   const wss = new WebSocketServer({ port: config.wsPort });
 
@@ -33,8 +56,9 @@ export function startWebSocketServer(
       type: "status",
       data: {
         connected: true,
-        walletAddress: client.address,
+        walletAddress,
         market: activeMarket,
+        testMode: config.testMode,
         timestamp: Date.now(),
       },
     });
@@ -58,7 +82,10 @@ export function startWebSocketServer(
           message,
           config,
           client,
+          walletAddress,
           activeMarket,
+          trading,
+          pnl,
         );
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -90,8 +117,11 @@ async function handleMessage(
   wss: WebSocketServer,
   message: AppMessage,
   config: Config,
-  client: PolymarketClient,
+  client: any,
+  walletAddress: string,
   activeMarket: MarketConfig | null,
+  trading: TradingBackend,
+  pnl: PnLTracker,
 ): Promise<MarketConfig | null> {
   switch (message.type) {
     // ----------------------------------------------------------
@@ -130,7 +160,11 @@ async function handleMessage(
       // Notify all clients the order is in-flight.
       broadcast(wss, pendingUpdate("buy", team));
 
-      const result = await executeBuy(client, config, tokenId, size);
+      const result = await trading.executeBuy(client, config, tokenId, size);
+
+      if (result.success && result.price && result.size) {
+        pnl.recordBuy(tokenId, team, result.size, result.price);
+      }
 
       const update: TradeUpdateMessage = {
         type: "trade_update",
@@ -175,7 +209,11 @@ async function handleMessage(
 
       broadcast(wss, pendingUpdate("sell", team));
 
-      const result = await executeSell(client, config, tokenId, size, price);
+      const result = await trading.executeSell(client, config, tokenId, size, price);
+
+      if (result.success && result.price && result.size) {
+        pnl.recordSell(tokenId, result.size, result.price);
+      }
 
       const sellUpdate: TradeUpdateMessage = {
         type: "trade_update",
@@ -196,6 +234,27 @@ async function handleMessage(
     }
 
     // ----------------------------------------------------------
+    // P&L Summary
+    // ----------------------------------------------------------
+    case "pnl": {
+      const snap = pnl.getSnapshot();
+      pnl.printSummary();
+      send(ws, {
+        type: "pnl",
+        data: {
+          totalSpent: snap.totalSpent,
+          totalReceived: snap.totalReceived,
+          realizedPnl: snap.realizedPnl,
+          unrealizedPnl: snap.unrealizedPnl,
+          openPositions: snap.positions.length,
+          tradeCount: snap.tradeCount,
+          timestamp: Date.now(),
+        },
+      });
+      return activeMarket;
+    }
+
+    // ----------------------------------------------------------
     // Status
     // ----------------------------------------------------------
     case "status": {
@@ -203,8 +262,9 @@ async function handleMessage(
         type: "status",
         data: {
           connected: true,
-          walletAddress: client.address,
+          walletAddress,
           market: activeMarket,
+          testMode: config.testMode,
           timestamp: Date.now(),
         },
       });

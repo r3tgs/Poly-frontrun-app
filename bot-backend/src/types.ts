@@ -22,7 +22,8 @@ export type AppMessage =
   | ConfigureMarketMessage
   | BuySignalMessage
   | SellMessage
-  | StatusRequestMessage;
+  | StatusRequestMessage
+  | PnlRequestMessage;
 
 /** Set the active market before sending trade signals. */
 export interface ConfigureMarketMessage {
@@ -57,6 +58,11 @@ export interface StatusRequestMessage {
   type: "status";
 }
 
+/** Request current P&L summary (test mode). */
+export interface PnlRequestMessage {
+  type: "pnl";
+}
+
 // ============================================================
 // WebSocket Messages — Bot → App
 // ============================================================
@@ -65,7 +71,8 @@ export type BotMessage =
   | StatusMessage
   | TradeUpdateMessage
   | ErrorMessage
-  | MarketConfiguredMessage;
+  | MarketConfiguredMessage
+  | PnlMessage;
 
 export interface StatusMessage {
   type: "status";
@@ -73,6 +80,7 @@ export interface StatusMessage {
     connected: boolean;
     walletAddress: string;
     market: MarketConfig | null;
+    testMode: boolean;
     timestamp: number;
   };
 }
@@ -105,4 +113,17 @@ export interface ErrorMessage {
 export interface MarketConfiguredMessage {
   type: "market_configured";
   data: MarketConfig;
+}
+
+export interface PnlMessage {
+  type: "pnl";
+  data: {
+    totalSpent: number;
+    totalReceived: number;
+    realizedPnl: number;
+    unrealizedPnl: number;
+    openPositions: number;
+    tradeCount: number;
+    timestamp: number;
+  };
 }
