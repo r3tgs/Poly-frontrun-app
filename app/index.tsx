@@ -6,33 +6,48 @@ import { Scoreboard } from '../components/Scoreboard';
 import { PlatformToggles } from '../components/PlatformToggles';
 import { TeamButtons } from '../components/TeamButtons';
 import { ActivityLog } from '../components/ActivityLog';
+import { ConnectionBadge } from '../components/ConnectionBadge';
 import { Colors } from '../constants/colors';
-import { mockGame, mockLogEntries, mockPlatformStatus } from '../mocks/gameData';
-import { selectTeam, togglePlatform } from '../api';
+import { mockGame, mockPlatformStatus } from '../mocks/gameData';
+import { useBotConnection } from '../hooks/useBotConnection';
 import type { LogEntry, PlatformStatus } from '../types';
+
+// Point this at your bot backend. When running on a physical device,
+// replace "localhost" with your computer's LAN IP (e.g. 192.168.1.42).
+const BOT_WS_URL = 'ws://localhost:8080';
 
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
   const [platformStatus, setPlatformStatus] =
     useState<PlatformStatus>(mockPlatformStatus);
-  const [logEntries, setLogEntries] = useState<LogEntry[]>(mockLogEntries);
+  const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
+
+  const addLogEntry = useCallback((entry: LogEntry) => {
+    setLogEntries((prev) => [entry, ...prev]);
+  }, []);
+
+  const { status, sendSignal } = useBotConnection({
+    url: BOT_WS_URL,
+    homeLabel: `${mockGame.homeTeam.city} ${mockGame.homeTeam.name}`,
+    awayLabel: `${mockGame.awayTeam.city} ${mockGame.awayTeam.name}`,
+    onLogEntry: addLogEntry,
+  });
 
   const handleTogglePlatform = useCallback(
     (platform: 'poly' | 'kalshi') => {
       const newValue = !platformStatus[platform];
       setPlatformStatus((prev) => ({ ...prev, [platform]: newValue }));
-      togglePlatform(platform, newValue);
     },
-    [platformStatus]
+    [platformStatus],
   );
 
   const handleSelectTeam = useCallback(
     (teamId: string) => {
-      const team = teamId === mockGame.homeTeam.id
-        ? mockGame.homeTeam
-        : mockGame.awayTeam;
+      const isHome = teamId === mockGame.homeTeam.id;
+      const team = isHome ? mockGame.homeTeam : mockGame.awayTeam;
 
-      const newEntry: LogEntry = {
+      // Local log: "User selected X"
+      addLogEntry({
         id: String(Date.now()),
         timestamp: new Date().toLocaleTimeString('en-US', {
           hour12: false,
@@ -42,19 +57,22 @@ export default function GameScreen() {
         }),
         message: `User selected '${team.city} ${team.name}'`,
         type: 'info',
-      };
+      });
 
-      setLogEntries((prev) => [newEntry, ...prev]);
-      selectTeam(teamId);
+      // Send buy signal to the bot
+      sendSignal(isHome ? 'home' : 'away');
     },
-    []
+    [addLogEntry, sendSignal],
   );
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* Header: Live badge + Scoreboard */}
+      {/* Header: Live badge + connection status + Scoreboard */}
       <View style={styles.header}>
-        <LiveBadge />
+        <View style={styles.badges}>
+          <LiveBadge />
+          <ConnectionBadge status={status} />
+        </View>
         <Scoreboard game={mockGame} />
       </View>
 
@@ -92,6 +110,11 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 8,
     paddingBottom: 12,
+    gap: 8,
+  },
+  badges: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     gap: 8,
   },
   card: {
