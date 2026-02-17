@@ -56,13 +56,16 @@ export function useBotConnection({
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [testMode, setTestMode] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+
+  // Keep callback ref fresh without triggering effect re-runs
   const onLogEntryRef = useRef(onLogEntry);
   onLogEntryRef.current = onLogEntry;
-
-  const teamLabel = useCallback(
-    (team: 'home' | 'away') => (team === 'home' ? homeLabel : awayLabel),
-    [homeLabel, awayLabel],
-  );
+  const homeLabelRef = useRef(homeLabel);
+  homeLabelRef.current = homeLabel;
+  const awayLabelRef = useRef(awayLabel);
+  awayLabelRef.current = awayLabel;
 
   // ---- helpers ----
 
@@ -83,6 +86,12 @@ export function useBotConnection({
         type,
       });
     },
+    [],
+  );
+
+  const teamLabel = useCallback(
+    (team: 'home' | 'away') =>
+      team === 'home' ? homeLabelRef.current : awayLabelRef.current,
     [],
   );
 
@@ -143,15 +152,19 @@ export function useBotConnection({
     [pushLog, teamLabel],
   );
 
-  // ---- connect / disconnect ----
+  // ---- connect / disconnect with auto-reconnect ----
 
-  useEffect(() => {
+  const connect = useCallback(() => {
+    if (!mountedRef.current) return;
+
     setStatus('connecting');
+    pushLog(`Connecting to ${url}...`, 'info');
 
     const ws = new WebSocket(url);
     wsRef.current = ws;
 
     ws.onopen = () => {
+      if (!mountedRef.current) { ws.close(); return; }
       setStatus('connected');
 
       // Auto-configure a test market so signals work immediately.
@@ -162,7 +175,7 @@ export function useBotConnection({
             conditionId: 'test-condition',
             homeTokenId: 'test-home-token',
             awayTokenId: 'test-away-token',
-            description: `${homeLabel} vs ${awayLabel}`,
+            description: `${homeLabelRef.current} vs ${awayLabelRef.current}`,
           },
         }),
       );
@@ -170,46 +183,71 @@ export function useBotConnection({
 
     ws.onmessage = (event) => {
       try {
-        const msg: BotMessage = JSON.parse(
-          typeof event.data === 'string' ? event.data : '',
-        );
+        const raw = typeof event.data === 'string'
+          ? event.data
+          : String(event.data);
+        const msg: BotMessage = JSON.parse(raw);
         handleBotMessage(msg);
-      } catch {
-        // ignore non-JSON messages
+      } catch (e) {
+        console.warn('[useBotConnection] Failed to parse message:', e);
       }
     };
 
     ws.onclose = () => {
+      if (!mountedRef.current) return;
       setStatus('disconnected');
+      pushLog('Disconnected from bot — retrying in 3s...', 'info');
+      reconnectTimer.current = setTimeout(connect, 3000);
     };
 
-    ws.onerror = () => {
-      setStatus('disconnected');
+    ws.onerror = (e) => {
+      console.warn('[useBotConnection] WebSocket error:', e);
+      // onclose will fire after this, which handles reconnect
     };
+  }, [url, handleBotMessage, pushLog]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    connect();
 
     return () => {
-      ws.close();
+      mountedRef.current = false;
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+      wsRef.current?.close();
       wsRef.current = null;
     };
-  }, [url, homeLabel, awayLabel, handleBotMessage]);
+  }, [connect]);
 
   // ---- public API ----
 
   /** Send a buy signal. `team` should be 'home' or 'away'. */
-  const sendSignal = useCallback((team: 'home' | 'away') => {
-    const ws = wsRef.current;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'signal', data: { team } }));
-    }
-  }, []);
+  const sendSignal = useCallback(
+    (team: 'home' | 'away') => {
+      const ws = wsRef.current;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        const payload = JSON.stringify({ type: 'signal', data: { team } });
+        ws.send(payload);
+        pushLog('Sent to bot', 'info');
+      } else {
+        pushLog('Not connected to bot — signal not sent', 'info');
+      }
+    },
+    [pushLog],
+  );
 
   /** Send a sell signal. */
-  const sendSell = useCallback((team: 'home' | 'away', size: number) => {
-    const ws = wsRef.current;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'sell', data: { team, size } }));
-    }
-  }, []);
+  const sendSell = useCallback(
+    (team: 'home' | 'away', size: number) => {
+      const ws = wsRef.current;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'sell', data: { team, size } }));
+        pushLog('Sell sent to bot', 'info');
+      } else {
+        pushLog('Not connected to bot — sell not sent', 'info');
+      }
+    },
+    [pushLog],
+  );
 
   /** Request P&L summary from the bot. */
   const requestPnl = useCallback(() => {
