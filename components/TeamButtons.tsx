@@ -61,10 +61,10 @@ function BuyButton({
 function SellButton({ onPress }: { onPress: () => void }) {
   return (
     <Pressable
-      style={({ pressed }) => [pressed ? styles.buttonPressed : undefined]}
+      style={({ pressed }) => [styles.sellPressable, pressed ? styles.buttonPressed : undefined]}
       onPress={onPress}
     >
-      <View style={styles.outerRing}>
+      <View style={[styles.outerRing, styles.sellOuter]}>
         <LinearGradient
           colors={['#F63658', '#B71431']}
           start={{ x: 0.5, y: 0 }}
@@ -112,11 +112,18 @@ const styles = StyleSheet.create({
   buyPressable: {
     flex: 1,
   },
+  sellPressable: {
+    aspectRatio: 1,
+    alignSelf: 'stretch',
+  },
   outerRing: {
     borderRadius: 18,
     borderCurve: 'continuous',
     padding: 2,
     backgroundColor: '#101010',
+  },
+  sellOuter: {
+    flex: 1,
   },
   button: {
     paddingVertical: 25,
@@ -127,8 +134,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sellButton: {
+    flex: 1,
+    paddingVertical: 0,
     borderColor: '#FF637F',
-    paddingHorizontal: 20,
   },
   buttonPressed: {
     opacity: 0.8,
