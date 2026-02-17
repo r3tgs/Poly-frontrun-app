@@ -71,7 +71,7 @@ function SellButton({ onPress }: { onPress: () => void }) {
           end={{ x: 0.5, y: 1 }}
           style={[styles.button, styles.sellButton]}
         >
-          <Text style={styles.sellText}>Sell</Text>
+          <Text style={styles.sellText}>SELL</Text>
         </LinearGradient>
       </View>
     </Pressable>
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
   sellText: {
     color: Colors.white,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
   },
 });
