@@ -57,7 +57,6 @@ export function useBotConnection({
   const [testMode, setTestMode] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mountedRef = useRef(true);
 
   // Keep callback ref fresh without triggering effect re-runs
   const onLogEntryRef = useRef(onLogEntry);
@@ -66,6 +65,9 @@ export function useBotConnection({
   homeLabelRef.current = homeLabel;
   const awayLabelRef = useRef(awayLabel);
   awayLabelRef.current = awayLabel;
+  // Keep the current URL in a ref so the reconnect closure always uses the latest
+  const urlRef = useRef(url);
+  urlRef.current = url;
 
   // ---- helpers ----
 
@@ -154,17 +156,34 @@ export function useBotConnection({
 
   // ---- connect / disconnect with auto-reconnect ----
 
-  const connect = useCallback(() => {
-    if (!mountedRef.current) return;
+  // Use a stable connect function that reads the URL from the ref.
+  // This prevents stale closures in onclose from reconnecting to old URLs.
+  const connectRef = useRef<() => void>(() => {});
 
+  connectRef.current = () => {
+    // Clean up any existing connection first
+    if (reconnectTimer.current) {
+      clearTimeout(reconnectTimer.current);
+      reconnectTimer.current = null;
+    }
+    if (wsRef.current) {
+      wsRef.current.onclose = null; // prevent old onclose from firing
+      wsRef.current.onerror = null;
+      wsRef.current.onmessage = null;
+      wsRef.current.onopen = null;
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    const currentUrl = urlRef.current;
     setStatus('connecting');
-    pushLog(`Connecting to ${url}...`, 'info');
+    pushLog(`Connecting to ${currentUrl}...`, 'info');
 
-    const ws = new WebSocket(url);
+    const ws = new WebSocket(currentUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
-      if (!mountedRef.current) { ws.close(); return; }
+      if (wsRef.current !== ws) { ws.close(); return; }
       setStatus('connected');
 
       // Auto-configure a test market so signals work immediately.
@@ -194,29 +213,35 @@ export function useBotConnection({
     };
 
     ws.onclose = () => {
-      if (!mountedRef.current) return;
+      // Only handle if this is still the active socket
+      if (wsRef.current !== ws) return;
       setStatus('disconnected');
-      pushLog('Disconnected from bot — retrying in 3s...', 'info');
-      reconnectTimer.current = setTimeout(connect, 3000);
+      pushLog('Disconnected — retrying in 3s...', 'info');
+      reconnectTimer.current = setTimeout(() => connectRef.current(), 3000);
     };
 
-    ws.onerror = (e) => {
-      console.warn('[useBotConnection] WebSocket error:', e);
+    ws.onerror = () => {
       // onclose will fire after this, which handles reconnect
     };
-  }, [url, handleBotMessage, pushLog]);
+  };
 
+  // Connect on mount + reconnect whenever URL changes
   useEffect(() => {
-    mountedRef.current = true;
-    connect();
+    connectRef.current();
 
     return () => {
-      mountedRef.current = false;
-      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
-      wsRef.current?.close();
-      wsRef.current = null;
+      if (reconnectTimer.current) {
+        clearTimeout(reconnectTimer.current);
+        reconnectTimer.current = null;
+      }
+      if (wsRef.current) {
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
+        wsRef.current.close();
+        wsRef.current = null;
+      }
     };
-  }, [connect]);
+  }, [url]);
 
   // ---- public API ----
 

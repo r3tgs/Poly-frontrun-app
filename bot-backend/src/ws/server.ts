@@ -43,7 +43,7 @@ export function startWebSocketServer(
   trading: TradingBackend,
   pnl: PnLTracker,
 ): WebSocketServer {
-  const wss = new WebSocketServer({ port: config.wsPort });
+  const wss = new WebSocketServer({ host: "0.0.0.0", port: config.wsPort });
 
   // Shared mutable state — the currently active market.
   let activeMarket: MarketConfig | null = null;

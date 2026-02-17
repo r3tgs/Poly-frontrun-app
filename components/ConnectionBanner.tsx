@@ -93,7 +93,7 @@ export function ConnectionBanner({ status, onUrlChange }: ConnectionBannerProps)
           onChangeText={setIp}
           placeholder="192.168.1.42"
           placeholderTextColor="#666"
-          keyboardType="numeric"
+          keyboardType="decimal-pad"
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="done"
