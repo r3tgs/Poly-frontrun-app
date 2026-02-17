@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,20 +7,33 @@ import { Scoreboard } from './components/Scoreboard';
 import { PlatformToggles } from './components/PlatformToggles';
 import { TeamButtons } from './components/TeamButtons';
 import { ActivityLog } from './components/ActivityLog';
+import { ConnectionBanner } from './components/ConnectionBanner';
 import { Colors } from './constants/colors';
-import { mockGame, mockLogEntries, mockPlatformStatus } from './mocks/gameData';
-import { selectTeam, togglePlatform } from './api';
-import type { GameState, LogEntry, PlatformStatus } from './types';
+import { mockGame, mockPlatformStatus } from './mocks/gameData';
+import { useBotConnection } from './hooks/useBotConnection';
+import { togglePlatform } from './api';
+import type { LogEntry, PlatformStatus } from './types';
 
 const CARD_PADDING = 20;
+const DEFAULT_BOT_URL = 'ws://localhost:8080';
 
 function GameScreen() {
   const insets = useSafeAreaInsets();
-  const [game, setGame] = useState<GameState>(mockGame);
+  const [botUrl, setBotUrl] = useState(DEFAULT_BOT_URL);
   const [platformStatus, setPlatformStatus] =
     useState<PlatformStatus>(mockPlatformStatus);
-  const [logEntries, setLogEntries] = useState<LogEntry[]>(mockLogEntries);
-  const pendingTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
+
+  const addLogEntry = useCallback((entry: LogEntry) => {
+    setLogEntries((prev) => [entry, ...prev]);
+  }, []);
+
+  const { status, sendSignal } = useBotConnection({
+    url: botUrl,
+    homeLabel: `${mockGame.homeTeam.city} ${mockGame.homeTeam.name}`,
+    awayLabel: `${mockGame.awayTeam.city} ${mockGame.awayTeam.name}`,
+    onLogEntry: addLogEntry,
+  });
 
   const handleTogglePlatform = useCallback(
     (platform: 'poly' | 'kalshi') => {
@@ -39,57 +52,23 @@ function GameScreen() {
       second: '2-digit',
     });
 
-  const addLog = (message: string, type: LogEntry['type']) => {
-    setLogEntries((prev) => [
-      { id: String(Date.now() + Math.random()), timestamp: getTimestamp(), message, type },
-      ...prev,
-    ]);
-  };
-
   const handleSelectTeam = useCallback(
     (teamId: string) => {
-      const isHome = teamId === game.homeTeam.id;
-      const team = isHome ? game.homeTeam : game.awayTeam;
-      const buyPrice = (Math.random() * 0.3 + 0.3).toFixed(2);
-      const sellPrice = (parseFloat(buyPrice) + Math.random() * 0.2 + 0.1).toFixed(2);
-      const contracts = Math.floor(Math.random() * 150 + 50);
+      const isHome = teamId === mockGame.homeTeam.id;
+      const team = isHome ? mockGame.homeTeam : mockGame.awayTeam;
 
-      // Clear any pending timers from previous rapid presses
-      pendingTimers.current.forEach(clearTimeout);
-      pendingTimers.current = [];
+      // Local log: "User selected X"
+      addLogEntry({
+        id: String(Date.now()),
+        timestamp: getTimestamp(),
+        message: `User selected '${team.city} ${team.name}'`,
+        type: 'info',
+      });
 
-      // Step 1: User selected (immediate)
-      addLog(`User selected '${team.city} ${team.name}'`, 'info');
-      selectTeam(teamId);
-
-      // Step 2: Sent to bot (~400ms)
-      pendingTimers.current.push(
-        setTimeout(() => addLog('Sent to bot', 'info'), 400)
-      );
-
-      // Step 3: Bought contracts (~1200ms)
-      pendingTimers.current.push(
-        setTimeout(() => addLog(`Bought ${contracts} contracts @ ${buyPrice}`, 'trade'), 1200)
-      );
-
-      // Step 4: Score update (~2000ms) — increment the score
-      pendingTimers.current.push(
-        setTimeout(() => {
-          setGame((prev) => {
-            const newHome = isHome ? prev.homeScore + 1 : prev.homeScore;
-            const newAway = isHome ? prev.awayScore : prev.awayScore + 1;
-            addLog(`Poly updated score to ${newHome}-${newAway}`, 'info');
-            return { ...prev, homeScore: newHome, awayScore: newAway };
-          });
-        }, 2000)
-      );
-
-      // Step 5: Sold contracts (~2800ms)
-      pendingTimers.current.push(
-        setTimeout(() => addLog(`Sold ${contracts} contracts @ ${sellPrice}`, 'sell'), 2800)
-      );
+      // Send buy signal to the bot backend
+      sendSignal(isHome ? 'home' : 'away');
     },
-    [game]
+    [addLogEntry, sendSignal]
   );
 
   return (
@@ -98,7 +77,9 @@ function GameScreen() {
 
       <View style={styles.header}>
         <LiveBadge />
-        <Scoreboard game={game} />
+        {/* Big connection banner with IP input */}
+        <ConnectionBanner status={status} onUrlChange={setBotUrl} />
+        <Scoreboard game={mockGame} />
       </View>
 
       <View style={styles.card}>
@@ -109,8 +90,8 @@ function GameScreen() {
             onToggle={handleTogglePlatform}
           />
           <TeamButtons
-            homeTeam={game.homeTeam}
-            awayTeam={game.awayTeam}
+            homeTeam={mockGame.homeTeam}
+            awayTeam={mockGame.awayTeam}
             onSelect={handleSelectTeam}
           />
         </View>
