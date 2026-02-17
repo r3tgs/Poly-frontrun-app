@@ -6,8 +6,7 @@ import { Scoreboard } from '../components/Scoreboard';
 import { PlatformToggles } from '../components/PlatformToggles';
 import { TeamButtons } from '../components/TeamButtons';
 import { ActivityLog } from '../components/ActivityLog';
-import { ConnectionBadge } from '../components/ConnectionBadge';
-import { BotUrlBar } from '../components/BotUrlBar';
+import { ConnectionBanner } from '../components/ConnectionBanner';
 import { Colors } from '../constants/colors';
 import { mockGame, mockPlatformStatus } from '../mocks/gameData';
 import { useBotConnection } from '../hooks/useBotConnection';
@@ -67,13 +66,13 @@ export default function GameScreen() {
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* Header: Live badge + connection status + Scoreboard */}
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.badges}>
           <LiveBadge />
-          <ConnectionBadge status={status} />
         </View>
-        <BotUrlBar onUrlChange={setBotUrl} />
+        {/* Big connection banner with IP input */}
+        <ConnectionBanner status={status} onUrlChange={setBotUrl} />
         <Scoreboard game={mockGame} />
       </View>
 
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 8,
     paddingBottom: 12,
-    gap: 8,
+    gap: 10,
   },
   badges: {
     flexDirection: 'row',
