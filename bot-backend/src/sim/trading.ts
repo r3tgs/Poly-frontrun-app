@@ -57,15 +57,6 @@ export async function executeBuy(
 
   const price = getSimPrice(tokenId);
 
-  if (price > config.maxPrice) {
-    log.warn(`[SIM] Price ${price.toFixed(4)} exceeds max ${config.maxPrice}`);
-    return {
-      success: false,
-      error: `Simulated price ${price.toFixed(4)} exceeds max price ${config.maxPrice}`,
-      latencyMs: Date.now() - t0,
-    };
-  }
-
   const contracts = Math.floor(amount / price);
   if (contracts <= 0) {
     return {

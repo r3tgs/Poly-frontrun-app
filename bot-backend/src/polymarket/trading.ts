@@ -104,13 +104,6 @@ async function executeLimitBuy(
     const bestAsk = parseFloat(book.asks[0].price);
     log.info(`Best ask: ${bestAsk}`);
 
-    if (bestAsk > config.maxPrice) {
-      return fail(
-        `Best ask ${bestAsk} exceeds max price ${config.maxPrice}`,
-        t0,
-      );
-    }
-
     const numContracts = Math.floor(usdcAmount / bestAsk);
     if (numContracts <= 0) {
       return fail(

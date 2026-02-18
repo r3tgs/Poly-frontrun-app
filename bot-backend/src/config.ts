@@ -24,7 +24,6 @@ export interface Config {
 
   // Trading defaults
   defaultBuySize: number; // USDC amount per buy signal
-  maxPrice: number; // Max price per contract (0–1 range)
 }
 
 function requireEnv(key: string): string {
@@ -54,6 +53,5 @@ export function loadConfig(): Config {
     apiPassphrase: optionalEnv("CLOB_API_PASSPHRASE"),
     wsPort: parseInt(process.env.WS_PORT || "8080", 10),
     defaultBuySize: parseFloat(process.env.DEFAULT_BUY_SIZE || "50"),
-    maxPrice: parseFloat(process.env.MAX_PRICE || "0.95"),
   };
 }
