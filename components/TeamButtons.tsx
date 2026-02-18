@@ -23,6 +23,14 @@ const buyStyles: Record<string, {
     gradientColors: ['#0D4BC4', '#0038A7'],
     borderColor: '#2967E4',
   },
+  yes: {
+    gradientColors: ['#09805A', '#006847'],
+    borderColor: '#0DA36F',
+  },
+  no: {
+    gradientColors: ['#C62828', '#B71C1C'],
+    borderColor: '#E53935',
+  },
 };
 
 function BuyButton({
@@ -50,7 +58,7 @@ function BuyButton({
           style={[styles.button, { borderColor: config.borderColor }]}
         >
           <Text style={styles.buttonText}>
-            {team.city} {team.name}
+            {team.city ? `${team.city} ${team.name}` : team.name}
           </Text>
         </LinearGradient>
       </View>
@@ -81,7 +89,7 @@ function SellButton({ onPress }: { onPress: () => void }) {
 export function TeamButtons({ homeTeam, awayTeam, onSelect, onSell }: TeamButtonsProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Who scored?</Text>
+      <Text style={styles.heading}>Buy outcome</Text>
       <View style={styles.row}>
         <BuyButton team={homeTeam} onPress={() => onSelect(homeTeam.id)} />
         <SellButton onPress={() => onSell(homeTeam.id)} />

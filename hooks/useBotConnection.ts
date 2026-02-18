@@ -35,6 +35,13 @@ type BotMessage =
 
 // ---------- Hook options ----------
 
+interface MarketTokenConfig {
+  conditionId: string;
+  homeTokenId: string;
+  awayTokenId: string;
+  description: string;
+}
+
 interface UseBotConnectionOptions {
   /** ws:// or wss:// URL of the bot backend. */
   url: string;
@@ -43,6 +50,8 @@ interface UseBotConnectionOptions {
   awayLabel: string;
   /** Called whenever a new log entry arrives from the bot. */
   onLogEntry: (entry: LogEntry) => void;
+  /** Real market token config. If omitted, sends test tokens. */
+  marketConfig?: MarketTokenConfig;
 }
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
@@ -52,6 +61,7 @@ export function useBotConnection({
   homeLabel,
   awayLabel,
   onLogEntry,
+  marketConfig,
 }: UseBotConnectionOptions) {
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [testMode, setTestMode] = useState(false);
@@ -186,16 +196,17 @@ export function useBotConnection({
       if (wsRef.current !== ws) { ws.close(); return; }
       setStatus('connected');
 
-      // Auto-configure a test market so signals work immediately.
+      // Configure market so signals work immediately.
+      const config = marketConfig ?? {
+        conditionId: 'test-condition',
+        homeTokenId: 'test-home-token',
+        awayTokenId: 'test-away-token',
+        description: `${homeLabelRef.current} vs ${awayLabelRef.current}`,
+      };
       ws.send(
         JSON.stringify({
           type: 'configure_market',
-          data: {
-            conditionId: 'test-condition',
-            homeTokenId: 'test-home-token',
-            awayTokenId: 'test-away-token',
-            description: `${homeLabelRef.current} vs ${awayLabelRef.current}`,
-          },
+          data: config,
         }),
       );
     };

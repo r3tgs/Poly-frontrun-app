@@ -8,7 +8,8 @@ import { TeamButtons } from '../components/TeamButtons';
 import { ActivityLog } from '../components/ActivityLog';
 import { ConnectionBanner } from '../components/ConnectionBanner';
 import { Colors } from '../constants/colors';
-import { mockGame, mockPlatformStatus } from '../mocks/gameData';
+import { mockGame, mockPlatformStatus, MARKET_QUESTION } from '../mocks/gameData';
+import { MARKET_CONFIG } from '../constants/market';
 import { useBotConnection } from '../hooks/useBotConnection';
 import type { LogEntry, PlatformStatus } from '../types';
 
@@ -25,11 +26,12 @@ export default function GameScreen() {
     setLogEntries((prev) => [entry, ...prev]);
   }, []);
 
-  const { status, sendSignal } = useBotConnection({
+  const { status, sendSignal, sendSell } = useBotConnection({
     url: botUrl,
-    homeLabel: `${mockGame.homeTeam.city} ${mockGame.homeTeam.name}`,
-    awayLabel: `${mockGame.awayTeam.city} ${mockGame.awayTeam.name}`,
+    homeLabel: mockGame.homeTeam.name,
+    awayLabel: mockGame.awayTeam.name,
     onLogEntry: addLogEntry,
+    marketConfig: MARKET_CONFIG,
   });
 
   const handleTogglePlatform = useCallback(
@@ -54,7 +56,7 @@ export default function GameScreen() {
           minute: '2-digit',
           second: '2-digit',
         }),
-        message: `User selected '${team.city} ${team.name}'`,
+        message: `User selected '${team.name}'`,
         type: 'info',
       });
 
@@ -73,7 +75,7 @@ export default function GameScreen() {
         </View>
         {/* Big connection banner with IP input */}
         <ConnectionBanner status={status} onUrlChange={setBotUrl} />
-        <Scoreboard game={mockGame} />
+        <Scoreboard game={mockGame} marketQuestion={MARKET_QUESTION} />
       </View>
 
       {/* Bottom card */}
@@ -94,7 +96,10 @@ export default function GameScreen() {
             homeTeam={mockGame.homeTeam}
             awayTeam={mockGame.awayTeam}
             onSelect={handleSelectTeam}
-            onSell={() => {}}
+            onSell={(teamId) => {
+              const isHome = teamId === mockGame.homeTeam.id;
+              sendSell(isHome ? 'home' : 'away', 0);
+            }}
           />
           <ActivityLog entries={logEntries} />
         </ScrollView>
