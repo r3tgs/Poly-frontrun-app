@@ -23,7 +23,7 @@ export const mockGame: GameState = {
   isLive: true,
 };
 
-export const MARKET_QUESTION = 'Will the US confirm that aliens exist before 2027?';
+export const MARKET_QUESTION = 'US/Israel strikes Iran by Feb 28, 2026?';
 
 export const mockPlatformStatus: PlatformStatus = {
   poly: true,
