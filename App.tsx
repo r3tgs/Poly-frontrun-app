@@ -8,17 +8,17 @@ import { TeamButtons } from './components/TeamButtons';
 import { ActivityLog } from './components/ActivityLog';
 import { ConnectionBanner } from './components/ConnectionBanner';
 import { Colors } from './constants/colors';
+import { BOT_WS_URL } from './constants/config';
 import { mockGame, mockPlatformStatus } from './mocks/gameData';
 import { useBotConnection } from './hooks/useBotConnection';
+import { MARKET_CONFIG } from './constants/market';
 import { togglePlatform } from './api';
 import type { LogEntry, PlatformStatus } from './types';
 
 const CARD_PADDING = 20;
-const DEFAULT_BOT_URL = 'ws://localhost:8080';
 
 function GameScreen() {
   const insets = useSafeAreaInsets();
-  const [botUrl, setBotUrl] = useState(DEFAULT_BOT_URL);
   const [platformStatus, setPlatformStatus] =
     useState<PlatformStatus>(mockPlatformStatus);
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
@@ -28,10 +28,11 @@ function GameScreen() {
   }, []);
 
   const { status, sendSignal, sendSell } = useBotConnection({
-    url: botUrl,
+    url: BOT_WS_URL,
     homeLabel: `${mockGame.homeTeam.city} ${mockGame.homeTeam.name}`,
     awayLabel: `${mockGame.awayTeam.city} ${mockGame.awayTeam.name}`,
     onLogEntry: addLogEntry,
+    marketConfig: MARKET_CONFIG,
   });
 
   const handleTogglePlatform = useCallback(
@@ -56,7 +57,6 @@ function GameScreen() {
       const isHome = teamId === mockGame.homeTeam.id;
       const team = isHome ? mockGame.homeTeam : mockGame.awayTeam;
 
-      // Local log: "User selected X"
       addLogEntry({
         id: String(Date.now()),
         timestamp: getTimestamp(),
@@ -64,7 +64,6 @@ function GameScreen() {
         type: 'info',
       });
 
-      // Send buy signal to the bot backend
       sendSignal(isHome ? 'home' : 'away');
     },
     [addLogEntry, sendSignal]
@@ -82,7 +81,6 @@ function GameScreen() {
         type: 'info',
       });
 
-      // Send sell signal to the bot backend (size=0 means sell all)
       sendSell(isHome ? 'home' : 'away', 0);
     },
     [addLogEntry, sendSell]
@@ -93,12 +91,11 @@ function GameScreen() {
       <StatusBar style="light" />
 
       <View style={styles.header}>
-        <ConnectionBanner status={status} onUrlChange={setBotUrl} />
+        <ConnectionBanner status={status} url={BOT_WS_URL} />
         <Scoreboard game={mockGame} />
       </View>
 
       <View style={styles.card}>
-        {/* Fixed content: toggles + buttons */}
         <View style={styles.fixedContent}>
           <PlatformToggles
             status={platformStatus}
@@ -112,7 +109,6 @@ function GameScreen() {
           />
         </View>
 
-        {/* Only the log scrolls */}
         <ActivityLog
           entries={logEntries}
           bottomInset={insets.bottom}

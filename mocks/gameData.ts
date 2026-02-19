@@ -4,16 +4,16 @@ import type { GameState, LogEntry, PlatformStatus } from '../types';
 export const mockGame: GameState = {
   homeTeam: {
     id: 'yes',
-    name: 'Yes',
-    abbreviation: 'YES',
+    name: 'Pepperdine',
+    abbreviation: 'PEPP',
     city: '',
     logoColor: Colors.yesGreen,
     buttonColor: Colors.yesGreen,
   },
   awayTeam: {
     id: 'no',
-    name: 'No',
-    abbreviation: 'NO',
+    name: 'Portland',
+    abbreviation: 'PORT',
     city: '',
     logoColor: Colors.noRed,
     buttonColor: Colors.noRed,
@@ -23,7 +23,7 @@ export const mockGame: GameState = {
   isLive: true,
 };
 
-export const MARKET_QUESTION = 'US/Israel strikes Iran by Feb 28, 2026?';
+export const MARKET_QUESTION = 'Pepperdine at Portland';
 
 export const mockPlatformStatus: PlatformStatus = {
   poly: true,

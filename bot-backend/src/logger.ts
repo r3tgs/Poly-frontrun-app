@@ -30,10 +30,16 @@ function log(
   const label = LEVEL_LABELS[level];
   const prefix = `[${ts}] [${label}] [${context}]`;
 
-  if (data !== undefined) {
-    console.log(prefix, message, JSON.stringify(data));
+  const line = data !== undefined
+    ? `${prefix} ${message} ${JSON.stringify(data)}`
+    : `${prefix} ${message}`;
+
+  // WARN/ERROR → stderr (unbuffered in Docker, always flushed before exit).
+  // DEBUG/INFO  → stdout.
+  if (level >= LogLevel.WARN) {
+    process.stderr.write(line + "\n");
   } else {
-    console.log(prefix, message);
+    process.stdout.write(line + "\n");
   }
 }
 

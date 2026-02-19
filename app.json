@@ -16,10 +16,12 @@
     "ios": {
       "supportsTablet": false,
       "backgroundColor": "#000000",
+      "bundleIdentifier": "com.benny.pmapp",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsLocalNetworking": true
-        }
+        },
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -33,6 +35,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "47908a5d-3660-4123-8a33-ce5c7ffac797"
+      }
     }
   }
 }

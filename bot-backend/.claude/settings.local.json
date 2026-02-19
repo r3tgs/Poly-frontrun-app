@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(powershell -Command \"Get-Process -Id 66032 | Select-Object Name, Id, Path\")",
+      "Bash(powershell -Command:*)",
+      "Bash(ipconfig:*)",
+      "Bash(sc query:*)",
+      "WebFetch(domain:docs.polymarket.us)",
+      "WebFetch(domain:github.com)",
+      "Bash(node -e:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npm run build:*)",
+      "WebFetch(domain:trading-api.readme.io)",
+      "WebSearch",
+      "WebFetch(domain:docs.kalshi.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(npm install:*)",
+      "Bash(ls -la \"C:\\\\Users\\\\benny\\\\OneDrive\\\\Desktop\\\\Poly-frontrun-app\\\\bot-backend\\\\node_modules\\\\kalshi-typescript\\\\dist\\\\models\"\" 2>/dev/null || ls -la \"/mnt/c/Users/benny/OneDrive/Desktop/Poly-frontrun-app/bot-backend/node_modules/kalshi-typescript/dist/models/\" 2>/dev/null || echo \"Directory not found at expected location \")",
+      "Bash(taskkill:*)",
+      "Bash(npm start)",
+      "Bash(cmd /c \"taskkill /F /IM node.exe\")",
+      "Bash(where:*)",
+      "Bash(flyctl version:*)"
+    ]
+  }
+}

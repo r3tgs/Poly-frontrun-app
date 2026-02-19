@@ -2,14 +2,51 @@
 // Market Configuration
 // ============================================================
 
-/** Maps a Polymarket market to home/away team token IDs. */
+/**
+ * Maps a market to home/away outcomes.
+ *
+ * Populate the CLOB fields for platform="polymarket",
+ * or the US fields for platform="polymarket-us".
+ * Both sets can coexist so the same config works with either platform.
+ */
 export interface MarketConfig {
-  /** Polymarket condition ID for this market */
-  conditionId: string;
-  /** Token ID for the "home" outcome (e.g., home team wins) */
-  homeTokenId: string;
-  /** Token ID for the "away" outcome (e.g., away team wins) */
-  awayTokenId: string;
+  // ---- Original Polymarket CLOB (platform="polymarket") ----
+  /** Polymarket condition ID */
+  conditionId?: string;
+  /** Token ID for the "home" outcome */
+  homeTokenId?: string;
+  /** Token ID for the "away" outcome */
+  awayTokenId?: string;
+
+  // ---- Polymarket US (platform="polymarket-us") ----
+  /** Market slug for the "home" outcome (e.g. "us-iran-yes-feb-28-2026") */
+  homeMarketSlug?: string;
+  /**
+   * Market slug for the "away" outcome.
+   * For binary Yes/No markets this is a different slug from homeMarketSlug.
+   * For sports moneyline markets this is the SAME slug as homeMarketSlug —
+   * set awayIsShort=true so the bot uses BUY_SHORT for the away side.
+   */
+  awayMarketSlug?: string;
+  /**
+   * Set to true for sports moneyline markets where both sides share one slug.
+   * When true the bot uses BUY_SHORT / SELL_SHORT for the away team.
+   * Leave false (default) for binary Yes/No markets with separate slugs.
+   */
+  awayIsShort?: boolean;
+
+  // ---- Kalshi (platform="kalshi") ----
+  /**
+   * Kalshi ticker for the "home" outcome (e.g. "NBA-2026-LAL").
+   * If homeKalshiTicker === awayKalshiTicker it is a binary market:
+   *   home=YES, away=NO on the same ticker.
+   * If they differ, each team has its own ticker and both buy YES.
+   */
+  homeKalshiTicker?: string;
+  /** Kalshi ticker for the "away" outcome. */
+  awayKalshiTicker?: string;
+
+  // ---- Common ----
   /** Human-readable label, e.g. "Stars vs Rangers" */
   description?: string;
 }

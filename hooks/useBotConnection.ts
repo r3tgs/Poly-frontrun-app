@@ -36,10 +36,15 @@ type BotMessage =
 // ---------- Hook options ----------
 
 interface MarketTokenConfig {
-  conditionId: string;
-  homeTokenId: string;
-  awayTokenId: string;
-  description: string;
+  // Original Polymarket CLOB
+  conditionId?: string;
+  homeTokenId?: string;
+  awayTokenId?: string;
+  // Polymarket US
+  homeMarketSlug?: string;
+  awayMarketSlug?: string;
+  awayIsShort?: boolean;
+  description?: string;
 }
 
 interface UseBotConnectionOptions {

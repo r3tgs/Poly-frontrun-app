@@ -1,3 +1,4 @@
+import * as http from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { Config } from "../config";
 import { TradeResult } from "../polymarket/trading";
@@ -11,6 +12,55 @@ import {
 import { createLogger } from "../logger";
 
 const log = createLogger("WS");
+
+const KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2";
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+interface MarketSearchResult {
+  eventTitle: string;
+  eventTicker: string;
+  homeKalshiTicker: string;
+  homeTitle: string;
+  awayKalshiTicker: string;
+  awayTitle: string;
+}
+
+async function searchKalshiMarkets(q: string): Promise<MarketSearchResult[]> {
+  const params = new URLSearchParams({ status: "open", limit: "200", with_nested_markets: "true" });
+  const resp = await fetch(`${KALSHI_BASE}/events?${params}`);
+  if (!resp.ok) throw new Error(`Kalshi API ${resp.status}`);
+  const data = await resp.json() as { events: any[] };
+
+  const ql = q.toLowerCase().trim();
+  if (!ql) return [];
+
+  const matches = data.events.filter((e: any) => {
+    const hay = `${e.event_ticker ?? ""} ${e.title ?? ""}`.toLowerCase();
+    return hay.includes(ql) ||
+      e.markets?.some((m: any) =>
+        `${m.ticker ?? ""} ${m.subtitle ?? ""} ${m.title ?? ""}`.toLowerCase().includes(ql),
+      );
+  });
+
+  return matches.slice(0, 15).map((e: any) => {
+    const markets: any[] = e.markets ?? [];
+    const home = markets[0];
+    const away = markets[1];
+    return {
+      eventTitle: e.title ?? e.event_ticker,
+      eventTicker: e.event_ticker,
+      homeKalshiTicker: home?.ticker ?? "",
+      homeTitle: home?.subtitle ?? home?.title ?? "",
+      awayKalshiTicker: away?.ticker ?? home?.ticker ?? "",
+      awayTitle: away?.subtitle ?? away?.title ?? "",
+    };
+  });
+}
 
 // ============================================================
 // Trading backend interface (real or simulated)
@@ -36,14 +86,91 @@ export interface TradingBackend {
 // Public API
 // ============================================================
 
+/** Minimal interface so ws/server.ts doesn't hard-depend on the kalshi module. */
+interface TickerSubscriber {
+  subscribe(tickers: string[]): void;
+}
+
 export function startWebSocketServer(
   config: Config,
   client: any,
   walletAddress: string,
   trading: TradingBackend,
   pnl: PnLTracker,
+  priceCache?: TickerSubscriber,
 ): WebSocketServer {
-  const wss = new WebSocketServer({ host: "0.0.0.0", port: config.wsPort });
+  // HTTP server: health check, market search/configure APIs, and WebSocket host.
+  const httpServer = http.createServer((req, res) => {
+    // CORS preflight
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, CORS);
+      res.end();
+      return;
+    }
+
+    // Health check
+    if (req.method === "GET" && req.url === "/health") {
+      res.writeHead(200, { "Content-Type": "text/plain", ...CORS });
+      res.end("ok");
+      return;
+    }
+
+    // Active market (used by dashboard to show currently configured market)
+    if (req.method === "GET" && req.url === "/active-market") {
+      res.writeHead(200, { "Content-Type": "application/json", ...CORS });
+      res.end(JSON.stringify(activeMarket));
+      return;
+    }
+
+    // Market search — proxies Kalshi public events API (avoids browser CORS issues)
+    if (req.method === "GET" && req.url?.startsWith("/search-markets")) {
+      const urlObj = new URL(req.url, "http://localhost");
+      const q = urlObj.searchParams.get("q") ?? "";
+      searchKalshiMarkets(q)
+        .then((results) => {
+          res.writeHead(200, { "Content-Type": "application/json", ...CORS });
+          res.end(JSON.stringify(results));
+        })
+        .catch((err) => {
+          res.writeHead(500, { "Content-Type": "application/json", ...CORS });
+          res.end(JSON.stringify({ error: String(err) }));
+        });
+      return;
+    }
+
+    // Configure market — dashboard POSTs here to set the active market
+    if (req.method === "POST" && req.url === "/configure-market") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const market = JSON.parse(body) as MarketConfig;
+          activeMarket = market;
+          if (priceCache && (market.homeKalshiTicker || market.awayKalshiTicker)) {
+            const tickers = [market.homeKalshiTicker, market.awayKalshiTicker].filter(Boolean) as string[];
+            priceCache.subscribe(tickers);
+            log.info(`Price cache subscribing to: ${tickers.join(", ")}`);
+          }
+          broadcast(wss, { type: "market_configured", data: market });
+          log.info(`Market configured via HTTP: ${JSON.stringify(market)}`);
+          res.writeHead(200, { "Content-Type": "application/json", ...CORS });
+          res.end(JSON.stringify({ ok: true }));
+        } catch (err) {
+          res.writeHead(400, { "Content-Type": "application/json", ...CORS });
+          res.end(JSON.stringify({ error: String(err) }));
+        }
+      });
+      return;
+    }
+
+    res.writeHead(426, { "Content-Type": "text/plain" });
+    res.end("Upgrade Required");
+  });
+
+  const wss = new WebSocketServer({ server: httpServer });
+  httpServer.listen(config.wsPort, "0.0.0.0", () => {
+    log.info(`Listening on ws://0.0.0.0:${config.wsPort}`);
+  });
 
   // Shared mutable state — the currently active market.
   let activeMarket: MarketConfig | null = null;
@@ -86,6 +213,7 @@ export function startWebSocketServer(
           activeMarket,
           trading,
           pnl,
+          priceCache,
         );
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -99,10 +227,6 @@ export function startWebSocketServer(
 
     ws.on("close", () => log.info("Client disconnected"));
     ws.on("error", (err) => log.error("Socket error", err));
-  });
-
-  wss.on("listening", () => {
-    log.info(`Listening on ws://localhost:${config.wsPort}`);
   });
 
   return wss;
@@ -122,6 +246,7 @@ async function handleMessage(
   activeMarket: MarketConfig | null,
   trading: TradingBackend,
   pnl: PnLTracker,
+  priceCache?: TickerSubscriber,
 ): Promise<MarketConfig | null> {
   switch (message.type) {
     // ----------------------------------------------------------
@@ -130,6 +255,11 @@ async function handleMessage(
     case "configure_market": {
       const market = message.data;
       log.info("Market configured", market);
+      if (priceCache && (market.homeKalshiTicker || market.awayKalshiTicker)) {
+        const tickers = [market.homeKalshiTicker, market.awayKalshiTicker].filter(Boolean) as string[];
+        priceCache.subscribe(tickers);
+        log.info(`Price cache subscribing to: ${tickers.join(", ")}`);
+      }
       broadcast(wss, { type: "market_configured", data: market });
       return market;
     }
@@ -150,10 +280,7 @@ async function handleMessage(
       }
 
       const { team, size } = message.data;
-      const tokenId =
-        team === "home"
-          ? activeMarket.homeTokenId
-          : activeMarket.awayTokenId;
+      const tokenId = getTradeId(activeMarket, team);
 
       log.info(`BUY signal — team=${team}  token=${tokenId}`);
 
@@ -162,8 +289,8 @@ async function handleMessage(
 
       const result = await trading.executeBuy(client, config, tokenId, size);
 
-      if (result.success && result.price && result.size) {
-        pnl.recordBuy(tokenId, team, result.size, result.price);
+      if (result.success && result.size) {
+        pnl.recordBuy(tokenId, team, result.size, result.price ?? 0);
       }
 
       const update: TradeUpdateMessage = {
@@ -201,27 +328,15 @@ async function handleMessage(
 
       const { team, price } = message.data;
       let sellSize = message.data.size;
-      const tokenId =
-        team === "home"
-          ? activeMarket.homeTokenId
-          : activeMarket.awayTokenId;
+      const tokenId = getTradeId(activeMarket, team);
 
-      // size=0 means "sell all open contracts for this token"
+      // size=0 means "sell all" — use PnL position if known, otherwise let
+      // the trading backend close via API (handles bot-restart case)
       if (!sellSize || sellSize <= 0) {
         const snap = pnl.getSnapshot();
         const pos = snap.positions.find((p) => p.tokenId === tokenId);
         sellSize = pos ? pos.contracts : 0;
-        if (sellSize <= 0) {
-          send(ws, {
-            type: "error",
-            data: {
-              message: `No open position to sell for team=${team}`,
-              timestamp: Date.now(),
-            },
-          });
-          return activeMarket;
-        }
-        log.info(`SELL ALL — team=${team}  contracts=${sellSize}  token=${tokenId}`);
+        log.info(`SELL ALL — team=${team}  contracts=${sellSize || "unknown (closing via API)"}  token=${tokenId}`);
       } else {
         log.info(`SELL signal — team=${team}  size=${sellSize}  token=${tokenId}`);
       }
@@ -319,6 +434,39 @@ function broadcast(wss: WebSocketServer, msg: BotMessage): void {
       client.send(payload);
     }
   }
+}
+
+/**
+ * Resolve the platform-specific trading identifier for a team.
+ *
+ * - Polymarket US:   returns the market slug for that outcome
+ * - Polymarket CLOB: returns the token ID for that outcome
+ */
+/**
+ * Returns the platform-specific trading identifier for a team.
+ *
+ * For Polymarket US the format is: "<marketSlug>::<LONG|SHORT>"
+ *   - Binary Yes/No markets: separate slugs, both sides use LONG
+ *   - Sports moneyline markets: same slug, home=LONG, away=SHORT (awayIsShort=true)
+ * For Polymarket CLOB: returns the raw token ID.
+ */
+function getTradeId(market: MarketConfig, team: "home" | "away"): string {
+  // Kalshi: ticker-based, sides are YES/NO
+  if (market.homeKalshiTicker || market.awayKalshiTicker) {
+    const ticker = (team === "home" ? market.homeKalshiTicker : market.awayKalshiTicker) ?? "";
+    // Same ticker for both teams = binary market: home=YES, away=NO
+    const sameTicker = market.homeKalshiTicker === market.awayKalshiTicker;
+    const side = (team === "away" && sameTicker) ? "NO" : "YES";
+    return `${ticker}::${side}`;
+  }
+  // Polymarket US: slug-based, sides are LONG/SHORT
+  if (market.homeMarketSlug || market.awayMarketSlug) {
+    const slug = (team === "home" ? market.homeMarketSlug : market.awayMarketSlug) ?? "";
+    const intent = (team === "away" && market.awayIsShort) ? "SHORT" : "LONG";
+    return `${slug}::${intent}`;
+  }
+  // Polymarket CLOB: raw token ID
+  return (team === "home" ? market.homeTokenId : market.awayTokenId) ?? "";
 }
 
 function pendingUpdate(
