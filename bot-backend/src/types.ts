@@ -60,7 +60,9 @@ export type AppMessage =
   | BuySignalMessage
   | SellMessage
   | StatusRequestMessage
-  | PnlRequestMessage;
+  | PnlRequestMessage
+  | RegisterMessage
+  | ConfigureClientMarketMessage;
 
 /** Set the active market before sending trade signals. */
 export interface ConfigureMarketMessage {
@@ -95,6 +97,18 @@ export interface StatusRequestMessage {
   type: "status";
 }
 
+/** Identify this connection as a phone or dashboard. */
+export interface RegisterMessage {
+  type: "register";
+  data: { clientType: "phone" | "dashboard"; label?: string };
+}
+
+/** Dashboard → bot: configure the market for one specific connected phone. */
+export interface ConfigureClientMarketMessage {
+  type: "configure_client_market";
+  data: { clientId: string; market: MarketConfig };
+}
+
 /** Request current P&L summary (test mode). */
 export interface PnlRequestMessage {
   type: "pnl";
@@ -109,7 +123,8 @@ export type BotMessage =
   | TradeUpdateMessage
   | ErrorMessage
   | MarketConfiguredMessage
-  | PnlMessage;
+  | PnlMessage
+  | ClientsUpdateMessage;
 
 export interface StatusMessage {
   type: "status";
@@ -150,6 +165,17 @@ export interface ErrorMessage {
 export interface MarketConfiguredMessage {
   type: "market_configured";
   data: MarketConfig;
+}
+
+/** Bot → dashboard: full list of connected phone clients and their markets. */
+export interface ClientsUpdateMessage {
+  type: "clients_update";
+  data: Array<{
+    id: string;
+    connectedAt: number;
+    activeMarket: MarketConfig | null;
+    label?: string;
+  }>;
 }
 
 export interface PnlMessage {

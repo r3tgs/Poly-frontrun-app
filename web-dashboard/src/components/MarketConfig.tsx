@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './MarketConfig.css';
 
-const BOT_URL = 'https://pm-frontrun-snowy-waterfall-1028.fly.dev';
+const BOT_WS_URL = 'wss://pm-frontrun-snowy-waterfall-1028.fly.dev';
+const BOT_HTTP_URL = 'https://pm-frontrun-snowy-waterfall-1028.fly.dev';
 
 interface SearchResult {
   eventTitle: string;
@@ -15,123 +16,246 @@ interface SearchResult {
 interface ActiveMarket {
   homeKalshiTicker?: string;
   awayKalshiTicker?: string;
+  description?: string;
+}
+
+interface PhoneClient {
+  id: string;
+  connectedAt: number;
+  activeMarket: ActiveMarket | null;
+  label?: string;
+}
+
+function timeAgo(ms: number): string {
+  const secs = Math.floor((Date.now() - ms) / 1000);
+  if (secs < 60) return `${secs}s ago`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m ago`;
+  return `${Math.floor(mins / 60)}h ago`;
 }
 
 export function MarketConfig() {
+  const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
+  const [phones, setPhones] = useState<PhoneClient[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [activeMarket, setActiveMarket] = useState<ActiveMarket | null>(null);
-  const [settingTicker, setSettingTicker] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [settingFor, setSettingFor] = useState<string | null>(null);
+
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectRef = useRef<() => void>(() => {});
+
+  connectRef.current = () => {
+    if (reconnectTimer.current) { clearTimeout(reconnectTimer.current); reconnectTimer.current = null; }
+    if (wsRef.current) {
+      wsRef.current.onopen = null;
+      wsRef.current.onclose = null;
+      wsRef.current.onmessage = null;
+      wsRef.current.onerror = null;
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    setWsStatus('connecting');
+    const ws = new WebSocket(BOT_WS_URL);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      if (wsRef.current !== ws) { ws.close(); return; }
+      setWsStatus('connected');
+      ws.send(JSON.stringify({ type: 'register', data: { clientType: 'dashboard' } }));
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(typeof event.data === 'string' ? event.data : String(event.data));
+        if (msg.type === 'clients_update') {
+          setPhones(msg.data ?? []);
+        }
+      } catch {}
+    };
+
+    ws.onclose = () => {
+      if (wsRef.current !== ws) return;
+      setWsStatus('disconnected');
+      reconnectTimer.current = setTimeout(() => connectRef.current(), 4000);
+    };
+
+    ws.onerror = () => {};
+  };
 
   useEffect(() => {
-    fetch(`${BOT_URL}/active-market`)
-      .then((r) => r.json())
-      .then((m) => { if (m) setActiveMarket(m); })
-      .catch(() => {});
+    connectRef.current();
+    return () => {
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+      if (wsRef.current) {
+        wsRef.current.onclose = null;
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
   }, []);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     const q = query.trim();
     if (!q) return;
-    setLoading(true);
-    setError(null);
+    setSearching(true);
+    setSearchError(null);
     setResults([]);
     try {
-      const resp = await fetch(`${BOT_URL}/search-markets?q=${encodeURIComponent(q)}`);
+      const resp = await fetch(`${BOT_HTTP_URL}/search-markets?q=${encodeURIComponent(q)}`);
       const data = await resp.json();
       if (Array.isArray(data)) {
         setResults(data);
-        if (data.length === 0) setError('No markets found. Try a different keyword.');
+        if (data.length === 0) setSearchError('No markets found.');
       } else {
-        setError('Search failed.');
+        setSearchError('Search failed.');
       }
     } catch {
-      setError('Could not reach bot server.');
+      setSearchError('Could not reach bot server.');
     } finally {
-      setLoading(false);
+      setSearching(false);
     }
-  };
+  }, [query]);
 
-  const handleSet = async (result: SearchResult) => {
-    setSettingTicker(result.eventTicker);
-    try {
-      await fetch(`${BOT_URL}/configure-market`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+  const handleSet = useCallback((phoneId: string, result: SearchResult) => {
+    const ws = wsRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    setSettingFor(phoneId);
+    ws.send(JSON.stringify({
+      type: 'configure_client_market',
+      data: {
+        clientId: phoneId,
+        market: {
           homeKalshiTicker: result.homeKalshiTicker,
           awayKalshiTicker: result.awayKalshiTicker,
-        }),
-      });
-      setActiveMarket({
-        homeKalshiTicker: result.homeKalshiTicker,
-        awayKalshiTicker: result.awayKalshiTicker,
-      });
+          description: result.eventTitle,
+        },
+      },
+    }));
+    // Optimistically collapse + clear after a short delay
+    setTimeout(() => {
+      setSettingFor(null);
+      setExpandedId(null);
       setResults([]);
       setQuery('');
-    } catch {
-      setError('Failed to configure market.');
-    } finally {
-      setSettingTicker(null);
+    }, 600);
+  }, []);
+
+  const toggleExpand = (id: string) => {
+    if (expandedId === id) {
+      setExpandedId(null);
+      setResults([]);
+      setQuery('');
+      setSearchError(null);
+    } else {
+      setExpandedId(id);
+      setResults([]);
+      setQuery('');
+      setSearchError(null);
     }
   };
 
   return (
     <div className="market-config">
-      <h2 className="section-title">Active Market</h2>
-
-      <div className="active-market-card">
-        {activeMarket?.homeKalshiTicker ? (
-          <div className="active-market-tickers">
-            <div className="active-ticker-row">
-              <span className="active-ticker-label">Home</span>
-              <span className="active-ticker-value">{activeMarket.homeKalshiTicker}</span>
-            </div>
-            <div className="active-ticker-row">
-              <span className="active-ticker-label">Away</span>
-              <span className="active-ticker-value">{activeMarket.awayKalshiTicker}</span>
-            </div>
-          </div>
-        ) : (
-          <span className="active-market-empty">No market configured</span>
-        )}
+      <div className="market-config-header">
+        <h2 className="section-title">Live Instances</h2>
+        <div className={`ws-status-dot ws-status-${wsStatus}`} title={wsStatus} />
       </div>
 
-      <div className="market-search-row">
-        <input
-          className="market-search-input"
-          type="text"
-          placeholder="Search team or event…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-        />
-        <button className="market-search-btn" onClick={handleSearch} disabled={loading}>
-          {loading ? '…' : 'Search'}
-        </button>
-      </div>
-
-      {error && <p className="market-error">{error}</p>}
-
-      {results.length > 0 && (
-        <div className="market-results">
-          {results.map((r) => (
-            <div key={r.eventTicker} className="market-result-item">
-              <div className="market-result-title">{r.eventTitle}</div>
-              <div className="market-result-teams">
-                <span className="market-result-team">{r.homeTitle || r.homeKalshiTicker}</span>
-                <span className="market-result-vs">vs</span>
-                <span className="market-result-team">{r.awayTitle || r.awayKalshiTicker}</span>
+      {phones.length === 0 ? (
+        <div className="instances-empty">
+          {wsStatus === 'connected'
+            ? 'No phones connected'
+            : wsStatus === 'connecting'
+            ? 'Connecting to bot…'
+            : 'Bot offline — retrying…'}
+        </div>
+      ) : (
+        <div className="instance-list">
+          {phones.map((phone) => (
+            <div key={phone.id} className="instance-card">
+              <div className="instance-header">
+                <div className="instance-meta">
+                  <span className="instance-id">
+                    {phone.label ?? `Phone ${phone.id.slice(0, 8)}`}
+                  </span>
+                  <span className="instance-time">{timeAgo(phone.connectedAt)}</span>
+                </div>
+                <button
+                  className="instance-configure-btn"
+                  onClick={() => toggleExpand(phone.id)}
+                >
+                  {expandedId === phone.id ? 'Done' : 'Configure'}
+                </button>
               </div>
-              <button
-                className="market-set-btn"
-                onClick={() => handleSet(r)}
-                disabled={settingTicker === r.eventTicker}
-              >
-                {settingTicker === r.eventTicker ? 'Setting…' : 'Set'}
-              </button>
+
+              <div className="instance-market">
+                {phone.activeMarket?.homeKalshiTicker ? (
+                  <div className="instance-tickers">
+                    <span className="instance-ticker-row">
+                      <span className="instance-ticker-label">Home</span>
+                      <span className="instance-ticker-value">{phone.activeMarket.homeKalshiTicker}</span>
+                    </span>
+                    <span className="instance-ticker-row">
+                      <span className="instance-ticker-label">Away</span>
+                      <span className="instance-ticker-value">{phone.activeMarket.awayKalshiTicker}</span>
+                    </span>
+                  </div>
+                ) : (
+                  <span className="instance-no-market">No market set</span>
+                )}
+              </div>
+
+              {expandedId === phone.id && (
+                <div className="instance-search-panel">
+                  <div className="market-search-row">
+                    <input
+                      className="market-search-input"
+                      type="text"
+                      placeholder="Search team or event…"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                      autoFocus
+                    />
+                    <button
+                      className="market-search-btn"
+                      onClick={handleSearch}
+                      disabled={searching}
+                    >
+                      {searching ? '…' : 'Search'}
+                    </button>
+                  </div>
+
+                  {searchError && <p className="market-error">{searchError}</p>}
+
+                  {results.length > 0 && (
+                    <div className="market-results">
+                      {results.map((r) => (
+                        <div key={r.eventTicker} className="market-result-item">
+                          <div className="market-result-title">{r.eventTitle}</div>
+                          <div className="market-result-teams">
+                            <span className="market-result-team">{r.homeTitle || r.homeKalshiTicker}</span>
+                            <span className="market-result-vs">vs</span>
+                            <span className="market-result-team">{r.awayTitle || r.awayKalshiTicker}</span>
+                          </div>
+                          <button
+                            className="market-set-btn"
+                            onClick={() => handleSet(phone.id, r)}
+                            disabled={settingFor === phone.id}
+                          >
+                            {settingFor === phone.id ? 'Setting…' : 'Set'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

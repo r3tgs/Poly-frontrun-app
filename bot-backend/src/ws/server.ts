@@ -1,4 +1,5 @@
 import * as http from "http";
+import { randomUUID } from "crypto";
 import { WebSocketServer, WebSocket } from "ws";
 import { Config } from "../config";
 import { TradeResult } from "../polymarket/trading";
@@ -83,13 +84,45 @@ export interface TradingBackend {
 }
 
 // ============================================================
-// Public API
+// Per-client state
 // ============================================================
+
+interface ClientInfo {
+  id: string;
+  type: "phone" | "dashboard" | "unknown";
+  connectedAt: number;
+  activeMarket: MarketConfig | null;
+  label?: string;
+}
 
 /** Minimal interface so ws/server.ts doesn't hard-depend on the kalshi module. */
 interface TickerSubscriber {
   subscribe(tickers: string[]): void;
 }
+
+/** Send a clients_update message to every connected dashboard. */
+function broadcastClientsUpdate(clients: Map<WebSocket, ClientInfo>): void {
+  const phones = [...clients.values()].filter((c) => c.type === "phone");
+  const msg: BotMessage = {
+    type: "clients_update",
+    data: phones.map((c) => ({
+      id: c.id,
+      connectedAt: c.connectedAt,
+      activeMarket: c.activeMarket,
+      label: c.label,
+    })),
+  };
+  const payload = JSON.stringify(msg);
+  for (const [ws, info] of clients) {
+    if (info.type === "dashboard" && ws.readyState === WebSocket.OPEN) {
+      ws.send(payload);
+    }
+  }
+}
+
+// ============================================================
+// Public API
+// ============================================================
 
 export function startWebSocketServer(
   config: Config,
@@ -99,7 +132,10 @@ export function startWebSocketServer(
   pnl: PnLTracker,
   priceCache?: TickerSubscriber,
 ): WebSocketServer {
-  // HTTP server: health check, market search/configure APIs, and WebSocket host.
+  // Per-connection state map
+  const clients = new Map<WebSocket, ClientInfo>();
+
+  // HTTP server: health check, market search, and WebSocket host.
   const httpServer = http.createServer((req, res) => {
     // CORS preflight
     if (req.method === "OPTIONS") {
@@ -115,14 +151,15 @@ export function startWebSocketServer(
       return;
     }
 
-    // Active market (used by dashboard to show currently configured market)
+    // Active market — returns first phone's market (legacy compat)
     if (req.method === "GET" && req.url === "/active-market") {
+      const firstPhone = [...clients.values()].find((c) => c.type === "phone");
       res.writeHead(200, { "Content-Type": "application/json", ...CORS });
-      res.end(JSON.stringify(activeMarket));
+      res.end(JSON.stringify(firstPhone?.activeMarket ?? null));
       return;
     }
 
-    // Market search — proxies Kalshi public events API (avoids browser CORS issues)
+    // Market search — proxies Kalshi public events API (avoids browser CORS)
     if (req.method === "GET" && req.url?.startsWith("/search-markets")) {
       const urlObj = new URL(req.url, "http://localhost");
       const q = urlObj.searchParams.get("q") ?? "";
@@ -138,31 +175,6 @@ export function startWebSocketServer(
       return;
     }
 
-    // Configure market — dashboard POSTs here to set the active market
-    if (req.method === "POST" && req.url === "/configure-market") {
-      let body = "";
-      req.on("data", (chunk) => { body += chunk; });
-      req.on("end", () => {
-        try {
-          const market = JSON.parse(body) as MarketConfig;
-          activeMarket = market;
-          if (priceCache && (market.homeKalshiTicker || market.awayKalshiTicker)) {
-            const tickers = [market.homeKalshiTicker, market.awayKalshiTicker].filter(Boolean) as string[];
-            priceCache.subscribe(tickers);
-            log.info(`Price cache subscribing to: ${tickers.join(", ")}`);
-          }
-          broadcast(wss, { type: "market_configured", data: market });
-          log.info(`Market configured via HTTP: ${JSON.stringify(market)}`);
-          res.writeHead(200, { "Content-Type": "application/json", ...CORS });
-          res.end(JSON.stringify({ ok: true }));
-        } catch (err) {
-          res.writeHead(400, { "Content-Type": "application/json", ...CORS });
-          res.end(JSON.stringify({ error: String(err) }));
-        }
-      });
-      return;
-    }
-
     res.writeHead(426, { "Content-Type": "text/plain" });
     res.end("Upgrade Required");
   });
@@ -172,11 +184,15 @@ export function startWebSocketServer(
     log.info(`Listening on ws://0.0.0.0:${config.wsPort}`);
   });
 
-  // Shared mutable state — the currently active market.
-  let activeMarket: MarketConfig | null = null;
-
   wss.on("connection", (ws) => {
-    log.info("Client connected");
+    const id = randomUUID();
+    clients.set(ws, {
+      id,
+      type: "unknown",
+      connectedAt: Date.now(),
+      activeMarket: null,
+    });
+    log.info(`Client connected: ${id}`);
 
     // Immediately tell the client the current bot status.
     send(ws, {
@@ -184,7 +200,7 @@ export function startWebSocketServer(
       data: {
         connected: true,
         walletAddress,
-        market: activeMarket,
+        market: null,
         testMode: config.testMode,
         timestamp: Date.now(),
       },
@@ -203,18 +219,7 @@ export function startWebSocketServer(
       }
 
       try {
-        activeMarket = await handleMessage(
-          ws,
-          wss,
-          message,
-          config,
-          client,
-          walletAddress,
-          activeMarket,
-          trading,
-          pnl,
-          priceCache,
-        );
+        await handleMessage(ws, wss, clients, message, config, client, walletAddress, trading, pnl, priceCache);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         log.error(`Unhandled error: ${msg}`);
@@ -225,7 +230,16 @@ export function startWebSocketServer(
       }
     });
 
-    ws.on("close", () => log.info("Client disconnected"));
+    ws.on("close", () => {
+      const info = clients.get(ws);
+      clients.delete(ws);
+      log.info(`Client disconnected: ${info?.id}`);
+      // Notify dashboards whenever a phone drops
+      if (info?.type === "phone") {
+        broadcastClientsUpdate(clients);
+      }
+    });
+
     ws.on("error", (err) => log.error("Socket error", err));
   });
 
@@ -239,35 +253,93 @@ export function startWebSocketServer(
 async function handleMessage(
   ws: WebSocket,
   wss: WebSocketServer,
+  clients: Map<WebSocket, ClientInfo>,
   message: AppMessage,
   config: Config,
   client: any,
   walletAddress: string,
-  activeMarket: MarketConfig | null,
   trading: TradingBackend,
   pnl: PnLTracker,
   priceCache?: TickerSubscriber,
-): Promise<MarketConfig | null> {
+): Promise<void> {
+  const senderInfo = clients.get(ws);
+
   switch (message.type) {
     // ----------------------------------------------------------
-    // Configure Market
+    // Register — identify this connection as phone or dashboard
+    // ----------------------------------------------------------
+    case "register": {
+      if (senderInfo) {
+        senderInfo.type = message.data.clientType;
+        if (message.data.label) senderInfo.label = message.data.label;
+      }
+      log.info(`Client registered as ${message.data.clientType}: ${senderInfo?.id}`);
+      // Send this dashboard the current phone list immediately
+      if (message.data.clientType === "dashboard") {
+        const phones = [...clients.values()].filter((c) => c.type === "phone");
+        send(ws, {
+          type: "clients_update",
+          data: phones.map((c) => ({
+            id: c.id,
+            connectedAt: c.connectedAt,
+            activeMarket: c.activeMarket,
+            label: c.label,
+          })),
+        });
+      }
+      // Tell all dashboards the updated roster
+      broadcastClientsUpdate(clients);
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Configure Market for a specific phone (dashboard → bot → phone)
+    // ----------------------------------------------------------
+    case "configure_client_market": {
+      const { clientId, market } = message.data;
+      for (const [targetWs, targetInfo] of clients) {
+        if (targetInfo.id === clientId) {
+          targetInfo.activeMarket = market;
+          if (priceCache && (market.homeKalshiTicker || market.awayKalshiTicker)) {
+            const tickers = [market.homeKalshiTicker, market.awayKalshiTicker].filter(Boolean) as string[];
+            priceCache.subscribe(tickers);
+            log.info(`Price cache subscribing to: ${tickers.join(", ")}`);
+          }
+          send(targetWs, { type: "market_configured", data: market });
+          log.info(`Market configured for client ${clientId}: ${JSON.stringify(market)}`);
+          break;
+        }
+      }
+      broadcastClientsUpdate(clients);
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Configure Market (phone self-configures on connect)
     // ----------------------------------------------------------
     case "configure_market": {
       const market = message.data;
+      if (senderInfo) {
+        senderInfo.activeMarket = market;
+      }
       log.info("Market configured", market);
       if (priceCache && (market.homeKalshiTicker || market.awayKalshiTicker)) {
         const tickers = [market.homeKalshiTicker, market.awayKalshiTicker].filter(Boolean) as string[];
         priceCache.subscribe(tickers);
         log.info(`Price cache subscribing to: ${tickers.join(", ")}`);
       }
-      broadcast(wss, { type: "market_configured", data: market });
-      return market;
+      send(ws, { type: "market_configured", data: market });
+      if (senderInfo?.type === "phone") {
+        broadcastClientsUpdate(clients);
+      }
+      return;
     }
 
     // ----------------------------------------------------------
     // Buy Signal  (the core frontrun action)
     // ----------------------------------------------------------
     case "signal": {
+      const activeMarket = senderInfo?.activeMarket ?? null;
       if (!activeMarket) {
         send(ws, {
           type: "error",
@@ -276,7 +348,7 @@ async function handleMessage(
             timestamp: Date.now(),
           },
         });
-        return activeMarket;
+        return;
       }
 
       const { team, size } = message.data;
@@ -308,13 +380,14 @@ async function handleMessage(
         },
       };
       broadcast(wss, update);
-      return activeMarket;
+      return;
     }
 
     // ----------------------------------------------------------
     // Manual Sell
     // ----------------------------------------------------------
     case "sell": {
+      const activeMarket = senderInfo?.activeMarket ?? null;
       if (!activeMarket) {
         send(ws, {
           type: "error",
@@ -323,15 +396,14 @@ async function handleMessage(
             timestamp: Date.now(),
           },
         });
-        return activeMarket;
+        return;
       }
 
       const { team, price } = message.data;
       let sellSize = message.data.size;
       const tokenId = getTradeId(activeMarket, team);
 
-      // size=0 means "sell all" — use PnL position if known, otherwise let
-      // the trading backend close via API (handles bot-restart case)
+      // size=0 means "sell all" — use PnL position if known
       if (!sellSize || sellSize <= 0) {
         const snap = pnl.getSnapshot();
         const pos = snap.positions.find((p) => p.tokenId === tokenId);
@@ -364,7 +436,7 @@ async function handleMessage(
         },
       };
       broadcast(wss, sellUpdate);
-      return activeMarket;
+      return;
     }
 
     // ----------------------------------------------------------
@@ -385,7 +457,7 @@ async function handleMessage(
           timestamp: Date.now(),
         },
       });
-      return activeMarket;
+      return;
     }
 
     // ----------------------------------------------------------
@@ -397,12 +469,12 @@ async function handleMessage(
         data: {
           connected: true,
           walletAddress,
-          market: activeMarket,
+          market: senderInfo?.activeMarket ?? null,
           testMode: config.testMode,
           timestamp: Date.now(),
         },
       });
-      return activeMarket;
+      return;
     }
 
     default:
@@ -413,7 +485,7 @@ async function handleMessage(
           timestamp: Date.now(),
         },
       });
-      return activeMarket;
+      return;
   }
 }
 
@@ -437,29 +509,23 @@ function broadcast(wss: WebSocketServer, msg: BotMessage): void {
 }
 
 /**
- * Resolve the platform-specific trading identifier for a team.
- *
- * - Polymarket US:   returns the market slug for that outcome
- * - Polymarket CLOB: returns the token ID for that outcome
- */
-/**
  * Returns the platform-specific trading identifier for a team.
  *
- * For Polymarket US the format is: "<marketSlug>::<LONG|SHORT>"
- *   - Binary Yes/No markets: separate slugs, both sides use LONG
- *   - Sports moneyline markets: same slug, home=LONG, away=SHORT (awayIsShort=true)
- * For Polymarket CLOB: returns the raw token ID.
+ * For Kalshi: "<ticker>::YES" or "<ticker>::NO"
+ *   - Same ticker for both teams → binary market: home=YES, away=NO
+ *   - Different tickers → each team buys YES on their own ticker
+ * For Polymarket US: "<slug>::LONG" or "<slug>::SHORT"
+ * For Polymarket CLOB: raw token ID
  */
 function getTradeId(market: MarketConfig, team: "home" | "away"): string {
-  // Kalshi: ticker-based, sides are YES/NO
+  // Kalshi: ticker-based
   if (market.homeKalshiTicker || market.awayKalshiTicker) {
     const ticker = (team === "home" ? market.homeKalshiTicker : market.awayKalshiTicker) ?? "";
-    // Same ticker for both teams = binary market: home=YES, away=NO
     const sameTicker = market.homeKalshiTicker === market.awayKalshiTicker;
     const side = (team === "away" && sameTicker) ? "NO" : "YES";
     return `${ticker}::${side}`;
   }
-  // Polymarket US: slug-based, sides are LONG/SHORT
+  // Polymarket US: slug-based
   if (market.homeMarketSlug || market.awayMarketSlug) {
     const slug = (team === "home" ? market.homeMarketSlug : market.awayMarketSlug) ?? "";
     const intent = (team === "away" && market.awayIsShort) ? "SHORT" : "LONG";

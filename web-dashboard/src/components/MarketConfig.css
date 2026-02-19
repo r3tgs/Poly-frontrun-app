@@ -1,55 +1,148 @@
 .market-config {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.active-market-card {
-  background: #16161A;
-  border-radius: 14px;
-  padding: 16px;
-  min-height: 72px;
-  display: flex;
-  align-items: center;
-}
-
-.active-market-tickers {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-.active-ticker-row {
-  display: flex;
-  align-items: center;
   gap: 12px;
 }
 
-.active-ticker-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  width: 36px;
+.market-config-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* WS connection status dot */
+.ws-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
   flex-shrink: 0;
+  margin-top: 1px;
 }
+.ws-status-connected { background: #4caf50; }
+.ws-status-connecting { background: #ff9800; }
+.ws-status-disconnected { background: #555; }
 
-.active-ticker-value {
-  font-size: 12px;
-  font-weight: 500;
-  color: #fff;
-  font-family: monospace;
-  background: #2a2a2e;
-  padding: 3px 8px;
-  border-radius: 6px;
-}
-
-.active-market-empty {
+/* Empty state */
+.instances-empty {
+  background: #16161A;
+  border-radius: 14px;
+  padding: 24px 16px;
   font-size: 14px;
   color: #555;
   font-weight: 500;
+  text-align: center;
+}
+
+/* Instance list */
+.instance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.instance-card {
+  background: #16161A;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.instance-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.instance-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.instance-id {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  font-family: monospace;
+}
+
+.instance-time {
+  font-size: 11px;
+  color: #555;
+}
+
+.instance-configure-btn {
+  background: #2a2a2e;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #aaa;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.instance-configure-btn:hover {
+  background: #3a3a3e;
+  color: #fff;
+}
+
+/* Market display inside instance card */
+.instance-market {
+  display: flex;
+  align-items: center;
+}
+
+.instance-tickers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.instance-ticker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.instance-ticker-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.instance-ticker-value {
+  font-size: 11px;
+  font-weight: 500;
+  color: #ccc;
+  font-family: monospace;
+  background: #222;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.instance-no-market {
+  font-size: 12px;
+  color: #444;
+  font-style: italic;
+}
+
+/* Search panel (shown when Configure is clicked) */
+.instance-search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #222;
+  padding-top: 10px;
 }
 
 .market-search-row {
@@ -59,18 +152,18 @@
 
 .market-search-input {
   flex: 1;
-  background: #16161A;
+  background: #0e0e11;
   border: 1px solid #2a2a2e;
   border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 14px;
+  padding: 9px 13px;
+  font-size: 13px;
   color: #fff;
   outline: none;
   transition: border-color 0.15s;
 }
 
 .market-search-input::placeholder {
-  color: #555;
+  color: #444;
 }
 
 .market-search-input:focus {
@@ -81,8 +174,8 @@
   background: #2a2a2e;
   border: none;
   border-radius: 10px;
-  padding: 10px 18px;
-  font-size: 14px;
+  padding: 9px 16px;
+  font-size: 13px;
   font-weight: 600;
   color: #fff;
   cursor: pointer;
@@ -100,7 +193,7 @@
 }
 
 .market-error {
-  font-size: 13px;
+  font-size: 12px;
   color: #ff6b6b;
   margin: 0;
 }
@@ -108,22 +201,22 @@
 .market-results {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 340px;
+  gap: 6px;
+  max-height: 280px;
   overflow-y: auto;
 }
 
 .market-result-item {
-  background: #16161A;
-  border-radius: 12px;
-  padding: 12px 14px;
+  background: #1e1e22;
+  border-radius: 10px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .market-result-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #fff;
   line-height: 1.3;
@@ -132,19 +225,19 @@
 .market-result-teams {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 11px;
   color: #aaa;
 }
 
 .market-result-team {
-  color: #ccc;
+  color: #bbb;
   font-weight: 500;
 }
 
 .market-result-vs {
-  color: #555;
-  font-size: 11px;
+  color: #444;
+  font-size: 10px;
 }
 
 .market-set-btn {
@@ -152,9 +245,9 @@
   background: #fff;
   color: #000;
   border: none;
-  border-radius: 8px;
-  padding: 6px 16px;
-  font-size: 13px;
+  border-radius: 7px;
+  padding: 5px 14px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: opacity 0.15s;

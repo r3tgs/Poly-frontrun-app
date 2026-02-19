@@ -44,6 +44,9 @@ interface MarketTokenConfig {
   homeMarketSlug?: string;
   awayMarketSlug?: string;
   awayIsShort?: boolean;
+  // Kalshi
+  homeKalshiTicker?: string;
+  awayKalshiTicker?: string;
   description?: string;
 }
 
@@ -200,6 +203,9 @@ export function useBotConnection({
     ws.onopen = () => {
       if (wsRef.current !== ws) { ws.close(); return; }
       setStatus('connected');
+
+      // Identify this connection as a phone so the dashboard can see it.
+      ws.send(JSON.stringify({ type: 'register', data: { clientType: 'phone' } }));
 
       // Configure market so signals work immediately.
       const config = marketConfig ?? {
