@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+// no scroll refs needed — column-reverse CSS handles sticky-to-bottom natively
 import type { KalshiTrade } from '../types';
 import './OrderFeed.css';
 
@@ -80,13 +80,7 @@ function TradeRow({ trade, market }: { trade: KalshiTrade; market: ActiveMarket 
 }
 
 export function OrderFeed({ trades, market }: Props) {
-  const bottomRef = useRef<HTMLDivElement>(null);
   const hasKalshi = !!(market?.homeKalshiTicker || market?.awayKalshiTicker);
-
-  // Auto-scroll to bottom (newest entry) whenever a new trade arrives.
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'instant' });
-  }, [trades.length]);
 
   return (
     <div className="order-feed">
@@ -104,12 +98,12 @@ export function OrderFeed({ trades, market }: Props) {
         ) : trades.length === 0 ? (
           <div className="of-empty">Waiting for trades…</div>
         ) : (
-          // Render oldest first so newest sits at the bottom (terminal behaviour).
-          [...trades].reverse().map((t) => (
+          // column-reverse renders newest (first in array) at the visual bottom.
+          // New prepended entries appear at the bottom; scroll anchors there natively.
+          trades.map((t) => (
             <TradeRow key={t.tradeId} trade={t} market={market} />
           ))
         )}
-        <div ref={bottomRef} />
       </div>
     </div>
   );

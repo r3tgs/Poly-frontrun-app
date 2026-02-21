@@ -46,7 +46,7 @@
 
 .of-terminal {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   height: 320px;
   overflow-y: auto;
   background: #0e0e12;
