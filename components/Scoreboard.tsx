@@ -1,14 +1,66 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Colors } from '../constants/colors';
 import type { GameState } from '../types';
 
 interface ScoreboardProps {
   game: GameState;
+  homeScore: number;
+  awayScore: number;
+  onHomeScoreChange: (score: number) => void;
+  onAwayScoreChange: (score: number) => void;
   marketQuestion?: string;
 }
 
-export function Scoreboard({ game, marketQuestion }: ScoreboardProps) {
+function ScoreCell({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(String(value));
+
+  // Keep display text in sync when value changes externally (button press)
+  useEffect(() => {
+    if (!editing) setText(String(value));
+  }, [value, editing]);
+
+  const commit = () => {
+    const n = parseInt(text, 10);
+    if (!isNaN(n) && n >= 0) onChange(n);
+    else setText(String(value));
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <TextInput
+        style={styles.scoreInput}
+        value={text}
+        onChangeText={setText}
+        keyboardType="number-pad"
+        onBlur={commit}
+        onSubmitEditing={commit}
+        autoFocus
+        maxLength={3}
+        selectTextOnFocus
+      />
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={() => { setText(String(value)); setEditing(true); }}
+      hitSlop={12}
+    >
+      <Text style={styles.score}>{value}</Text>
+    </Pressable>
+  );
+}
+
+export function Scoreboard({ game, homeScore, awayScore, onHomeScoreChange, onAwayScoreChange, marketQuestion }: ScoreboardProps) {
   if (marketQuestion) {
     return (
       <View style={styles.container}>
@@ -25,9 +77,9 @@ export function Scoreboard({ game, marketQuestion }: ScoreboardProps) {
       </View>
 
       <View style={styles.scoreContainer}>
-        <Text style={styles.score}>{game.homeScore}</Text>
+        <ScoreCell value={homeScore} onChange={onHomeScoreChange} />
         <Text style={styles.score}>-</Text>
-        <Text style={styles.score}>{game.awayScore}</Text>
+        <ScoreCell value={awayScore} onChange={onAwayScoreChange} />
       </View>
 
       <View style={styles.teamSection}>
@@ -86,5 +138,18 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: '900',
     letterSpacing: -1.92,
+    minWidth: 48,
+    textAlign: 'center',
+  },
+  scoreInput: {
+    color: '#FFFFFF',
+    fontSize: 48,
+    fontWeight: '900',
+    letterSpacing: -1.92,
+    minWidth: 48,
+    textAlign: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: '#4caf50',
+    padding: 0,
   },
 });

@@ -19,6 +19,14 @@ interface StatusData {
   market: unknown;
 }
 
+interface ActiveMarketData {
+  homeKalshiTicker?: string;
+  awayKalshiTicker?: string;
+  homeTitle?: string;
+  awayTitle?: string;
+  description?: string;
+}
+
 interface PnlData {
   realizedPnl: number;
   unrealizedPnl: number;
@@ -29,8 +37,9 @@ interface PnlData {
 type BotMessage =
   | { type: 'status'; data: StatusData }
   | { type: 'trade_update'; data: TradeUpdateData }
-  | { type: 'market_configured'; data: unknown }
+  | { type: 'market_configured'; data: ActiveMarketData }
   | { type: 'pnl'; data: PnlData }
+  | { type: 'set_label'; data: { label: string } }
   | { type: 'error'; data: { message: string } };
 
 // ---------- Hook options ----------
@@ -64,6 +73,28 @@ interface UseBotConnectionOptions {
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
 
+const MARKET_STORAGE_KEY = 'pm_active_market';
+const LABEL_STORAGE_KEY = 'pm_device_label';
+
+function detectDeviceLabel(): string {
+  try {
+    const ua = navigator.userAgent;
+    if (/iPhone/.test(ua)) {
+      const m = ua.match(/iPhone OS (\d+)_(\d+)/);
+      return m ? `iPhone iOS ${m[1]}.${m[2]}` : 'iPhone';
+    }
+    if (/iPad/.test(ua)) {
+      const m = ua.match(/CPU OS (\d+)_(\d+)/);
+      return m ? `iPad iOS ${m[1]}.${m[2]}` : 'iPad';
+    }
+    if (/Android/.test(ua)) {
+      const m = ua.match(/Android [\d.]+; ([^;)]+)/);
+      return m ? m[1].trim() : 'Android';
+    }
+  } catch {}
+  return 'Phone';
+}
+
 export function useBotConnection({
   url,
   homeLabel,
@@ -71,8 +102,21 @@ export function useBotConnection({
   onLogEntry,
   marketConfig,
 }: UseBotConnectionOptions) {
+  // Persist the device label across reconnects. Dashboard can rename it via set_label.
+  const deviceLabelRef = useRef<string>(
+    (() => { try { return localStorage.getItem(LABEL_STORAGE_KEY) || detectDeviceLabel(); } catch { return detectDeviceLabel(); } })()
+  );
+
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [testMode, setTestMode] = useState(false);
+  const [activeMarket, setActiveMarket] = useState<ActiveMarketData | null>(() => {
+    try {
+      const stored = localStorage.getItem(MARKET_STORAGE_KEY);
+      return stored ? (JSON.parse(stored) as ActiveMarketData) : null;
+    } catch {
+      return null;
+    }
+  });
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -131,7 +175,14 @@ export function useBotConnection({
           break;
 
         case 'market_configured':
+          try { localStorage.setItem(MARKET_STORAGE_KEY, JSON.stringify(msg.data)); } catch {}
+          setActiveMarket(msg.data);
           pushLog('Market configured', 'info');
+          break;
+
+        case 'set_label':
+          deviceLabelRef.current = msg.data.label;
+          try { localStorage.setItem(LABEL_STORAGE_KEY, msg.data.label); } catch {}
           break;
 
         case 'trade_update': {
@@ -140,13 +191,14 @@ export function useBotConnection({
           if (d.status === 'pending') {
             pushLog(`${d.action === 'buy' ? 'Buying' : 'Selling'} ${label}...`, 'info');
           } else if (d.status === 'filled') {
-            const price = d.price?.toFixed(2) ?? '?';
+            const price = d.price != null ? (d.price * 100).toFixed(0) + '¢' : '?';
             const size = d.size ?? '?';
+            const feeStr = d.fee != null ? ` fee $${d.fee.toFixed(2)}` : '';
             const latency = d.latencyMs ? ` (${d.latencyMs}ms)` : '';
             pushLog(
               d.action === 'buy'
-                ? `Bought ${size} contracts @ ${price}${latency}`
-                : `Sold ${size} contracts @ ${price}${latency}`,
+                ? `Bought ${size} @ ${price}${feeStr}${latency}`
+                : `Sold ${size} @ ${price}${feeStr}${latency}`,
               d.action === 'buy' ? 'trade' : 'sell',
             );
           } else if (d.status === 'failed') {
@@ -157,8 +209,9 @@ export function useBotConnection({
 
         case 'pnl': {
           const p = msg.data;
+          const fees = p.totalFees > 0 ? ` | fees $${p.totalFees.toFixed(2)}` : '';
           pushLog(
-            `P&L: realized ${p.realizedPnl >= 0 ? '+' : ''}${p.realizedPnl.toFixed(2)} USDC | ${p.openPositions} open`,
+            `P&L: realized ${p.realizedPnl >= 0 ? '+' : ''}$${p.realizedPnl.toFixed(2)}${fees} | ${p.openPositions} open`,
             'info',
           );
           break;
@@ -205,21 +258,36 @@ export function useBotConnection({
       setStatus('connected');
 
       // Identify this connection as a phone so the dashboard can see it.
-      ws.send(JSON.stringify({ type: 'register', data: { clientType: 'phone' } }));
+      ws.send(JSON.stringify({ type: 'register', data: { clientType: 'phone', label: deviceLabelRef.current } }));
 
-      // Configure market so signals work immediately.
-      const config = marketConfig ?? {
-        conditionId: 'test-condition',
-        homeTokenId: 'test-home-token',
-        awayTokenId: 'test-away-token',
-        description: `${homeLabelRef.current} vs ${awayLabelRef.current}`,
-      };
-      ws.send(
-        JSON.stringify({
-          type: 'configure_market',
-          data: config,
-        }),
-      );
+      // Re-announce the last known market so the dashboard card always shows
+      // the correct market — even after a bot restart (which clears server memory).
+      // Prefer the dashboard-assigned market saved in localStorage; fall back to
+      // the hardcoded marketConfig if nothing is stored yet.
+      try {
+        const stored = localStorage.getItem(MARKET_STORAGE_KEY);
+        if (stored) {
+          const market = JSON.parse(stored);
+          if (market.homeKalshiTicker || market.awayKalshiTicker ||
+              market.homeMarketSlug   || market.awayMarketSlug   ||
+              market.homeTokenId      || market.awayTokenId) {
+            ws.send(JSON.stringify({ type: 'configure_market', data: market }));
+          }
+        } else {
+          // Nothing stored yet — use the hardcoded config if present.
+          const config = marketConfig;
+          const hasMarket = config && (
+            config.homeKalshiTicker || config.awayKalshiTicker ||
+            config.homeMarketSlug   || config.awayMarketSlug   ||
+            config.homeTokenId      || config.awayTokenId
+          );
+          if (hasMarket) {
+            ws.send(JSON.stringify({ type: 'configure_market', data: config }));
+          }
+        }
+      } catch {
+        // localStorage unavailable — skip
+      }
     };
 
     ws.onmessage = (event) => {
@@ -304,5 +372,13 @@ export function useBotConnection({
     }
   }, []);
 
-  return { status, testMode, sendSignal, sendSell, requestPnl };
+  /** Toggle test mode on the bot at runtime. */
+  const sendSetTestMode = useCallback((enabled: boolean) => {
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'set_test_mode', data: { enabled } }));
+    }
+  }, []);
+
+  return { status, testMode, activeMarket, sendSignal, sendSell, requestPnl, sendSetTestMode };
 }

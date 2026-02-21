@@ -6,39 +6,58 @@ import './Performance.css';
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const PERIODS: Period[] = ['Month', 'Week', 'Day'];
 
-function formatPnl(value: number): string {
-  if (value === 0) return '+0';
-  const prefix = value > 0 ? '+' : '';
-  return `${prefix}${value.toLocaleString()}`;
+function formatPnlCell(value: number): string {
+  if (value === 0) return '$0';
+  const prefix = value > 0 ? '+$' : '-$';
+  return `${prefix}${Math.abs(value).toFixed(2)}`;
+}
+
+function formatProfit(value: number): string {
+  const sign = value >= 0 ? '+' : '';
+  return `${sign}$${value.toFixed(2)}`;
 }
 
 function StatsRow({ stats }: { stats: PerformanceStats }) {
   return (
     <div className="stats-row">
       <div className="stat-item">
-        <span className="stat-label">Total Profit</span>
+        <span className="stat-label">Realized P&L</span>
         <div className="stat-value-row">
-          <span className="stat-value">${stats.totalProfit.toLocaleString()}</span>
-          <span className="stat-change positive">
-            <img src={chevronIcon} alt="" className="stat-chevron" />
-            {stats.profitChange}%
+          <span
+            className="stat-value"
+            style={{ color: stats.totalProfit >= 0 ? '#15DF83' : '#F63658' }}
+          >
+            {formatProfit(stats.totalProfit)}
           </span>
+          {stats.profitChange != null && stats.profitChange !== 0 && (
+            <span className="stat-change positive">
+              <img src={chevronIcon} alt="" className="stat-chevron" />
+              {stats.profitChange}%
+            </span>
+          )}
         </div>
       </div>
       <div className="stat-divider" />
       <div className="stat-item">
         <span className="stat-label">ROI</span>
         <div className="stat-value-row">
-          <span className="stat-value">{stats.roi}%</span>
-          <span className="stat-change positive">
-            <img src={chevronIcon} alt="" className="stat-chevron" />
-            {stats.roiChange}%
+          <span
+            className="stat-value"
+            style={{ color: stats.roi >= 0 ? '#15DF83' : '#F63658' }}
+          >
+            {stats.roi >= 0 ? '+' : ''}{stats.roi.toFixed(1)}%
           </span>
+          {stats.roiChange != null && stats.roiChange !== 0 && (
+            <span className="stat-change positive">
+              <img src={chevronIcon} alt="" className="stat-chevron" />
+              {stats.roiChange}%
+            </span>
+          )}
         </div>
       </div>
       <div className="stat-divider" />
       <div className="stat-item">
-        <span className="stat-label">Total Bets Placed</span>
+        <span className="stat-label">Total Trades</span>
         <div className="stat-value-row">
           <span className="stat-value">{stats.totalBets}</span>
         </div>
@@ -70,7 +89,6 @@ function PeriodToggle({
 }
 
 function CalendarHeatmap({ data }: { data: DayData[] }) {
-  // Compute average profit and average loss from current month days
   const currentMonthDays = data.filter((d) => d.isCurrentMonth);
   const profitDays = currentMonthDays.filter((d) => d.pnl > 0);
   const lossDays = currentMonthDays.filter((d) => d.pnl < 0);
@@ -84,7 +102,6 @@ function CalendarHeatmap({ data }: { data: DayData[] }) {
       ? lossDays.reduce((sum, d) => sum + Math.abs(d.pnl), 0) / lossDays.length
       : 0;
 
-  // Group days into rows of 7
   const rows: DayData[][] = [];
   for (let i = 0; i < data.length; i += 7) {
     rows.push(data.slice(i, i + 7));
@@ -136,7 +153,7 @@ function CalendarHeatmap({ data }: { data: DayData[] }) {
                         isPositive ? 'pnl-positive' : isNegative ? 'pnl-negative' : 'pnl-zero'
                       }`}
                     >
-                      {formatPnl(d.pnl)}
+                      {formatPnlCell(d.pnl)}
                     </span>
                   )}
                 </div>

@@ -15,6 +15,13 @@ export function setPriceCache(cache: PriceCache): void {
 }
 
 // ============================================================
+// Constants
+// ============================================================
+
+/** Kalshi taker fee: $0.02 per contract (2% of $1 max payout). */
+const TAKER_FEE_PER_CONTRACT = 0.02;
+
+// ============================================================
 // Helpers
 // ============================================================
 
@@ -25,6 +32,53 @@ function parseTradeId(tradeId: string): { ticker: string; side: "yes" | "no" } {
     return { ticker: tradeId.slice(0, sep), side: raw === "NO" ? "no" : "yes" };
   }
   return { ticker: tradeId, side: "yes" };
+}
+
+/**
+ * Extract actual average fill price (dollars) and total fees (dollars) from
+ * a Kalshi Order response using the official Order fields:
+ *   - taker_fill_cost / maker_fill_cost  — fill cost in cents
+ *   - taker_fees / maker_fees            — fees in cents
+ *   - fill_count                          — number of contracts filled
+ *
+ * IMPORTANT — Kalshi's fill cost direction:
+ *   BUY  orders: taker_fill_cost is in the bought side's cents.
+ *                avgPrice = taker_fill_cost / count / 100
+ *   SELL orders: taker_fill_cost is in the OPPOSITE side's cents.
+ *                e.g. selling YES at 18¢ → taker_fill_cost = 82¢×count (NO cents).
+ *                avgPrice = 1 - taker_fill_cost / count / 100
+ *
+ * Falls back to limitCents if fill_count = 0 (unfilled GTC sitting on book).
+ * Falls back to TAKER_FEE_PER_CONTRACT estimate if the API returns no fee data.
+ */
+function extractFillData(
+  order: any,
+  limitCents: number,
+  action: "buy" | "sell",
+): { avgPriceDollars: number; feeDollars: number } {
+  const fillCount = Number(order.fill_count ?? 0);
+  const totalFillCostCents =
+    Number(order.taker_fill_cost ?? 0) + Number(order.maker_fill_cost ?? 0);
+  const totalFeesCents =
+    Number(order.taker_fees ?? 0) + Number(order.maker_fees ?? 0);
+
+  let avgPriceDollars: number;
+  if (fillCount > 0 && totalFillCostCents > 0) {
+    const rawCost = totalFillCostCents / fillCount / 100;
+    // Sell orders: fill cost is denominated in the complement side — invert to get the sell price.
+    avgPriceDollars = action === "sell" ? 1 - rawCost : rawCost;
+  } else {
+    avgPriceDollars = limitCents / 100;
+  }
+
+  const feeDollars =
+    totalFeesCents > 0
+      ? totalFeesCents / 100
+      : fillCount > 0
+      ? fillCount * TAKER_FEE_PER_CONTRACT // fallback estimate if API omits fees
+      : 0;
+
+  return { avgPriceDollars, feeDollars };
 }
 
 /**
@@ -144,11 +198,11 @@ export async function executeBuy(
       return executeGTCBuy(client, ticker, side, amount, bestAskCents, t0);
     }
 
-    const fillPrice = bestAskCents / 100;
-    log.info(`BUY filled  orderId=${order.order_id}  price=${fillPrice}  contracts=${filledCount}  latency=${latencyMs}ms`);
-    return { success: true, orderId: order.order_id, price: fillPrice, size: filledCount, latencyMs };
+    const { avgPriceDollars: fillPrice, feeDollars: fee } = extractFillData(order, bestAskCents, "buy");
+    log.info(`BUY filled  orderId=${order.order_id}  avgPrice=${fillPrice.toFixed(4)}  contracts=${filledCount}  fee=$${fee.toFixed(2)}  latency=${latencyMs}ms`);
+    return { success: true, orderId: order.order_id, price: fillPrice, size: filledCount, fee, latencyMs };
   } catch (err) {
-    log.warn(`FOK buy failed: ${err instanceof Error ? err.message : String(err)} — falling back to GTC`);
+    log.warn(`FOK buy failed: ${errMsg(err)} — falling back to GTC`);
     return executeGTCBuy(client, ticker, side, amount, undefined, t0);
   }
 }
@@ -186,10 +240,13 @@ async function executeGTCBuy(
 
     const order = resp.data.order;
     const latencyMs = Date.now() - t0;
-    log.info(`GTC BUY posted  orderId=${order.order_id}  price=${bestAskCents / 100}  count=${count}  latency=${latencyMs}ms`);
-    return { success: true, orderId: order.order_id, price: bestAskCents / 100, size: count, latencyMs };
+    const { avgPriceDollars: fillPrice, feeDollars: fillFee } = extractFillData(order, bestAskCents, "buy");
+    // If GTC is sitting on the book (nothing filled yet), estimate fee for bookkeeping.
+    const fee = fillFee > 0 ? fillFee : count * TAKER_FEE_PER_CONTRACT;
+    log.info(`GTC BUY posted  orderId=${order.order_id}  price=${fillPrice.toFixed(4)}  count=${count}  fee=$${fee.toFixed(2)}  latency=${latencyMs}ms`);
+    return { success: true, orderId: order.order_id, price: fillPrice, size: count, fee, latencyMs };
   } catch (err) {
-    return fail(err instanceof Error ? err.message : String(err), t0);
+    return fail(errMsg(err), t0);
   }
 }
 
@@ -216,7 +273,7 @@ export async function executeSell(
       size = Math.abs(pos.position);
       log.info(`SELL ALL (from API) — ticker=${ticker}  side=${side}  contracts=${size}`);
     } catch (err) {
-      return fail(`Failed to fetch position: ${err instanceof Error ? err.message : String(err)}`, t0);
+      return fail(`Failed to fetch position: ${errMsg(err)}`, t0);
     }
   }
 
@@ -251,11 +308,31 @@ export async function executeSell(
 
     const order = resp.data.order;
     const latencyMs = Date.now() - t0;
-    log.info(`SELL posted  orderId=${order.order_id}  price=${sellPriceCents / 100}  latency=${latencyMs}ms`);
-    return { success: true, orderId: order.order_id, price: sellPriceCents / 100, size, latencyMs };
+    const { avgPriceDollars: fillPrice, feeDollars: fee } = extractFillData(order, sellPriceCents, "sell");
+    log.info(`SELL posted  orderId=${order.order_id}  price=${fillPrice.toFixed(4)}  contracts=${size}  fee=$${fee.toFixed(2)}  latency=${latencyMs}ms`);
+    return { success: true, orderId: order.order_id, price: fillPrice, size, fee, latencyMs };
   } catch (err) {
-    return fail(err instanceof Error ? err.message : String(err), t0);
+    return fail(errMsg(err), t0);
   }
+}
+
+/**
+ * Extract a human-readable error message from an Axios error,
+ * including the response body so Kalshi's reason is visible in the logs.
+ */
+function errMsg(err: unknown): string {
+  if (err != null && typeof err === "object" && "response" in err) {
+    const axiosErr = err as { response?: { data?: unknown; status?: number }; message?: string };
+    const status = axiosErr.response?.status ?? "?";
+    const body = axiosErr.response?.data;
+    const bodyStr = body
+      ? typeof body === "string"
+        ? body
+        : JSON.stringify(body)
+      : "";
+    return `HTTP ${status}${bodyStr ? " — " + bodyStr : ""}`;
+  }
+  return err instanceof Error ? err.message : String(err);
 }
 
 function fail(error: string, t0: number): TradeResult {

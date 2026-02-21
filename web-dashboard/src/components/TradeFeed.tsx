@@ -15,8 +15,24 @@ function PlatformBadge({ platform }: { platform: 'poly' | 'kalshi' }) {
   );
 }
 
+function formatTime(ts: number): string {
+  return new Date(ts).toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
+
 function TradeRow({ trade }: { trade: TradeEntry }) {
   const isBuy = trade.action === 'buy';
+  const teamLabel = trade.team === 'home'
+    ? (trade.homeTitle ?? 'Home')
+    : (trade.awayTitle ?? 'Away');
+
+  const priceDisplay = `${(trade.price * 100).toFixed(0)}¢`;
+  const feeDisplay = trade.fee != null ? ` · $${trade.fee.toFixed(2)} fee` : '';
+  const latencyDisplay = trade.latencyMs != null ? ` · ${trade.latencyMs}ms` : '';
 
   return (
     <div className="trade-row">
@@ -28,26 +44,35 @@ function TradeRow({ trade }: { trade: TradeEntry }) {
         />
         <div className="trade-info">
           <span className={`trade-action ${isBuy ? 'action-buy' : 'action-sell'}`}>
-            {isBuy ? 'Bought' : 'Sold'} {trade.team}
+            {isBuy ? 'Bought' : 'Sold'} {teamLabel}
           </span>
           <span className="trade-details">
-            {trade.contracts} contracts @ {trade.price.toFixed(2)}
+            {trade.contracts} contracts @ {priceDisplay}{feeDisplay}{latencyDisplay}
           </span>
         </div>
       </div>
       <div className="trade-right">
         <div className="trade-matchup">
-          <div className="matchup-team">
-            <span className="matchup-abbr">{trade.awayAbbr}</span>
-            <span className="matchup-name">{trade.awayName}</span>
-          </div>
-          <span className="matchup-vs">VS</span>
-          <div className="matchup-team">
-            <span className="matchup-abbr">{trade.homeAbbr}</span>
-            <span className="matchup-name">{trade.homeName}</span>
-          </div>
+          {trade.homeTitle && trade.awayTitle ? (
+            <>
+              <div className="matchup-team">
+                <span className="matchup-name">{trade.homeTitle}</span>
+              </div>
+              <span className="matchup-vs">VS</span>
+              <div className="matchup-team">
+                <span className="matchup-name">{trade.awayTitle}</span>
+              </div>
+            </>
+          ) : trade.marketDesc ? (
+            <span className="matchup-name">{trade.marketDesc}</span>
+          ) : (
+            <span className="matchup-name" style={{ color: '#555' }}>—</span>
+          )}
         </div>
-        <PlatformBadge platform={trade.platform} />
+        <div className="trade-right-meta">
+          <PlatformBadge platform={trade.platform} />
+          <span className="trade-time">{formatTime(trade.timestamp)}</span>
+        </div>
       </div>
     </div>
   );
@@ -58,9 +83,13 @@ export function TradeFeed({ trades }: { trades: TradeEntry[] }) {
     <div className="trade-feed">
       <h2 className="section-title">Trade Feed</h2>
       <div className="trade-list">
-        {trades.map((trade) => (
-          <TradeRow key={trade.id} trade={trade} />
-        ))}
+        {trades.length === 0 ? (
+          <div className="trade-feed-empty">No trades yet this session</div>
+        ) : (
+          trades.map((trade) => (
+            <TradeRow key={trade.id} trade={trade} />
+          ))
+        )}
       </div>
     </div>
   );

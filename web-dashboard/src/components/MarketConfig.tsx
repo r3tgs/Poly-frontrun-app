@@ -1,29 +1,21 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import type { PhoneClient } from '../types';
 import './MarketConfig.css';
 
-const BOT_WS_URL = 'wss://pm-frontrun-snowy-waterfall-1028.fly.dev';
 const BOT_HTTP_URL = 'https://pm-frontrun-snowy-waterfall-1028.fly.dev';
 
-interface SearchResult {
-  eventTitle: string;
-  eventTicker: string;
+interface MarketPreview {
   homeKalshiTicker: string;
   homeTitle: string;
   awayKalshiTicker: string;
   awayTitle: string;
+  description: string;
 }
 
-interface ActiveMarket {
-  homeKalshiTicker?: string;
-  awayKalshiTicker?: string;
-  description?: string;
-}
-
-interface PhoneClient {
-  id: string;
-  connectedAt: number;
-  activeMarket: ActiveMarket | null;
-  label?: string;
+interface MarketConfigProps {
+  wsRef: React.MutableRefObject<WebSocket | null>;
+  wsStatus: 'connecting' | 'connected' | 'disconnected';
+  phones: PhoneClient[];
 }
 
 function timeAgo(ms: number): string {
@@ -34,94 +26,129 @@ function timeAgo(ms: number): string {
   return `${Math.floor(mins / 60)}h ago`;
 }
 
-export function MarketConfig() {
-  const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
-  const [phones, setPhones] = useState<PhoneClient[]>([]);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [settingFor, setSettingFor] = useState<string | null>(null);
+/** Extract a Kalshi ticker from a URL or raw ticker string. */
+function extractTicker(input: string): string | null {
+  const trimmed = input.trim();
+  try {
+    const url = new URL(trimmed);
+    const parts = url.pathname.split('/').filter(Boolean);
+    if (parts.length > 0) return parts[parts.length - 1].toUpperCase();
+  } catch {}
+  if (/^[A-Z0-9-]+$/i.test(trimmed)) return trimmed.toUpperCase();
+  return null;
+}
 
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const connectRef = useRef<() => void>(() => {});
+// ---- Per-phone configure panel ----
 
-  connectRef.current = () => {
-    if (reconnectTimer.current) { clearTimeout(reconnectTimer.current); reconnectTimer.current = null; }
-    if (wsRef.current) {
-      wsRef.current.onopen = null;
-      wsRef.current.onclose = null;
-      wsRef.current.onmessage = null;
-      wsRef.current.onerror = null;
-      wsRef.current.close();
-      wsRef.current = null;
+interface ConfigurePanelProps {
+  phoneId: string;
+  onSet: (phoneId: string, preview: MarketPreview) => void;
+  isSettingFor: boolean;
+}
+
+function ConfigurePanel({ phoneId, onSet, isSettingFor }: ConfigurePanelProps) {
+  const [url, setUrl] = useState('');
+  const [preview, setPreview] = useState<MarketPreview | null>(null);
+  const [looking, setLooking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const lookup = useCallback(async (raw: string) => {
+    const ticker = extractTicker(raw);
+    if (!ticker) { setError('Could not extract a ticker from that URL.'); return; }
+    setLooking(true);
+    setError(null);
+    setPreview(null);
+    try {
+      const resp = await fetch(`${BOT_HTTP_URL}/lookup-market?ticker=${encodeURIComponent(ticker)}`);
+      const data = await resp.json();
+      if (data.error) { setError(data.error); return; }
+      setPreview(data as MarketPreview);
+    } catch {
+      setError('Could not reach bot server.');
+    } finally {
+      setLooking(false);
     }
-
-    setWsStatus('connecting');
-    const ws = new WebSocket(BOT_WS_URL);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      if (wsRef.current !== ws) { ws.close(); return; }
-      setWsStatus('connected');
-      ws.send(JSON.stringify({ type: 'register', data: { clientType: 'dashboard' } }));
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(typeof event.data === 'string' ? event.data : String(event.data));
-        if (msg.type === 'clients_update') {
-          setPhones(msg.data ?? []);
-        }
-      } catch {}
-    };
-
-    ws.onclose = () => {
-      if (wsRef.current !== ws) return;
-      setWsStatus('disconnected');
-      reconnectTimer.current = setTimeout(() => connectRef.current(), 4000);
-    };
-
-    ws.onerror = () => {};
-  };
-
-  useEffect(() => {
-    connectRef.current();
-    return () => {
-      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
-      if (wsRef.current) {
-        wsRef.current.onclose = null;
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-    };
   }, []);
 
-  const handleSearch = useCallback(async () => {
-    const q = query.trim();
-    if (!q) return;
-    setSearching(true);
-    setSearchError(null);
-    setResults([]);
-    try {
-      const resp = await fetch(`${BOT_HTTP_URL}/search-markets?q=${encodeURIComponent(q)}`);
-      const data = await resp.json();
-      if (Array.isArray(data)) {
-        setResults(data);
-        if (data.length === 0) setSearchError('No markets found.');
-      } else {
-        setSearchError('Search failed.');
-      }
-    } catch {
-      setSearchError('Could not reach bot server.');
-    } finally {
-      setSearching(false);
-    }
-  }, [query]);
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text');
+    setUrl(pasted);
+    setTimeout(() => lookup(pasted), 0);
+  }, [lookup]);
 
-  const handleSet = useCallback((phoneId: string, result: SearchResult) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') lookup(url);
+  }, [lookup, url]);
+
+  return (
+    <div className="instance-search-panel">
+      <div className="market-url-row">
+        <input
+          className="market-search-input"
+          type="text"
+          placeholder="Paste Kalshi market URL…"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          onPaste={handlePaste}
+          onKeyDown={handleKeyDown}
+          autoFocus
+        />
+        {!preview && (
+          <button
+            className="market-search-btn"
+            onClick={() => lookup(url)}
+            disabled={looking || !url.trim()}
+          >
+            {looking ? '…' : 'Look up'}
+          </button>
+        )}
+      </div>
+
+      {error && <p className="market-error">{error}</p>}
+
+      {preview && (
+        <div className="market-preview">
+          <div className="market-preview-title">{preview.description}</div>
+          <div className="market-preview-teams">
+            <div className="market-preview-team">
+              <span className="market-preview-label">Home</span>
+              <span className="market-preview-ticker">{preview.homeKalshiTicker}</span>
+              {preview.homeTitle && <span className="market-preview-name">{preview.homeTitle}</span>}
+            </div>
+            <div className="market-preview-vs">vs</div>
+            <div className="market-preview-team">
+              <span className="market-preview-label">Away</span>
+              <span className="market-preview-ticker">{preview.awayKalshiTicker}</span>
+              {preview.awayTitle && <span className="market-preview-name">{preview.awayTitle}</span>}
+            </div>
+          </div>
+          <div className="market-preview-actions">
+            <button className="market-clear-btn" onClick={() => { setPreview(null); setUrl(''); }}>
+              Clear
+            </button>
+            <button
+              className="market-set-btn"
+              onClick={() => onSet(phoneId, preview)}
+              disabled={isSettingFor}
+            >
+              {isSettingFor ? 'Setting…' : 'Set Market'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- Main component ----
+
+export function MarketConfig({ wsRef, wsStatus, phones }: MarketConfigProps) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [settingFor, setSettingFor] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingLabel, setEditingLabel] = useState('');
+
+  const handleSet = useCallback((phoneId: string, preview: MarketPreview) => {
     const ws = wsRef.current;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     setSettingFor(phoneId);
@@ -130,34 +157,38 @@ export function MarketConfig() {
       data: {
         clientId: phoneId,
         market: {
-          homeKalshiTicker: result.homeKalshiTicker,
-          awayKalshiTicker: result.awayKalshiTicker,
-          description: result.eventTitle,
+          homeKalshiTicker: preview.homeKalshiTicker,
+          awayKalshiTicker: preview.awayKalshiTicker,
+          description: preview.description,
+          homeTitle: preview.homeTitle,
+          awayTitle: preview.awayTitle,
         },
       },
     }));
-    // Optimistically collapse + clear after a short delay
     setTimeout(() => {
       setSettingFor(null);
       setExpandedId(null);
-      setResults([]);
-      setQuery('');
     }, 600);
-  }, []);
+  }, [wsRef]);
 
   const toggleExpand = (id: string) => {
-    if (expandedId === id) {
-      setExpandedId(null);
-      setResults([]);
-      setQuery('');
-      setSearchError(null);
-    } else {
-      setExpandedId(id);
-      setResults([]);
-      setQuery('');
-      setSearchError(null);
-    }
+    setExpandedId(prev => prev === id ? null : id);
   };
+
+  const startEditLabel = (phone: PhoneClient) => {
+    setEditingId(phone.id);
+    setEditingLabel(phone.label ?? `Phone ${phone.id.slice(0, 8)}`);
+  };
+
+  const commitLabel = useCallback((phoneId: string, label: string) => {
+    setEditingId(null);
+    const trimmed = label.trim();
+    if (!trimmed) return;
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'rename_client', data: { clientId: phoneId, label: trimmed } }));
+    }
+  }, [wsRef]);
 
   return (
     <div className="market-config">
@@ -180,9 +211,27 @@ export function MarketConfig() {
             <div key={phone.id} className="instance-card">
               <div className="instance-header">
                 <div className="instance-meta">
-                  <span className="instance-id">
-                    {phone.label ?? `Phone ${phone.id.slice(0, 8)}`}
-                  </span>
+                  {editingId === phone.id ? (
+                    <input
+                      className="instance-label-input"
+                      value={editingLabel}
+                      onChange={(e) => setEditingLabel(e.target.value)}
+                      onBlur={() => commitLabel(phone.id, editingLabel)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') commitLabel(phone.id, editingLabel);
+                        if (e.key === 'Escape') setEditingId(null);
+                      }}
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className="instance-id"
+                      onClick={() => startEditLabel(phone)}
+                      title="Click to rename"
+                    >
+                      {phone.label ?? `Phone ${phone.id.slice(0, 8)}`}
+                    </span>
+                  )}
                   <span className="instance-time">{timeAgo(phone.connectedAt)}</span>
                 </div>
                 <button
@@ -211,50 +260,11 @@ export function MarketConfig() {
               </div>
 
               {expandedId === phone.id && (
-                <div className="instance-search-panel">
-                  <div className="market-search-row">
-                    <input
-                      className="market-search-input"
-                      type="text"
-                      placeholder="Search team or event…"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      autoFocus
-                    />
-                    <button
-                      className="market-search-btn"
-                      onClick={handleSearch}
-                      disabled={searching}
-                    >
-                      {searching ? '…' : 'Search'}
-                    </button>
-                  </div>
-
-                  {searchError && <p className="market-error">{searchError}</p>}
-
-                  {results.length > 0 && (
-                    <div className="market-results">
-                      {results.map((r) => (
-                        <div key={r.eventTicker} className="market-result-item">
-                          <div className="market-result-title">{r.eventTitle}</div>
-                          <div className="market-result-teams">
-                            <span className="market-result-team">{r.homeTitle || r.homeKalshiTicker}</span>
-                            <span className="market-result-vs">vs</span>
-                            <span className="market-result-team">{r.awayTitle || r.awayKalshiTicker}</span>
-                          </div>
-                          <button
-                            className="market-set-btn"
-                            onClick={() => handleSet(phone.id, r)}
-                            disabled={settingFor === phone.id}
-                          >
-                            {settingFor === phone.id ? 'Setting…' : 'Set'}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <ConfigurePanel
+                  phoneId={phone.id}
+                  onSet={handleSet}
+                  isSettingFor={settingFor === phone.id}
+                />
               )}
             </div>
           ))}

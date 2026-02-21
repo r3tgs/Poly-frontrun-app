@@ -111,3 +111,25 @@
   border-radius: 10px;
   overflow: hidden;
 }
+
+.trade-right-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.trade-time {
+  color: #555;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.trade-feed-empty {
+  color: #555;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 24px 0;
+  text-align: center;
+}

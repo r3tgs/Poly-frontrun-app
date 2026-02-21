@@ -33,22 +33,29 @@ async function main(): Promise<void> {
   // 2. Client + trading backend
   let client: any = null;
   let walletAddress = "0xTEST_WALLET";
-  let trading: TradingBackend = simTrading;
   let kalshiCache: PriceCache | undefined;
+
+  // platformTrading is the real backend for the configured platform.
+  // It is used even in test mode as the "real" target so the runtime toggle works.
+  let platformTrading: TradingBackend = simTrading;
 
   if (config.testMode) {
     log.info(`Simulated wallet: ${walletAddress}`);
+    // Determine the platform backend for runtime toggling (but don't init the client).
+    if (config.platform === "polymarket-us") platformTrading = realUSTrading;
+    else if (config.platform === "kalshi") platformTrading = realKalshiTrading;
+    else platformTrading = realTrading;
   } else if (config.platform === "polymarket-us") {
     const pm = await initializeUSClient(config);
     client = pm;
     walletAddress = "Polymarket US";
-    trading = realUSTrading;
+    platformTrading = realUSTrading;
     log.info("Polymarket US client ready");
   } else if (config.platform === "kalshi") {
     const km = await initializeKalshiClient(config);
     client = km;
     walletAddress = "Kalshi";
-    trading = realKalshiTrading;
+    platformTrading = realKalshiTrading;
     kalshiCache = new PriceCache(km.keyId, km.privateKeyPem);
     realKalshiTrading.setPriceCache(kalshiCache);
     log.info("Kalshi client ready (price cache initialised)");
@@ -56,7 +63,7 @@ async function main(): Promise<void> {
     const pm = await initializeClient(config);
     client = pm;
     walletAddress = pm.address;
-    trading = realTrading;
+    platformTrading = realTrading;
     log.info(`Wallet ready: ${walletAddress}`);
   }
 
@@ -64,7 +71,9 @@ async function main(): Promise<void> {
   const pnl = new PnLTracker();
 
   // 5. WebSocket server
-  const wss = startWebSocketServer(config, client, walletAddress, trading, pnl, kalshiCache);
+  // Pass both the platform's real backend and simTrading so the server can
+  // switch between them at runtime when the phone toggles test mode.
+  const wss = startWebSocketServer(config, client, walletAddress, platformTrading, simTrading, pnl, kalshiCache);
 
   // 6. Graceful shutdown
   const shutdown = () => {

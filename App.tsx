@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Scoreboard } from './components/Scoreboard';
@@ -22,18 +22,35 @@ function GameScreen() {
   const [platformStatus, setPlatformStatus] =
     useState<PlatformStatus>(mockPlatformStatus);
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
+  const [homeScore, setHomeScore] = useState(0);
+  const [awayScore, setAwayScore] = useState(0);
 
   const addLogEntry = useCallback((entry: LogEntry) => {
     setLogEntries((prev) => [entry, ...prev]);
   }, []);
 
-  const { status, sendSignal, sendSell } = useBotConnection({
+  const { status, testMode, activeMarket, sendSignal, sendSell, sendSetTestMode } = useBotConnection({
     url: BOT_WS_URL,
     homeLabel: `${mockGame.homeTeam.city} ${mockGame.homeTeam.name}`,
     awayLabel: `${mockGame.awayTeam.city} ${mockGame.awayTeam.name}`,
     onLogEntry: addLogEntry,
     marketConfig: MARKET_CONFIG,
   });
+
+  // Override team names with live market data when available.
+  // Fall back to the Kalshi ticker when homeTitle/awayTitle are empty.
+  const homeName = activeMarket
+    ? (activeMarket.homeTitle || activeMarket.homeKalshiTicker || 'Home')
+    : null;
+  const awayName = activeMarket
+    ? (activeMarket.awayTitle || activeMarket.awayKalshiTicker || 'Away')
+    : null;
+  const homeTeam = homeName
+    ? { ...mockGame.homeTeam, id: 'home', city: '', name: homeName, abbreviation: homeName.slice(0, 4).toUpperCase() }
+    : mockGame.homeTeam;
+  const awayTeam = awayName
+    ? { ...mockGame.awayTeam, id: 'away', city: '', name: awayName, abbreviation: awayName.slice(0, 4).toUpperCase() }
+    : mockGame.awayTeam;
 
   const handleTogglePlatform = useCallback(
     (platform: 'poly' | 'kalshi') => {
@@ -54,36 +71,39 @@ function GameScreen() {
 
   const handleSelectTeam = useCallback(
     (teamId: string) => {
-      const isHome = teamId === mockGame.homeTeam.id;
-      const team = isHome ? mockGame.homeTeam : mockGame.awayTeam;
+      const isHome = teamId === 'home' || teamId === mockGame.homeTeam.id;
+      const team = isHome ? homeTeam : awayTeam;
 
       addLogEntry({
         id: String(Date.now()),
         timestamp: getTimestamp(),
-        message: `User selected '${team.city} ${team.name}'`,
+        message: `User selected '${team.name}'`,
         type: 'info',
       });
 
+      if (isHome) setHomeScore((s) => s + 1);
+      else setAwayScore((s) => s + 1);
+
       sendSignal(isHome ? 'home' : 'away');
     },
-    [addLogEntry, sendSignal]
+    [addLogEntry, sendSignal, homeTeam, awayTeam]
   );
 
   const handleSellTeam = useCallback(
     (teamId: string) => {
-      const isHome = teamId === mockGame.homeTeam.id;
-      const team = isHome ? mockGame.homeTeam : mockGame.awayTeam;
+      const isHome = teamId === 'home' || teamId === mockGame.homeTeam.id;
+      const team = isHome ? homeTeam : awayTeam;
 
       addLogEntry({
         id: String(Date.now()),
         timestamp: getTimestamp(),
-        message: `Sell '${team.city} ${team.name}'`,
+        message: `Sell '${team.name}'`,
         type: 'info',
       });
 
       sendSell(isHome ? 'home' : 'away', 0);
     },
-    [addLogEntry, sendSell]
+    [addLogEntry, sendSell, homeTeam, awayTeam]
   );
 
   return (
@@ -92,7 +112,23 @@ function GameScreen() {
 
       <View style={styles.header}>
         <ConnectionBanner status={status} url={BOT_WS_URL} />
-        <Scoreboard game={mockGame} />
+        <View style={styles.marketRow}>
+          {activeMarket ? (
+            <Text style={styles.marketActive}>
+              {activeMarket.description || `${activeMarket.homeKalshiTicker} / ${activeMarket.awayKalshiTicker}`}
+              {'\n'}{homeName} vs {awayName}
+            </Text>
+          ) : (
+            <Text style={styles.marketWaiting}>Waiting for market from dashboard…</Text>
+          )}
+        </View>
+        <Scoreboard
+          game={{ ...mockGame, homeTeam, awayTeam }}
+          homeScore={homeScore}
+          awayScore={awayScore}
+          onHomeScoreChange={setHomeScore}
+          onAwayScoreChange={setAwayScore}
+        />
       </View>
 
       <View style={styles.card}>
@@ -100,10 +136,12 @@ function GameScreen() {
           <PlatformToggles
             status={platformStatus}
             onToggle={handleTogglePlatform}
+            testMode={testMode}
+            onToggleTestMode={() => sendSetTestMode(!testMode)}
           />
           <TeamButtons
-            homeTeam={mockGame.homeTeam}
-            awayTeam={mockGame.awayTeam}
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
             onSelect={handleSelectTeam}
             onSell={handleSellTeam}
           />
@@ -148,5 +186,21 @@ const styles = StyleSheet.create({
   fixedContent: {
     paddingTop: CARD_PADDING,
     paddingHorizontal: CARD_PADDING,
+  },
+  marketRow: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  marketActive: {
+    color: '#4caf50',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  marketWaiting: {
+    color: '#aaa',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

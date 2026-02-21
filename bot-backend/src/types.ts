@@ -49,6 +49,10 @@ export interface MarketConfig {
   // ---- Common ----
   /** Human-readable label, e.g. "Stars vs Rangers" */
   description?: string;
+  /** Human-readable name for the home team / outcome */
+  homeTitle?: string;
+  /** Human-readable name for the away team / outcome */
+  awayTitle?: string;
 }
 
 // ============================================================
@@ -62,7 +66,9 @@ export type AppMessage =
   | StatusRequestMessage
   | PnlRequestMessage
   | RegisterMessage
-  | ConfigureClientMarketMessage;
+  | ConfigureClientMarketMessage
+  | RenameClientMessage
+  | SetTestModeMessage;
 
 /** Set the active market before sending trade signals. */
 export interface ConfigureMarketMessage {
@@ -109,9 +115,21 @@ export interface ConfigureClientMarketMessage {
   data: { clientId: string; market: MarketConfig };
 }
 
+/** Dashboard → bot: rename a connected phone. */
+export interface RenameClientMessage {
+  type: "rename_client";
+  data: { clientId: string; label: string };
+}
+
 /** Request current P&L summary (test mode). */
 export interface PnlRequestMessage {
   type: "pnl";
+}
+
+/** Phone → bot: switch between simulated and real trading at runtime. */
+export interface SetTestModeMessage {
+  type: "set_test_mode";
+  data: { enabled: boolean };
 }
 
 // ============================================================
@@ -124,7 +142,8 @@ export type BotMessage =
   | ErrorMessage
   | MarketConfiguredMessage
   | PnlMessage
-  | ClientsUpdateMessage;
+  | ClientsUpdateMessage
+  | SetLabelMessage;
 
 export interface StatusMessage {
   type: "status";
@@ -146,6 +165,8 @@ export interface TradeUpdateMessage {
     status: "pending" | "filled" | "partial" | "failed";
     price?: number;
     size?: number;
+    /** Exchange fee paid in USDC */
+    fee?: number;
     timestamp: number;
     /** End-to-end latency from signal receipt to order post */
     latencyMs?: number;
@@ -178,11 +199,18 @@ export interface ClientsUpdateMessage {
   }>;
 }
 
+/** Bot → phone: persist the label the dashboard assigned. */
+export interface SetLabelMessage {
+  type: "set_label";
+  data: { label: string };
+}
+
 export interface PnlMessage {
   type: "pnl";
   data: {
     totalSpent: number;
     totalReceived: number;
+    totalFees: number;
     realizedPnl: number;
     unrealizedPnl: number;
     openPositions: number;

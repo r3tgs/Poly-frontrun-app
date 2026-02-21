@@ -56,11 +56,134 @@ async function searchKalshiMarkets(q: string): Promise<MarketSearchResult[]> {
       eventTitle: e.title ?? e.event_ticker,
       eventTicker: e.event_ticker,
       homeKalshiTicker: home?.ticker ?? "",
-      homeTitle: home?.subtitle ?? home?.title ?? "",
+      homeTitle: home?.yes_sub_title || home?.subtitle || home?.title || "",
       awayKalshiTicker: away?.ticker ?? home?.ticker ?? "",
-      awayTitle: away?.subtitle ?? away?.title ?? "",
+      awayTitle: away?.yes_sub_title || away?.subtitle || away?.title || "",
     };
   });
+}
+
+interface MarketLookupResult {
+  homeKalshiTicker: string;
+  homeTitle: string;
+  awayKalshiTicker: string;
+  awayTitle: string;
+  description: string;
+}
+
+async function lookupKalshiMarket(ticker: string): Promise<MarketLookupResult> {
+  // Helper: build result from an event with nested markets
+  function resultFromEvent(event: any): MarketLookupResult | null {
+    const markets: any[] = event.markets ?? [];
+    const description: string = event.title ?? event.event_ticker ?? ticker;
+    if (markets.length >= 2) {
+      return {
+        homeKalshiTicker: markets[0].ticker,
+        homeTitle: markets[0].yes_sub_title || markets[0].subtitle || markets[0].title || markets[0].ticker,
+        awayKalshiTicker: markets[1].ticker,
+        awayTitle: markets[1].yes_sub_title || markets[1].subtitle || markets[1].title || markets[1].ticker,
+        description,
+      };
+    }
+    if (markets.length === 1) {
+      const m = markets[0];
+      return {
+        homeKalshiTicker: m.ticker,
+        homeTitle: m.yes_sub_title || m.subtitle || "Yes",
+        awayKalshiTicker: m.ticker,
+        awayTitle: m.no_sub_title || "No",
+        description,
+      };
+    }
+    return null;
+  }
+
+  // Strategy 1: direct market lookup → then fetch its parent event
+  try {
+    const mResp = await fetch(`${KALSHI_BASE}/markets/${ticker}`);
+    if (mResp.ok) {
+      const mData = await mResp.json() as { market: any };
+      const m = mData.market;
+      if (m?.status && m.status !== "open") {
+        throw new Error(`Market is ${m.status} (not open for trading).`);
+      }
+      const eventTicker: string = m?.event_ticker ?? ticker;
+      const eResp = await fetch(`${KALSHI_BASE}/events/${eventTicker}?with_nested_markets=true`);
+      if (eResp.ok) {
+        const eData = await eResp.json() as { event: any };
+        const result = resultFromEvent(eData.event ?? {});
+        if (result) return result;
+      }
+      // Binary fallback
+      return {
+        homeKalshiTicker: ticker,
+        homeTitle: m.yes_sub_title || m.subtitle || "Yes",
+        awayKalshiTicker: ticker,
+        awayTitle: m.no_sub_title || "No",
+        description: m.title || ticker,
+      };
+    }
+  } catch (err) {
+    // Only rethrow if it's a closed-market error we threw ourselves
+    if (err instanceof Error && err.message.startsWith("Market is ")) throw err;
+  }
+
+  // Strategy 2: treat the ticker as an event ticker directly
+  try {
+    const eResp = await fetch(`${KALSHI_BASE}/events/${ticker}?with_nested_markets=true`);
+    if (eResp.ok) {
+      const eData = await eResp.json() as { event: any };
+      const result = resultFromEvent(eData.event ?? {});
+      if (result) return result;
+    }
+  } catch {}
+
+  // Strategy 3: strip the last hyphen-segment (URL slug often appends the outcome)
+  // e.g. "KXATPMATCH-26FEB18SVAT-IA" → try event "KXATPMATCH-26FEB18SVAT"
+  const parts = ticker.split("-");
+  if (parts.length > 1) {
+    const eventGuess = parts.slice(0, -1).join("-");
+    try {
+      const eResp = await fetch(`${KALSHI_BASE}/events/${eventGuess}?with_nested_markets=true`);
+      if (eResp.ok) {
+        const eData = await eResp.json() as { event: any };
+        const result = resultFromEvent(eData.event ?? {});
+        if (result) return result;
+      }
+    } catch {}
+  }
+
+  // Strategy 4: search all open events for any market whose ticker matches
+  // (normalised: strip hyphens and compare case-insensitively)
+  const normalised = ticker.replace(/-/g, "").toLowerCase();
+  try {
+    const params = new URLSearchParams({ status: "open", limit: "200", with_nested_markets: "true" });
+    const searchResp = await fetch(`${KALSHI_BASE}/events?${params}`);
+    if (searchResp.ok) {
+      const searchData = await searchResp.json() as { events: any[] };
+      for (const event of searchData.events) {
+        const markets: any[] = event.markets ?? [];
+        // Check if any market ticker normalises to our ticker
+        const hit = markets.find((m: any) =>
+          m.ticker?.replace(/-/g, "").toLowerCase() === normalised
+        );
+        if (hit) {
+          const result = resultFromEvent(event);
+          if (result) return result;
+        }
+        // Also check if the event ticker itself normalises to our ticker
+        if (event.event_ticker?.replace(/-/g, "").toLowerCase() === normalised) {
+          const result = resultFromEvent(event);
+          if (result) return result;
+        }
+      }
+    }
+  } catch {}
+
+  throw new Error(
+    `Could not find market "${ticker}" on Kalshi. ` +
+    `Check that you copied the URL from an active market page on kalshi.com.`
+  );
 }
 
 // ============================================================
@@ -128,12 +251,21 @@ export function startWebSocketServer(
   config: Config,
   client: any,
   walletAddress: string,
-  trading: TradingBackend,
+  realTradingBackend: TradingBackend,
+  simTradingBackend: TradingBackend,
   pnl: PnLTracker,
   priceCache?: TickerSubscriber,
 ): WebSocketServer {
   // Per-connection state map
   const clients = new Map<WebSocket, ClientInfo>();
+
+  // Last market set by the dashboard — re-sent to any phone that (re)connects.
+  const globalMarket: { current: MarketConfig | null } = { current: null };
+
+  // Mutable trading backend — swapped when phone toggles test mode.
+  const tradingRef: { current: TradingBackend } = {
+    current: config.testMode ? simTradingBackend : realTradingBackend,
+  };
 
   // HTTP server: health check, market search, and WebSocket host.
   const httpServer = http.createServer((req, res) => {
@@ -170,6 +302,27 @@ export function startWebSocketServer(
         })
         .catch((err) => {
           res.writeHead(500, { "Content-Type": "application/json", ...CORS });
+          res.end(JSON.stringify({ error: String(err) }));
+        });
+      return;
+    }
+
+    // Lookup market by ticker — resolves a Kalshi ticker to home/away tickers
+    if (req.method === "GET" && req.url?.startsWith("/lookup-market")) {
+      const urlObj = new URL(req.url, "http://localhost");
+      const ticker = (urlObj.searchParams.get("ticker") ?? "").toUpperCase().trim();
+      if (!ticker) {
+        res.writeHead(400, { "Content-Type": "application/json", ...CORS });
+        res.end(JSON.stringify({ error: "ticker is required" }));
+        return;
+      }
+      lookupKalshiMarket(ticker)
+        .then((result) => {
+          res.writeHead(200, { "Content-Type": "application/json", ...CORS });
+          res.end(JSON.stringify(result));
+        })
+        .catch((err) => {
+          res.writeHead(404, { "Content-Type": "application/json", ...CORS });
           res.end(JSON.stringify({ error: String(err) }));
         });
       return;
@@ -219,7 +372,7 @@ export function startWebSocketServer(
       }
 
       try {
-        await handleMessage(ws, wss, clients, message, config, client, walletAddress, trading, pnl, priceCache);
+        await handleMessage(ws, wss, clients, message, config, client, walletAddress, tradingRef, realTradingBackend, simTradingBackend, pnl, priceCache, globalMarket);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         log.error(`Unhandled error: ${msg}`);
@@ -258,9 +411,12 @@ async function handleMessage(
   config: Config,
   client: any,
   walletAddress: string,
-  trading: TradingBackend,
+  tradingRef: { current: TradingBackend },
+  realTradingBackend: TradingBackend,
+  simTradingBackend: TradingBackend,
   pnl: PnLTracker,
-  priceCache?: TickerSubscriber,
+  priceCache: TickerSubscriber | undefined,
+  globalMarket: { current: MarketConfig | null },
 ): Promise<void> {
   const senderInfo = clients.get(ws);
 
@@ -274,6 +430,14 @@ async function handleMessage(
         if (message.data.label) senderInfo.label = message.data.label;
       }
       log.info(`Client registered as ${message.data.clientType}: ${senderInfo?.id}`);
+      if (message.data.clientType === "phone") {
+        // Re-send last dashboard-configured market so phone restores state after refresh.
+        if (globalMarket.current) {
+          if (senderInfo) senderInfo.activeMarket = globalMarket.current;
+          send(ws, { type: "market_configured", data: globalMarket.current });
+          log.info(`Re-sent last market to reconnecting phone ${senderInfo?.id}`);
+        }
+      }
       // Send this dashboard the current phone list immediately
       if (message.data.clientType === "dashboard") {
         const phones = [...clients.values()].filter((c) => c.type === "phone");
@@ -293,10 +457,30 @@ async function handleMessage(
     }
 
     // ----------------------------------------------------------
+    // Rename a phone client (dashboard → bot → phone)
+    // ----------------------------------------------------------
+    case "rename_client": {
+      const { clientId, label } = message.data;
+      for (const [targetWs, targetInfo] of clients) {
+        if (targetInfo.id === clientId) {
+          targetInfo.label = label;
+          // Tell the phone its new label so it can persist it in localStorage.
+          send(targetWs, { type: "set_label", data: { label } });
+          log.info(`Renamed client ${clientId} → "${label}"`);
+          break;
+        }
+      }
+      broadcastClientsUpdate(clients);
+      return;
+    }
+
+    // ----------------------------------------------------------
     // Configure Market for a specific phone (dashboard → bot → phone)
     // ----------------------------------------------------------
     case "configure_client_market": {
       const { clientId, market } = message.data;
+      // Remember globally so reconnecting phones get it automatically.
+      globalMarket.current = market;
       for (const [targetWs, targetInfo] of clients) {
         if (targetInfo.id === clientId) {
           targetInfo.activeMarket = market;
@@ -359,10 +543,10 @@ async function handleMessage(
       // Notify all clients the order is in-flight.
       broadcast(wss, pendingUpdate("buy", team));
 
-      const result = await trading.executeBuy(client, config, tokenId, size);
+      const result = await tradingRef.current.executeBuy(client, config, tokenId, size);
 
       if (result.success && result.size) {
-        pnl.recordBuy(tokenId, team, result.size, result.price ?? 0);
+        pnl.recordBuy(tokenId, team, result.size, result.price ?? 0, result.fee ?? 0);
       }
 
       const update: TradeUpdateMessage = {
@@ -374,6 +558,7 @@ async function handleMessage(
           status: result.success ? "filled" : "failed",
           price: result.price,
           size: result.size,
+          fee: result.fee,
           timestamp: Date.now(),
           latencyMs: result.latencyMs,
           error: result.error,
@@ -400,25 +585,21 @@ async function handleMessage(
       }
 
       const { team, price } = message.data;
-      let sellSize = message.data.size;
+      const sellSize = message.data.size ?? 0;
       const tokenId = getTradeId(activeMarket, team);
 
-      // size=0 means "sell all" — use PnL position if known
-      if (!sellSize || sellSize <= 0) {
-        const snap = pnl.getSnapshot();
-        const pos = snap.positions.find((p) => p.tokenId === tokenId);
-        sellSize = pos ? pos.contracts : 0;
-        log.info(`SELL ALL — team=${team}  contracts=${sellSize || "unknown (closing via API)"}  token=${tokenId}`);
-      } else {
-        log.info(`SELL signal — team=${team}  size=${sellSize}  token=${tokenId}`);
-      }
+      // Always pass size=0 when the phone sends 0 ("sell all").
+      // executeSell will fetch the real open position from the exchange API,
+      // which is the ground truth — the P&L tracker may be stale (GTC buys
+      // that haven't filled yet, bot restarts, manual trades, etc.).
+      log.info(`SELL signal — team=${team}  size=${sellSize || "all (fetching from API)"}  token=${tokenId}`);
 
       broadcast(wss, pendingUpdate("sell", team));
 
-      const result = await trading.executeSell(client, config, tokenId, sellSize, price);
+      const result = await tradingRef.current.executeSell(client, config, tokenId, sellSize, price);
 
       if (result.success && result.price && result.size) {
-        pnl.recordSell(tokenId, result.size, result.price);
+        pnl.recordSell(tokenId, result.size, result.price, result.fee ?? 0);
       }
 
       const sellUpdate: TradeUpdateMessage = {
@@ -430,6 +611,7 @@ async function handleMessage(
           status: result.success ? "filled" : "failed",
           price: result.price,
           size: result.size,
+          fee: result.fee,
           timestamp: Date.now(),
           latencyMs: result.latencyMs,
           error: result.error,
@@ -450,6 +632,7 @@ async function handleMessage(
         data: {
           totalSpent: snap.totalSpent,
           totalReceived: snap.totalReceived,
+          totalFees: snap.totalFees,
           realizedPnl: snap.realizedPnl,
           unrealizedPnl: snap.unrealizedPnl,
           openPositions: snap.positions.length,
@@ -474,6 +657,31 @@ async function handleMessage(
           timestamp: Date.now(),
         },
       });
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Toggle test / real mode at runtime
+    // ----------------------------------------------------------
+    case "set_test_mode": {
+      const enable = message.data.enabled;
+      config.testMode = enable;
+      tradingRef.current = enable ? simTradingBackend : realTradingBackend;
+      log.info(`Test mode ${enable ? "ON" : "OFF"}`);
+      // Broadcast updated status to every connected client.
+      const statusPayload = JSON.stringify({
+        type: "status",
+        data: {
+          connected: true,
+          walletAddress,
+          market: null,
+          testMode: config.testMode,
+          timestamp: Date.now(),
+        },
+      } satisfies BotMessage);
+      for (const [targetWs] of clients) {
+        if (targetWs.readyState === WebSocket.OPEN) targetWs.send(statusPayload);
+      }
       return;
     }
 

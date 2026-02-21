@@ -67,6 +67,25 @@
   font-weight: 600;
   color: #fff;
   font-family: monospace;
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 0.15s;
+}
+.instance-id:hover {
+  border-bottom-color: #555;
+}
+
+.instance-label-input {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: monospace;
+  color: #fff;
+  background: #2a2a2e;
+  border: 1px solid #4caf50;
+  border-radius: 5px;
+  padding: 2px 7px;
+  outline: none;
+  width: 180px;
 }
 
 .instance-time {
@@ -260,4 +279,89 @@
 .market-set-btn:disabled {
   opacity: 0.5;
   cursor: default;
+}
+
+/* URL input row */
+.market-url-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* Market preview card */
+.market-preview {
+  background: #1e1e22;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.market-preview-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.market-preview-teams {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.market-preview-team {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.market-preview-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.market-preview-ticker {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  font-family: monospace;
+}
+
+.market-preview-name {
+  font-size: 11px;
+  color: #888;
+}
+
+.market-preview-vs {
+  font-size: 11px;
+  color: #444;
+  flex-shrink: 0;
+}
+
+.market-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.market-clear-btn {
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.market-clear-btn:hover {
+  border-color: #555;
+  color: #aaa;
 }

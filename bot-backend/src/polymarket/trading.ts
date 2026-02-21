@@ -15,6 +15,8 @@ export interface TradeResult {
   price?: number;
   /** Number of contracts (limit) or USDC amount (market) */
   size?: number;
+  /** Exchange fees paid in USDC */
+  fee?: number;
   error?: string;
   /** Milliseconds from function entry to order post */
   latencyMs: number;

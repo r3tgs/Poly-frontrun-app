@@ -2,7 +2,7 @@
   "expo": {
     "name": "PM",
     "slug": "pm-app",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "scheme": "pm",
     "icon": "./assets/icon.png",
@@ -34,7 +34,9 @@
       "usesCleartextTraffic": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "backgroundColor": "#000000",
+      "themeColor": "#000000"
     },
     "extra": {
       "eas": {

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LiveBadge } from '../components/LiveBadge';
 import { Scoreboard } from '../components/Scoreboard';
@@ -13,7 +13,7 @@ import { MARKET_CONFIG } from '../constants/market';
 import { useBotConnection } from '../hooks/useBotConnection';
 import type { LogEntry, PlatformStatus } from '../types';
 
-const DEFAULT_BOT_URL = 'ws://localhost:8080';
+const DEFAULT_BOT_URL = 'wss://pm-frontrun-snowy-waterfall-1028.fly.dev';
 
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
@@ -26,13 +26,22 @@ export default function GameScreen() {
     setLogEntries((prev) => [entry, ...prev]);
   }, []);
 
-  const { status, sendSignal, sendSell } = useBotConnection({
+  const { status, activeMarket, sendSignal, sendSell } = useBotConnection({
     url: botUrl,
     homeLabel: mockGame.homeTeam.name,
     awayLabel: mockGame.awayTeam.name,
     onLogEntry: addLogEntry,
     marketConfig: MARKET_CONFIG,
   });
+
+  // Override team names with live market data when available
+  const homeTeam = activeMarket?.homeTitle
+    ? { ...mockGame.homeTeam, name: activeMarket.homeTitle, abbreviation: activeMarket.homeTitle.slice(0, 4).toUpperCase() }
+    : mockGame.homeTeam;
+  const awayTeam = activeMarket?.awayTitle
+    ? { ...mockGame.awayTeam, name: activeMarket.awayTitle, abbreviation: activeMarket.awayTitle.slice(0, 4).toUpperCase() }
+    : mockGame.awayTeam;
+  const marketQuestion = activeMarket?.description ?? MARKET_QUESTION;
 
   const handleTogglePlatform = useCallback(
     (platform: 'poly' | 'kalshi') => {
@@ -45,7 +54,7 @@ export default function GameScreen() {
   const handleSelectTeam = useCallback(
     (teamId: string) => {
       const isHome = teamId === mockGame.homeTeam.id;
-      const team = isHome ? mockGame.homeTeam : mockGame.awayTeam;
+      const team = isHome ? homeTeam : awayTeam;
 
       // Local log: "User selected X"
       addLogEntry({
@@ -63,7 +72,7 @@ export default function GameScreen() {
       // Send buy signal to the bot
       sendSignal(isHome ? 'home' : 'away');
     },
-    [addLogEntry, sendSignal],
+    [addLogEntry, sendSignal, homeTeam, awayTeam],
   );
 
   return (
@@ -74,8 +83,18 @@ export default function GameScreen() {
           <LiveBadge />
         </View>
         {/* Big connection banner with IP input */}
-        <ConnectionBanner status={status} onUrlChange={setBotUrl} />
-        <Scoreboard game={mockGame} marketQuestion={MARKET_QUESTION} />
+        <ConnectionBanner status={status} url={botUrl} />
+        {/* Market status — shows what the dashboard pushed */}
+        <View style={styles.marketRow}>
+          {activeMarket ? (
+            <Text style={styles.marketActive}>
+              {activeMarket.description || `${activeMarket.homeKalshiTicker} / ${activeMarket.awayKalshiTicker}`}
+            </Text>
+          ) : (
+            <Text style={styles.marketWaiting}>Waiting for market from dashboard…</Text>
+          )}
+        </View>
+        <Scoreboard game={{ ...mockGame, homeTeam, awayTeam }} marketQuestion={marketQuestion} />
       </View>
 
       {/* Bottom card */}
@@ -93,8 +112,8 @@ export default function GameScreen() {
             onToggle={handleTogglePlatform}
           />
           <TeamButtons
-            homeTeam={mockGame.homeTeam}
-            awayTeam={mockGame.awayTeam}
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
             onSelect={handleSelectTeam}
             onSell={(teamId) => {
               const isHome = teamId === mockGame.homeTeam.id;
@@ -136,4 +155,21 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingHorizontal: 20,
   },
+  marketRow: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  marketActive: {
+    color: '#4caf50',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  marketWaiting: {
+    color: '#aaa',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });
+
