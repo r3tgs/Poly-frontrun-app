@@ -225,7 +225,7 @@
 /* Log terminal */
 .log-terminal {
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 1px;
   height: 420px;
   overflow-y: auto;
@@ -287,6 +287,9 @@
 .log-line.log-level-warn  .log-msg { color: #f5a623; }
 .log-line.log-level-error .log-msg { color: #F63658; }
 .log-line.log-level-debug .log-msg { color: #444; }
+
+.log-line-buy  .log-msg { color: #15DF83; }
+.log-line-sell .log-msg { color: #F63658; }
 
 .log-empty {
   color: #333;

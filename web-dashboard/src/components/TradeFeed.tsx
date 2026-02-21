@@ -110,7 +110,7 @@ function TradeRow({ trade }: { trade: TradeEntry }) {
 function LogTerminal({ logs }: { logs: LogEntry[] }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to top (newest) whenever a log arrives — logs are prepended.
+  // Auto-scroll to bottom (newest) whenever a log arrives.
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'instant' });
   }, [logs.length]);
@@ -120,14 +120,22 @@ function LogTerminal({ logs }: { logs: LogEntry[] }) {
       {logs.length === 0 ? (
         <div className="log-empty">Waiting for logs…</div>
       ) : (
-        [...logs].reverse().map((entry, i) => (
-          <div key={i} className={`log-line log-level-${entry.level.toLowerCase()}`}>
-            <span className="log-ts">{entry.ts.slice(11, 23)}</span>
-            <span className={`log-level-badge log-level-${entry.level.toLowerCase()}`}>{entry.level}</span>
-            <span className="log-ctx">[{entry.context}]</span>
-            <span className="log-msg">{entry.message}</span>
-          </div>
-        ))
+        // Reverse so oldest renders first (top), newest last (bottom)
+        [...logs].reverse().map((entry, i) => {
+          const msg = entry.message.toLowerCase();
+          const ctx = entry.context.toLowerCase();
+          const isBuy  = /\bbuy\b/.test(msg) || /\bbuy\b/.test(ctx);
+          const isSell = /\bsell\b/.test(msg) || /\bsell\b/.test(ctx);
+          const tradeClass = isBuy ? 'log-line-buy' : isSell ? 'log-line-sell' : '';
+          return (
+            <div key={i} className={`log-line log-level-${entry.level.toLowerCase()} ${tradeClass}`}>
+              <span className="log-ts">{entry.ts.slice(11, 23)}</span>
+              <span className={`log-level-badge log-level-${entry.level.toLowerCase()}`}>{entry.level}</span>
+              <span className="log-ctx">[{entry.context}]</span>
+              <span className="log-msg">{entry.message}</span>
+            </div>
+          );
+        })
       )}
       <div ref={bottomRef} />
     </div>
