@@ -1,9 +1,32 @@
+import { useState } from 'react';
 import type { TradeEntry } from '../types';
 import buyIcon from '../assets/PM Buy Icon.svg';
 import sellIcon from '../assets/PM Sell Icon.svg';
 import kalshiLogo from '../assets/PM Kalshi.svg';
 import polyLogo from '../assets/PM Poly.svg';
 import './TradeFeed.css';
+
+type FeedFilter = 'all' | 'today' | '24h' | '1h';
+
+const FILTERS: { label: string; value: FeedFilter }[] = [
+  { label: 'All', value: 'all' },
+  { label: 'Today', value: 'today' },
+  { label: '24h', value: '24h' },
+  { label: '1h', value: '1h' },
+];
+
+function applyFilter(trades: TradeEntry[], filter: FeedFilter): TradeEntry[] {
+  if (filter === 'all') return trades;
+  const now = Date.now();
+  if (filter === '1h') return trades.filter(t => now - t.timestamp <= 60 * 60 * 1000);
+  if (filter === '24h') return trades.filter(t => now - t.timestamp <= 24 * 60 * 60 * 1000);
+  if (filter === 'today') {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    return trades.filter(t => t.timestamp >= start.getTime());
+  }
+  return trades;
+}
 
 function PlatformBadge({ platform }: { platform: 'poly' | 'kalshi' }) {
   return (
@@ -82,14 +105,32 @@ function TradeRow({ trade }: { trade: TradeEntry }) {
 }
 
 export function TradeFeed({ trades }: { trades: TradeEntry[] }) {
+  const [filter, setFilter] = useState<FeedFilter>('all');
+  const visible = applyFilter(trades, filter);
+
   return (
     <div className="trade-feed">
-      <h2 className="section-title">Trade Feed</h2>
+      <div className="trade-feed-header">
+        <h2 className="section-title">Trade Feed</h2>
+        <div className="feed-filter-toggle">
+          {FILTERS.map(f => (
+            <button
+              key={f.value}
+              className={`feed-filter-btn ${filter === f.value ? 'active' : ''}`}
+              onClick={() => setFilter(f.value)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="trade-list">
-        {trades.length === 0 ? (
-          <div className="trade-feed-empty">No trades yet this session</div>
+        {visible.length === 0 ? (
+          <div className="trade-feed-empty">
+            {trades.length === 0 ? 'No trades yet' : 'No trades in this period'}
+          </div>
         ) : (
-          trades.map((trade) => (
+          visible.map((trade) => (
             <TradeRow key={trade.id} trade={trade} />
           ))
         )}

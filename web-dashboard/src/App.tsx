@@ -59,12 +59,32 @@ function buildCalendarData(todayPnl: number): DayData[] {
   return cells;
 }
 
+// ---- Trade persistence ----
+
+const TRADES_STORAGE_KEY = 'pm_trade_history';
+const MAX_STORED_TRADES = 500;
+
+function loadStoredTrades(): TradeEntry[] {
+  try {
+    const raw = localStorage.getItem(TRADES_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as TradeEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistTrades(trades: TradeEntry[]): void {
+  try {
+    localStorage.setItem(TRADES_STORAGE_KEY, JSON.stringify(trades));
+  } catch {}
+}
+
 // ---- Shared WebSocket hook ----
 
 function useBotData() {
   const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const [phones, setPhones] = useState<PhoneClient[]>([]);
-  const [trades, setTrades] = useState<TradeEntry[]>([]);
+  const [trades, setTrades] = useState<TradeEntry[]>(loadStoredTrades);
   const [pnl, setPnl] = useState<PnlData | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -124,7 +144,11 @@ function useBotData() {
             timestamp: d.timestamp ?? Date.now(),
           };
 
-          setTrades(prev => [trade, ...prev].slice(0, 100));
+          setTrades(prev => {
+            const next = [trade, ...prev].slice(0, MAX_STORED_TRADES);
+            persistTrades(next);
+            return next;
+          });
 
           // Refresh P&L after every fill
           if (ws.readyState === WebSocket.OPEN) {

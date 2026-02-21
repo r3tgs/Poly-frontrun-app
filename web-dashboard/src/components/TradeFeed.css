@@ -4,6 +4,39 @@
   gap: 16px;
 }
 
+.trade-feed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.feed-filter-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.feed-filter-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  transition: background 0.15s, color 0.15s;
+}
+
+.feed-filter-btn:hover {
+  color: #aaa;
+  background: #1e1e24;
+}
+
+.feed-filter-btn.active {
+  color: #fff;
+  background: #1e1e24;
+}
+
 .trade-list {
   display: flex;
   flex-direction: column;
