@@ -3,8 +3,9 @@ import { Performance } from './components/Performance';
 import { TradeFeed } from './components/TradeFeed';
 import { SourceDelays } from './components/SourceDelays';
 import { MarketConfig } from './components/MarketConfig';
+import { OrderFeed } from './components/OrderFeed';
 import { mockSourceDelays } from './mocks/data';
-import type { TradeEntry, LogEntry, DayData, PerformanceStats, PhoneClient } from './types';
+import type { TradeEntry, LogEntry, DayData, PerformanceStats, PhoneClient, KalshiTrade } from './types';
 import './App.css';
 
 const BOT_WS_URL = 'wss://pm-frontrun-snowy-waterfall-1028.fly.dev';
@@ -87,6 +88,7 @@ function useBotData() {
   const [trades, setTrades] = useState<TradeEntry[]>(loadStoredTrades);
   const [pnl, setPnl] = useState<PnlData | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [orderFeed, setOrderFeed] = useState<KalshiTrade[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -157,6 +159,9 @@ function useBotData() {
 
         } else if (msg.type === 'log') {
           setLogs(prev => [msg.data, ...prev].slice(0, 1000));
+
+        } else if (msg.type === 'kalshi_order_feed') {
+          setOrderFeed(prev => [msg.data, ...prev].slice(0, 300));
         }
       } catch {}
     };
@@ -179,13 +184,14 @@ function useBotData() {
     };
   }, []);
 
-  return { wsStatus, wsRef, phones, trades, pnl, logs };
+  return { wsStatus, wsRef, phones, trades, pnl, logs, orderFeed };
 }
 
 // ---- App ----
 
 function App() {
-  const { wsStatus, wsRef, phones, trades, pnl, logs } = useBotData();
+  const { wsStatus, wsRef, phones, trades, pnl, logs, orderFeed } = useBotData();
+  const activeMarket = phones.find(p => p.activeMarket)?.activeMarket ?? null;
 
   const stats: PerformanceStats = {
     totalProfit: pnl?.realizedPnl ?? 0,
@@ -206,6 +212,7 @@ function App() {
       <div className="right-column">
         <SourceDelays delays={mockSourceDelays} />
         <MarketConfig wsRef={wsRef} wsStatus={wsStatus} phones={phones} />
+        <OrderFeed trades={orderFeed} market={activeMarket} />
       </div>
     </div>
   );

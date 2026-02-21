@@ -136,6 +136,25 @@ export interface SetTestModeMessage {
 // WebSocket Messages — Bot → App
 // ============================================================
 
+// ============================================================
+// Kalshi Live Order Feed
+// ============================================================
+
+export interface KalshiTradeEntry {
+  tradeId: string;
+  ticker: string;
+  count: number;
+  /** YES price in cents (1–99). NO price = 100 - yesPrice. */
+  yesPrice: number;
+  takerSide: "yes" | "no";
+  /** Unix ms — parsed from Kalshi's created_time ISO string. */
+  timestamp: number;
+  /** True when this trade_id was confirmed as ours via the private fill channel. */
+  isOwn: boolean;
+  /** Only set when isOwn=true. */
+  action?: "buy" | "sell";
+}
+
 export type BotMessage =
   | StatusMessage
   | TradeUpdateMessage
@@ -144,7 +163,8 @@ export type BotMessage =
   | PnlMessage
   | ClientsUpdateMessage
   | SetLabelMessage
-  | LogMessage;
+  | LogMessage
+  | KalshiOrderFeedMessage;
 
 export interface LogMessage {
   type: "log";
@@ -231,4 +251,9 @@ export interface PnlMessage {
     tradeCount: number;
     timestamp: number;
   };
+}
+
+export interface KalshiOrderFeedMessage {
+  type: "kalshi_order_feed";
+  data: KalshiTradeEntry;
 }

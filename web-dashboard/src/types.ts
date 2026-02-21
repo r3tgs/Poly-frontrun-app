@@ -60,6 +60,19 @@ export interface LogEntry {
   timestamp: number;
 }
 
+export interface KalshiTrade {
+  tradeId: string;
+  ticker: string;
+  count: number;
+  /** YES price in cents (1–99). */
+  yesPrice: number;
+  takerSide: "yes" | "no";
+  /** Unix ms */
+  timestamp: number;
+  isOwn: boolean;
+  action?: "buy" | "sell";
+}
+
 /** Market configuration stored on a connected phone. */
 export interface PhoneActiveMarket {
   homeKalshiTicker?: string;

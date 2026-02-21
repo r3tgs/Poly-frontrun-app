@@ -9,6 +9,7 @@ import {
   BotMessage,
   MarketConfig,
   TradeUpdateMessage,
+  KalshiTradeEntry,
 } from "../types";
 import { createLogger, addLogListener } from "../logger";
 
@@ -223,6 +224,11 @@ interface TickerSubscriber {
   subscribe(tickers: string[]): void;
 }
 
+interface TradeStreamInterface {
+  subscribe(tickers: string[]): void;
+  addListener(fn: (entry: KalshiTradeEntry) => void): () => void;
+}
+
 /** Push a PnL snapshot to every connected dashboard. */
 function broadcastPnlToDashboards(clients: Map<WebSocket, ClientInfo>, pnl: PnLTracker): void {
   const snap = pnl.getSnapshot();
@@ -279,6 +285,7 @@ export function startWebSocketServer(
   simTradingBackend: TradingBackend,
   pnl: PnLTracker,
   priceCache?: TickerSubscriber,
+  tradeStream?: TradeStreamInterface,
 ): WebSocketServer {
   // Per-connection state map
   const clients = new Map<WebSocket, ClientInfo>();
@@ -293,6 +300,19 @@ export function startWebSocketServer(
       }
     }
   });
+
+  // Stream live Kalshi order-feed entries to dashboards.
+  if (tradeStream) {
+    tradeStream.addListener((entry) => {
+      const msg: BotMessage = { type: "kalshi_order_feed", data: entry };
+      const payload = JSON.stringify(msg);
+      for (const [ws, info] of clients) {
+        if (info.type === "dashboard" && ws.readyState === WebSocket.OPEN) {
+          ws.send(payload);
+        }
+      }
+    });
+  }
 
   // Last market set by the dashboard — re-sent to any phone that (re)connects.
   const globalMarket: { current: MarketConfig | null } = { current: null };
@@ -407,7 +427,7 @@ export function startWebSocketServer(
       }
 
       try {
-        await handleMessage(ws, wss, clients, message, config, client, walletAddress, tradingRef, realTradingBackend, simTradingBackend, pnl, priceCache, globalMarket);
+        await handleMessage(ws, wss, clients, message, config, client, walletAddress, tradingRef, realTradingBackend, simTradingBackend, pnl, priceCache, tradeStream, globalMarket);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         log.error(`Unhandled error: ${msg}`);
@@ -451,6 +471,7 @@ async function handleMessage(
   simTradingBackend: TradingBackend,
   pnl: PnLTracker,
   priceCache: TickerSubscriber | undefined,
+  tradeStream: TradeStreamInterface | undefined,
   globalMarket: { current: MarketConfig | null },
 ): Promise<void> {
   const senderInfo = clients.get(ws);
@@ -519,10 +540,10 @@ async function handleMessage(
       for (const [targetWs, targetInfo] of clients) {
         if (targetInfo.id === clientId) {
           targetInfo.activeMarket = market;
-          if (priceCache && (market.homeKalshiTicker || market.awayKalshiTicker)) {
-            const tickers = [market.homeKalshiTicker, market.awayKalshiTicker].filter(Boolean) as string[];
-            priceCache.subscribe(tickers);
-            log.info(`Price cache subscribing to: ${tickers.join(", ")}`);
+          if (market.homeKalshiTicker || market.awayKalshiTicker) {
+            const tickers = [...new Set([market.homeKalshiTicker, market.awayKalshiTicker].filter(Boolean) as string[])];
+            if (priceCache) { priceCache.subscribe(tickers); log.info(`Price cache subscribing to: ${tickers.join(", ")}`); }
+            if (tradeStream) { tradeStream.subscribe(tickers); log.info(`Trade stream subscribing to: ${tickers.join(", ")}`); }
           }
           send(targetWs, { type: "market_configured", data: market });
           log.info(`Market configured for client ${clientId}: ${JSON.stringify(market)}`);
@@ -542,10 +563,10 @@ async function handleMessage(
         senderInfo.activeMarket = market;
       }
       log.info("Market configured", market);
-      if (priceCache && (market.homeKalshiTicker || market.awayKalshiTicker)) {
-        const tickers = [market.homeKalshiTicker, market.awayKalshiTicker].filter(Boolean) as string[];
-        priceCache.subscribe(tickers);
-        log.info(`Price cache subscribing to: ${tickers.join(", ")}`);
+      if (market.homeKalshiTicker || market.awayKalshiTicker) {
+        const tickers = [...new Set([market.homeKalshiTicker, market.awayKalshiTicker].filter(Boolean) as string[])];
+        if (priceCache) { priceCache.subscribe(tickers); log.info(`Price cache subscribing to: ${tickers.join(", ")}`); }
+        if (tradeStream) { tradeStream.subscribe(tickers); log.info(`Trade stream subscribing to: ${tickers.join(", ")}`); }
       }
       send(ws, { type: "market_configured", data: market });
       if (senderInfo?.type === "phone") {

@@ -1,0 +1,162 @@
+.order-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.of-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.of-live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.of-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #333;
+  transition: background 0.3s;
+}
+
+.of-dot-live {
+  background: #15DF83;
+  box-shadow: 0 0 5px #15DF83aa;
+  animation: of-pulse 2s ease-in-out infinite;
+}
+
+@keyframes of-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.of-live-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #555;
+}
+
+/* ---- Terminal ---- */
+
+.of-terminal {
+  display: flex;
+  flex-direction: column;
+  height: 320px;
+  overflow-y: auto;
+  background: #0e0e12;
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a35 transparent;
+}
+
+.of-terminal::-webkit-scrollbar { width: 4px; }
+.of-terminal::-webkit-scrollbar-thumb { background: #2a2a35; border-radius: 2px; }
+
+.of-empty {
+  color: #333;
+  font-size: 12px;
+  padding: 16px 0;
+  text-align: center;
+}
+
+/* ---- Rows ---- */
+
+.of-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Own buy — green tint */
+.of-row-own-buy {
+  background: rgba(21, 223, 131, 0.07);
+}
+
+/* Own sell — red tint */
+.of-row-own-sell {
+  background: rgba(246, 54, 88, 0.07);
+}
+
+.of-ts {
+  color: #868686;
+  font-size: 12px;
+  flex-shrink: 0;
+  min-width: 88px;
+}
+
+.of-side {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.of-side-yes { color: #4a9eff; }
+.of-side-no  { color: #868686; }
+
+/* Own trades override side colour */
+.of-row-own-buy  .of-side { color: #15DF83; }
+.of-row-own-sell .of-side { color: #F63658; }
+
+.of-count {
+  color: #fff;
+  font-weight: 600;
+  min-width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.of-price {
+  color: #aaa;
+  flex-shrink: 0;
+}
+
+/* Own trades — emphasise price */
+.of-row-own-buy  .of-price,
+.of-row-own-buy  .of-count { color: #15DF83; }
+
+.of-row-own-sell .of-price,
+.of-row-own-sell .of-count { color: #F63658; }
+
+.of-outcome {
+  color: #555;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100px;
+}
+
+.of-me-badge {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.of-me-buy {
+  color: #15DF83;
+  background: rgba(21, 223, 131, 0.15);
+}
+
+.of-me-sell {
+  color: #F63658;
+  background: rgba(246, 54, 88, 0.15);
+}

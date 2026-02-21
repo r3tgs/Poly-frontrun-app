@@ -3,6 +3,7 @@ import { initializeClient } from "./polymarket/client";
 import { initializeUSClient } from "./polymarket-us/client";
 import { initializeKalshiClient } from "./kalshi/client";
 import { PriceCache } from "./kalshi/priceCache";
+import { TradeStream } from "./kalshi/tradeStream";
 import * as realTrading from "./polymarket/trading";
 import * as realUSTrading from "./polymarket-us/trading";
 import * as realKalshiTrading from "./kalshi/trading";
@@ -34,6 +35,7 @@ async function main(): Promise<void> {
   let client: any = null;
   let walletAddress = "0xTEST_WALLET";
   let kalshiCache: PriceCache | undefined;
+  let kalshiTradeStream: TradeStream | undefined;
 
   // platformTrading is the real backend for the configured platform.
   // It is used even in test mode as the "real" target so the runtime toggle works.
@@ -57,8 +59,9 @@ async function main(): Promise<void> {
     walletAddress = "Kalshi";
     platformTrading = realKalshiTrading;
     kalshiCache = new PriceCache(km.keyId, km.privateKeyPem);
+    kalshiTradeStream = new TradeStream(km.keyId, km.privateKeyPem);
     realKalshiTrading.setPriceCache(kalshiCache);
-    log.info("Kalshi client ready (price cache initialised)");
+    log.info("Kalshi client ready (price cache + trade stream initialised)");
   } else {
     const pm = await initializeClient(config);
     client = pm;
@@ -73,13 +76,14 @@ async function main(): Promise<void> {
   // 5. WebSocket server
   // Pass both the platform's real backend and simTrading so the server can
   // switch between them at runtime when the phone toggles test mode.
-  const wss = startWebSocketServer(config, client, walletAddress, platformTrading, simTrading, pnl, kalshiCache);
+  const wss = startWebSocketServer(config, client, walletAddress, platformTrading, simTrading, pnl, kalshiCache, kalshiTradeStream);
 
   // 6. Graceful shutdown
   const shutdown = () => {
     log.info("Shutting down…");
     pnl.printSummary();
     kalshiCache?.stop();
+    kalshiTradeStream?.stop();
     wss.close(() => {
       log.info("Stopped.");
       process.exit(0);
