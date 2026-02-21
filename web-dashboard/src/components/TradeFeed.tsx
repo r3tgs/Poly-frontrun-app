@@ -123,9 +123,10 @@ function LogTerminal({ logs }: { logs: LogEntry[] }) {
         // Reverse so oldest renders first (top), newest last (bottom)
         [...logs].reverse().map((entry, i) => {
           const msg = entry.message.toLowerCase();
-          const ctx = entry.context.toLowerCase();
-          const isBuy  = /\bbuy\b/.test(msg) || /\bbuy\b/.test(ctx);
-          const isSell = /\bsell\b/.test(msg) || /\bsell\b/.test(ctx);
+          // Only highlight the actual fill/post log — these are the only lines containing "orderid="
+          const isFill = msg.includes('orderid=');
+          const isBuy  = isFill && msg.includes('buy');
+          const isSell = isFill && !isBuy && msg.includes('sell');
           const tradeClass = isBuy ? 'log-line-buy' : isSell ? 'log-line-sell' : '';
           return (
             <div key={i} className={`log-line log-level-${entry.level.toLowerCase()} ${tradeClass}`}>
