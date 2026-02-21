@@ -143,7 +143,19 @@ export type BotMessage =
   | MarketConfiguredMessage
   | PnlMessage
   | ClientsUpdateMessage
-  | SetLabelMessage;
+  | SetLabelMessage
+  | LogMessage;
+
+export interface LogMessage {
+  type: "log";
+  data: {
+    ts: string;
+    level: string;
+    context: string;
+    message: string;
+    timestamp: number;
+  };
+}
 
 export interface StatusMessage {
   type: "status";
@@ -171,6 +183,8 @@ export interface TradeUpdateMessage {
     /** End-to-end latency from signal receipt to order post */
     latencyMs?: number;
     error?: string;
+    /** True when this trade was executed by the simulated (test-mode) backend */
+    sim?: boolean;
   };
 }
 

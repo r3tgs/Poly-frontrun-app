@@ -4,7 +4,7 @@ import { TradeFeed } from './components/TradeFeed';
 import { SourceDelays } from './components/SourceDelays';
 import { MarketConfig } from './components/MarketConfig';
 import { mockSourceDelays } from './mocks/data';
-import type { TradeEntry, DayData, PerformanceStats, PhoneClient } from './types';
+import type { TradeEntry, LogEntry, DayData, PerformanceStats, PhoneClient } from './types';
 import './App.css';
 
 const BOT_WS_URL = 'wss://pm-frontrun-snowy-waterfall-1028.fly.dev';
@@ -86,6 +86,7 @@ function useBotData() {
   const [phones, setPhones] = useState<PhoneClient[]>([]);
   const [trades, setTrades] = useState<TradeEntry[]>(loadStoredTrades);
   const [pnl, setPnl] = useState<PnlData | null>(null);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -142,6 +143,7 @@ function useBotData() {
             awayTitle: market?.awayTitle,
             platform: 'kalshi',
             timestamp: d.timestamp ?? Date.now(),
+            sim: d.sim ?? false,
           };
 
           setTrades(prev => {
@@ -157,6 +159,9 @@ function useBotData() {
 
         } else if (msg.type === 'pnl') {
           setPnl(msg.data);
+
+        } else if (msg.type === 'log') {
+          setLogs(prev => [msg.data, ...prev].slice(0, 1000));
         }
       } catch {}
     };
@@ -187,13 +192,13 @@ function useBotData() {
     };
   }, []);
 
-  return { wsStatus, wsRef, phones, trades, pnl };
+  return { wsStatus, wsRef, phones, trades, pnl, logs };
 }
 
 // ---- App ----
 
 function App() {
-  const { wsStatus, wsRef, phones, trades, pnl } = useBotData();
+  const { wsStatus, wsRef, phones, trades, pnl, logs } = useBotData();
 
   const stats: PerformanceStats = {
     totalProfit: pnl?.realizedPnl ?? 0,
@@ -209,7 +214,7 @@ function App() {
     <div className="app">
       <div className="left-column">
         <Performance stats={stats} calendarData={calendarData} />
-        <TradeFeed trades={trades} />
+        <TradeFeed trades={trades} logs={logs} />
       </div>
       <div className="right-column">
         <SourceDelays delays={mockSourceDelays} />

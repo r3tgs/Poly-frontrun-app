@@ -10,7 +10,7 @@ import {
   MarketConfig,
   TradeUpdateMessage,
 } from "../types";
-import { createLogger } from "../logger";
+import { createLogger, addLogListener } from "../logger";
 
 const log = createLogger("WS");
 
@@ -258,6 +258,17 @@ export function startWebSocketServer(
 ): WebSocketServer {
   // Per-connection state map
   const clients = new Map<WebSocket, ClientInfo>();
+
+  // Stream every log line to connected dashboard clients.
+  addLogListener((line) => {
+    const msg: BotMessage = { type: "log", data: line };
+    const payload = JSON.stringify(msg);
+    for (const [ws, info] of clients) {
+      if (info.type === "dashboard" && ws.readyState === WebSocket.OPEN) {
+        ws.send(payload);
+      }
+    }
+  });
 
   // Last market set by the dashboard — re-sent to any phone that (re)connects.
   const globalMarket: { current: MarketConfig | null } = { current: null };
@@ -543,6 +554,7 @@ async function handleMessage(
       // Notify all clients the order is in-flight.
       broadcast(wss, pendingUpdate("buy", team));
 
+      const isSim = tradingRef.current === simTradingBackend;
       const result = await tradingRef.current.executeBuy(client, config, tokenId, size);
 
       if (result.success && result.size) {
@@ -562,6 +574,7 @@ async function handleMessage(
           timestamp: Date.now(),
           latencyMs: result.latencyMs,
           error: result.error,
+          sim: isSim,
         },
       };
       broadcast(wss, update);
@@ -596,6 +609,7 @@ async function handleMessage(
 
       broadcast(wss, pendingUpdate("sell", team));
 
+      const isSim = tradingRef.current === simTradingBackend;
       const result = await tradingRef.current.executeSell(client, config, tokenId, sellSize, price);
 
       if (result.success && result.price && result.size) {
@@ -615,6 +629,7 @@ async function handleMessage(
           timestamp: Date.now(),
           latencyMs: result.latencyMs,
           error: result.error,
+          sim: isSim,
         },
       };
       broadcast(wss, sellUpdate);

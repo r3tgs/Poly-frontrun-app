@@ -8,11 +8,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+}
+
+.feed-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .feed-filter-toggle {
   display: flex;
-  gap: 4px;
+  gap: 2px;
+  margin-right: 4px;
 }
 
 .feed-filter-btn {
@@ -35,6 +43,29 @@
 .feed-filter-btn.active {
   color: #fff;
   background: #1e1e24;
+}
+
+.feed-mode-btn {
+  background: none;
+  border: 1px solid #2a2a30;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.feed-mode-btn:hover {
+  color: #aaa;
+  border-color: #444;
+}
+
+.feed-mode-btn.active {
+  color: #fff;
+  background: #1e1e24;
+  border-color: #444;
 }
 
 .trade-list {
@@ -170,5 +201,98 @@
   font-size: 14px;
   font-weight: 500;
   padding: 24px 0;
+  text-align: center;
+}
+
+/* Sim trade indicator */
+.trade-row-sim {
+  opacity: 0.7;
+}
+
+.sim-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #aaa;
+  background: #2a2a35;
+  vertical-align: middle;
+}
+
+/* Log terminal */
+.log-terminal {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 1px;
+  height: 420px;
+  overflow-y: auto;
+  background: #0e0e12;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a35 transparent;
+}
+
+.log-terminal::-webkit-scrollbar {
+  width: 4px;
+}
+
+.log-terminal::-webkit-scrollbar-thumb {
+  background: #2a2a35;
+  border-radius: 2px;
+}
+
+.log-line {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.log-ts {
+  color: #333;
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+.log-level-badge {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  width: 36px;
+  text-align: center;
+}
+
+.log-level-badge.log-level-info  { color: #4a9eff; }
+.log-level-badge.log-level-warn  { color: #f5a623; }
+.log-level-badge.log-level-error { color: #F63658; }
+.log-level-badge.log-level-debug { color: #444; }
+
+.log-ctx {
+  color: #555;
+  flex-shrink: 0;
+}
+
+.log-msg {
+  color: #ccc;
+  flex: 1;
+}
+
+.log-line.log-level-warn  .log-msg { color: #f5a623; }
+.log-line.log-level-error .log-msg { color: #F63658; }
+.log-line.log-level-debug .log-msg { color: #444; }
+
+.log-empty {
+  color: #333;
+  font-size: 12px;
+  padding: 16px 0;
   text-align: center;
 }

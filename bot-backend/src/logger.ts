@@ -18,6 +18,24 @@ export function setLogLevel(level: LogLevel): void {
   currentLevel = level;
 }
 
+// ---- Log broadcast listeners ----
+
+export interface LogLine {
+  ts: string;
+  level: string;
+  context: string;
+  message: string;
+  timestamp: number;
+}
+
+type LogListener = (line: LogLine) => void;
+const logListeners = new Set<LogListener>();
+
+export function addLogListener(fn: LogListener): () => void {
+  logListeners.add(fn);
+  return () => logListeners.delete(fn);
+}
+
 function log(
   level: LogLevel,
   context: string,
@@ -30,9 +48,11 @@ function log(
   const label = LEVEL_LABELS[level];
   const prefix = `[${ts}] [${label}] [${context}]`;
 
-  const line = data !== undefined
-    ? `${prefix} ${message} ${JSON.stringify(data)}`
-    : `${prefix} ${message}`;
+  const fullMessage = data !== undefined
+    ? `${message} ${JSON.stringify(data)}`
+    : message;
+
+  const line = `${prefix} ${fullMessage}`;
 
   // WARN/ERROR → stderr (unbuffered in Docker, always flushed before exit).
   // DEBUG/INFO  → stdout.
@@ -40,6 +60,18 @@ function log(
     process.stderr.write(line + "\n");
   } else {
     process.stdout.write(line + "\n");
+  }
+
+  // Broadcast to all registered listeners (e.g. WebSocket dashboard clients).
+  if (logListeners.size > 0) {
+    const entry: LogLine = {
+      ts,
+      level: label.trim(),
+      context,
+      message: fullMessage,
+      timestamp: Date.now(),
+    };
+    for (const fn of logListeners) fn(entry);
   }
 }
 

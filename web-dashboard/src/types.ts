@@ -48,6 +48,16 @@ export interface TradeEntry {
   awayTitle?: string;
   platform: Platform;
   timestamp: number;
+  /** True when executed by the simulated (test-mode) trading backend */
+  sim?: boolean;
+}
+
+export interface LogEntry {
+  ts: string;
+  level: string;   // "INFO" | "WARN" | "ERROR" | "DEBUG"
+  context: string;
+  message: string;
+  timestamp: number;
 }
 
 /** Market configuration stored on a connected phone. */

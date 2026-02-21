@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { TradeEntry } from '../types';
+import { useState, useRef, useEffect } from 'react';
+import type { TradeEntry, LogEntry } from '../types';
 import buyIcon from '../assets/PM Buy Icon.svg';
 import sellIcon from '../assets/PM Sell Icon.svg';
 import kalshiLogo from '../assets/PM Kalshi.svg';
@@ -61,7 +61,7 @@ function TradeRow({ trade }: { trade: TradeEntry }) {
   const latencyDisplay = trade.latencyMs != null ? ` · ${trade.latencyMs}ms` : '';
 
   return (
-    <div className="trade-row">
+    <div className={`trade-row ${trade.sim ? 'trade-row-sim' : ''}`}>
       <div className="trade-left">
         <img
           src={isBuy ? buyIcon : sellIcon}
@@ -71,6 +71,7 @@ function TradeRow({ trade }: { trade: TradeEntry }) {
         <div className="trade-info">
           <span className={`trade-action ${isBuy ? 'action-buy' : 'action-sell'}`}>
             {isBuy ? 'Bought' : 'Sold'} {teamLabel}
+            {trade.sim && <span className="sim-badge">SIM</span>}
           </span>
           <span className="trade-details">
             {trade.contracts} contracts @ {priceDisplay}{feeDisplay}{latencyDisplay}
@@ -104,37 +105,99 @@ function TradeRow({ trade }: { trade: TradeEntry }) {
   );
 }
 
-export function TradeFeed({ trades }: { trades: TradeEntry[] }) {
+// ---- Log terminal ----
+
+function LogTerminal({ logs }: { logs: LogEntry[] }) {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to top (newest) whenever a log arrives — logs are prepended.
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'instant' });
+  }, [logs.length]);
+
+  return (
+    <div className="log-terminal">
+      {logs.length === 0 ? (
+        <div className="log-empty">Waiting for logs…</div>
+      ) : (
+        [...logs].reverse().map((entry, i) => (
+          <div key={i} className={`log-line log-level-${entry.level.toLowerCase()}`}>
+            <span className="log-ts">{entry.ts.slice(11, 23)}</span>
+            <span className={`log-level-badge log-level-${entry.level.toLowerCase()}`}>{entry.level}</span>
+            <span className="log-ctx">[{entry.context}]</span>
+            <span className="log-msg">{entry.message}</span>
+          </div>
+        ))
+      )}
+      <div ref={bottomRef} />
+    </div>
+  );
+}
+
+// ---- Main export ----
+
+export function TradeFeed({ trades, logs }: { trades: TradeEntry[]; logs: LogEntry[] }) {
   const [filter, setFilter] = useState<FeedFilter>('all');
-  const visible = applyFilter(trades, filter);
+  const [showSim, setShowSim] = useState(false);
+  const [logMode, setLogMode] = useState(false);
+
+  const filtered = applyFilter(
+    showSim ? trades : trades.filter(t => !t.sim),
+    filter,
+  );
 
   return (
     <div className="trade-feed">
       <div className="trade-feed-header">
         <h2 className="section-title">Trade Feed</h2>
-        <div className="feed-filter-toggle">
-          {FILTERS.map(f => (
-            <button
-              key={f.value}
-              className={`feed-filter-btn ${filter === f.value ? 'active' : ''}`}
-              onClick={() => setFilter(f.value)}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="feed-controls">
+          {!logMode && (
+            <div className="feed-filter-toggle">
+              {FILTERS.map(f => (
+                <button
+                  key={f.value}
+                  className={`feed-filter-btn ${filter === f.value ? 'active' : ''}`}
+                  onClick={() => setFilter(f.value)}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            className={`feed-mode-btn ${showSim ? 'active' : ''}`}
+            onClick={() => setShowSim(v => !v)}
+            title="Show simulated (test-mode) trades"
+          >
+            Sim
+          </button>
+          <button
+            className={`feed-mode-btn ${logMode ? 'active' : ''}`}
+            onClick={() => setLogMode(v => !v)}
+            title="Toggle live backend log view"
+          >
+            Logs
+          </button>
         </div>
       </div>
-      <div className="trade-list">
-        {visible.length === 0 ? (
-          <div className="trade-feed-empty">
-            {trades.length === 0 ? 'No trades yet' : 'No trades in this period'}
-          </div>
-        ) : (
-          visible.map((trade) => (
-            <TradeRow key={trade.id} trade={trade} />
-          ))
-        )}
-      </div>
+
+      {logMode ? (
+        <LogTerminal logs={logs} />
+      ) : (
+        <div className="trade-list">
+          {filtered.length === 0 ? (
+            <div className="trade-feed-empty">
+              {trades.filter(t => showSim || !t.sim).length === 0
+                ? 'No trades yet'
+                : 'No trades in this period'}
+            </div>
+          ) : (
+            filtered.map((trade) => (
+              <TradeRow key={trade.id} trade={trade} />
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
