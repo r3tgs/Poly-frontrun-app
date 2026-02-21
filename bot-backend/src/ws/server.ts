@@ -223,6 +223,30 @@ interface TickerSubscriber {
   subscribe(tickers: string[]): void;
 }
 
+/** Push a PnL snapshot to every connected dashboard. */
+function broadcastPnlToDashboards(clients: Map<WebSocket, ClientInfo>, pnl: PnLTracker): void {
+  const snap = pnl.getSnapshot();
+  const msg: BotMessage = {
+    type: "pnl",
+    data: {
+      totalSpent: snap.totalSpent,
+      totalReceived: snap.totalReceived,
+      totalFees: snap.totalFees,
+      realizedPnl: snap.realizedPnl,
+      unrealizedPnl: snap.unrealizedPnl,
+      openPositions: snap.positions.length,
+      tradeCount: snap.tradeCount,
+      timestamp: Date.now(),
+    },
+  };
+  const payload = JSON.stringify(msg);
+  for (const [ws, info] of clients) {
+    if (info.type === "dashboard" && ws.readyState === WebSocket.OPEN) {
+      ws.send(payload);
+    }
+  }
+}
+
 /** Send a clients_update message to every connected dashboard. */
 function broadcastClientsUpdate(clients: Map<WebSocket, ClientInfo>): void {
   const phones = [...clients.values()].filter((c) => c.type === "phone");
@@ -614,6 +638,9 @@ async function handleMessage(
 
       if (result.success && result.price && result.size) {
         pnl.recordSell(tokenId, result.size, result.price, result.fee ?? 0);
+        // Position closed — print summary once and push updated PnL to all dashboards.
+        pnl.printSummary();
+        broadcastPnlToDashboards(clients, pnl);
       }
 
       const sellUpdate: TradeUpdateMessage = {
@@ -641,7 +668,6 @@ async function handleMessage(
     // ----------------------------------------------------------
     case "pnl": {
       const snap = pnl.getSnapshot();
-      pnl.printSummary();
       send(ws, {
         type: "pnl",
         data: {

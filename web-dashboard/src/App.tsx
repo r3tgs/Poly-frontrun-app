@@ -152,11 +152,6 @@ function useBotData() {
             return next;
           });
 
-          // Refresh P&L after every fill
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'pnl' }));
-          }
-
         } else if (msg.type === 'pnl') {
           setPnl(msg.data);
 
@@ -178,15 +173,7 @@ function useBotData() {
   useEffect(() => {
     connectRef.current();
 
-    // Poll P&L every 10 s so the dashboard stays current even when idle
-    const pnlPoll = setInterval(() => {
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ type: 'pnl' }));
-      }
-    }, 10_000);
-
     return () => {
-      clearInterval(pnlPoll);
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
       if (wsRef.current) { wsRef.current.onclose = null; wsRef.current.close(); wsRef.current = null; }
     };
