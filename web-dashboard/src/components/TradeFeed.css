@@ -14,8 +14,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
   height: 56px;
   padding: 8px;
+  padding-right: 120px;
   align-self: stretch;
   background-color: #16161A;
   border-radius: 14px;
@@ -66,7 +68,6 @@
 .trade-right {
   display: flex;
   align-items: center;
-  gap: 18px;
 }
 
 .trade-matchup {
@@ -106,23 +107,28 @@
 
 /* Platform Badges */
 .platform-badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
   overflow: hidden;
 }
 
 .trade-right-meta {
+  position: absolute;
+  top: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 3px;
+  align-items: flex-end;
+  padding: 8px;
+  gap: 4px;
+  pointer-events: none;
 }
 
 .trade-time {
-  color: #555;
-  font-size: 10px;
-  font-weight: 500;
+  color: #868686;
+  font-size: 13px;
+  font-weight: 650;
   white-space: nowrap;
 }
 

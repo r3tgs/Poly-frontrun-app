@@ -16,12 +16,15 @@ function PlatformBadge({ platform }: { platform: 'poly' | 'kalshi' }) {
 }
 
 function formatTime(ts: number): string {
-  return new Date(ts).toLocaleTimeString('en-US', {
+  const d = new Date(ts);
+  const time = d.toLocaleTimeString('en-US', {
     hour12: false,
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
   });
+  const ms = String(d.getMilliseconds()).padStart(3, '0');
+  return `${time}.${ms}`;
 }
 
 function TradeRow({ trade }: { trade: TradeEntry }) {
@@ -69,10 +72,10 @@ function TradeRow({ trade }: { trade: TradeEntry }) {
             <span className="matchup-name" style={{ color: '#555' }}>—</span>
           )}
         </div>
-        <div className="trade-right-meta">
-          <PlatformBadge platform={trade.platform} />
-          <span className="trade-time">{formatTime(trade.timestamp)}</span>
-        </div>
+      </div>
+      <div className="trade-right-meta">
+        <PlatformBadge platform={trade.platform} />
+        <span className="trade-time">{formatTime(trade.timestamp)}</span>
       </div>
     </div>
   );
