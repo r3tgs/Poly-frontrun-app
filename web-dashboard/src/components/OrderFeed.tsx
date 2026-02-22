@@ -48,12 +48,14 @@ function outcomeLabel(trade: KalshiTrade, market: ActiveMarket | null): string {
 }
 
 function TradeRow({ trade, market }: { trade: KalshiTrade; market: ActiveMarket | null }) {
-  const priceDisplay =
-    trade.takerSide === 'yes'
-      ? `${trade.yesPrice}¢`
-      : `${100 - trade.yesPrice}¢`;
+  // For own trades, show from our perspective (ownSide from the fill channel).
+  // takerSide reflects who was aggressive, which differs from our side when we're the maker.
+  const displaySide = (trade.isOwn && trade.ownSide) ? trade.ownSide : trade.takerSide;
+  const priceDisplay = displaySide === 'yes'
+    ? `${trade.yesPrice}¢`
+    : `${100 - trade.yesPrice}¢`;
 
-  const label = outcomeLabel(trade, market);
+  const label = outcomeLabel({ ...trade, takerSide: displaySide }, market);
 
   const rowClass = [
     'of-row',
@@ -64,8 +66,8 @@ function TradeRow({ trade, market }: { trade: KalshiTrade; market: ActiveMarket 
   return (
     <div className={rowClass}>
       <span className="of-ts">{formatTs(trade.timestamp)}</span>
-      <span className={`of-side of-side-${trade.takerSide}`}>
-        {trade.takerSide.toUpperCase()}
+      <span className={`of-side of-side-${displaySide}`}>
+        {displaySide.toUpperCase()}
       </span>
       <span className="of-count">{trade.count}</span>
       <span className="of-price">@ {priceDisplay}</span>

@@ -153,6 +153,8 @@ export interface KalshiTradeEntry {
   isOwn: boolean;
   /** Only set when isOwn=true. */
   action?: "buy" | "sell";
+  /** Our side from the fill channel (may differ from takerSide when we're the maker). */
+  ownSide?: "yes" | "no";
 }
 
 export type BotMessage =

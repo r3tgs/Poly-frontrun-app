@@ -30,7 +30,7 @@ export class TradeStream {
   private listeners = new Set<TradeListener>();
 
   // trade_id → { timestamp, action } from the private fill channel.
-  private ownTradeIds = new Map<string, { ts: number; action: "buy" | "sell" }>();
+  private ownTradeIds = new Map<string, { ts: number; action: "buy" | "sell"; side: "yes" | "no" }>();
 
   constructor(
     private readonly apiKey: string,
@@ -142,12 +142,13 @@ export class TradeStream {
   private handleMessage(msg: any): void {
     // Private fill — record the trade_id so we can mark it as own.
     if (msg.type === "fill" && msg.msg) {
-      const { trade_id, action } = msg.msg;
+      const { trade_id, action, side } = msg.msg;
       if (trade_id) {
         const act: "buy" | "sell" = action === "sell" ? "sell" : "buy";
-        this.ownTradeIds.set(trade_id, { ts: Date.now(), action: act });
+        const ownSide: "yes" | "no" = side === "no" ? "no" : "yes";
+        this.ownTradeIds.set(trade_id, { ts: Date.now(), action: act, side: ownSide });
         this.cleanupOwnTradeIds();
-        log.debug(`Own fill: trade_id=${trade_id} action=${act}`);
+        log.debug(`Own fill: trade_id=${trade_id} action=${act} side=${ownSide}`);
       }
       return;
     }
@@ -173,6 +174,7 @@ export class TradeStream {
         timestamp,
         isOwn: !!ownInfo,
         action: ownInfo?.action,
+        ownSide: ownInfo?.side,
       };
 
       this.listeners.forEach((fn) => fn(entry));

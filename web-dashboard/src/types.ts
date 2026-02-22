@@ -71,6 +71,8 @@ export interface KalshiTrade {
   timestamp: number;
   isOwn: boolean;
   action?: "buy" | "sell";
+  /** Our side from the fill channel — use this for own-trade display instead of takerSide. */
+  ownSide?: "yes" | "no";
 }
 
 /** Market configuration stored on a connected phone. */
