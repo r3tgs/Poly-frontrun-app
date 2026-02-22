@@ -2,8 +2,23 @@ import { Configuration, PortfolioApi, MarketApi, OrdersApi } from "kalshi-typesc
 import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
+import * as https from "https";
 import { Config } from "../config";
 import { createLogger } from "../logger";
+
+/**
+ * Single persistent HTTPS agent shared across ALL Kalshi REST calls.
+ *
+ * Without this, every order opens a fresh TCP + TLS connection (~20-40 ms).
+ * With keep-alive the connection is reused and the handshake cost disappears
+ * after the first request, cutting latency to pure network RTT (~5-15 ms).
+ */
+const kalshiAgent = new https.Agent({
+  keepAlive: true,
+  keepAliveMsecs: 30_000, // TCP keep-alive probe interval
+  maxSockets: 10,
+  maxFreeSockets: 5,      // keep 5 idle sockets warm at all times
+});
 
 const log = createLogger("KalshiClient");
 
@@ -85,6 +100,8 @@ export async function initializeKalshiClient(config: Config): Promise<KalshiClie
     apiKey: config.kalshiKeyId!.trim(),
     privateKeyPem,
     basePath: "https://api.elections.kalshi.com/trade-api/v2",
+    // Reuse the persistent keep-alive agent for every API call.
+    baseOptions: { httpsAgent: kalshiAgent },
   });
 
   const portfolio = new PortfolioApi(configuration);

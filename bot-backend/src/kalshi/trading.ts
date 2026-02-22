@@ -96,7 +96,7 @@ async function resolveAskCents(
     log.debug(`[cache] ask ${ticker} ${side.toUpperCase()} = ${cached}¢`);
     return cached;
   }
-  log.debug(`[cache miss] fetching ask via REST for ${ticker}`);
+  log.warn(`[cache miss] ask price not cached — extra REST round-trip for ${ticker}`);
   return fetchAskCentsREST(client, ticker, side);
 }
 
@@ -129,7 +129,7 @@ async function resolveBidCents(
     log.debug(`[cache] bid ${ticker} ${side.toUpperCase()} = ${cached}¢`);
     return cached;
   }
-  log.debug(`[cache miss] fetching bid via REST for ${ticker}`);
+  log.warn(`[cache miss] bid price not cached — extra REST round-trip for ${ticker}`);
   return fetchBidCentsREST(client, ticker, side);
 }
 
