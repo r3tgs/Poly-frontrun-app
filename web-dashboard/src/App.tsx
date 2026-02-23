@@ -260,6 +260,20 @@ function useBotData() {
 function App() {
   const { wsStatus, wsRef, phones, trades, logs, orderFeed, priceHistoryData, serverDefaultSize } = useBotData();
 
+  // Trade size lives here (not inside TradeSize) so it survives tab switches.
+  const [tradeSize, setTradeSize] = useState<number>(50);
+  // Sync from server whenever dashboard_state arrives.
+  useEffect(() => {
+    if (serverDefaultSize != null) setTradeSize(serverDefaultSize);
+  }, [serverDefaultSize]);
+  const applyTradeSize = (s: number) => {
+    setTradeSize(s);
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'set_default_size', data: { size: s } }));
+    }
+  };
+
   const [activeMarket, setActiveMarket] = useState<PhoneActiveMarket | null>(null);
   useEffect(() => {
     const m = phones.find(p => p.activeMarket)?.activeMarket ?? null;
@@ -335,7 +349,7 @@ function App() {
             <TradeFeed trades={trades} logs={logs} />
           </div>
           <div className="right-column">
-            <TradeSize wsRef={wsRef} serverDefaultSize={serverDefaultSize} onSizeChange={setServerDefaultSize} />
+            <TradeSize size={tradeSize} onApply={applyTradeSize} />
             <MarketConfig wsRef={wsRef} wsStatus={wsStatus} phones={phones} />
             <OrderFeed trades={orderFeed} market={activeMarket} />
           </div>
