@@ -95,9 +95,6 @@ export function PriceChart({
     const homeMap = new Map<number, number>();
     const awayMap = new Map<number, number>();
 
-    // Candle data only — individual order-feed trades are NOT added here because
-    // they bounce around the bid/ask spread and produce extreme artificial spikes.
-    // Own-trade dots are rendered as ReferenceDots at absolute coordinates instead.
     for (const p of homeHistory) homeMap.set(p.ts, p.price);
     for (const p of awayHistory) awayMap.set(p.ts, p.price);
 
@@ -106,21 +103,19 @@ export function PriceChart({
       for (const [ts, price] of homeMap) awayMap.set(ts, 100 - price);
     }
 
-    // Merge all timestamps into sorted combined array
     const allTs = new Set([...homeMap.keys(), ...awayMap.keys()]);
     return [...allTs]
       .sort((a, b) => a - b)
       .map(ts => ({ ts, homePrice: homeMap.get(ts), awayPrice: awayMap.get(ts) }));
   }, [homeHistory, awayHistory, homeTicker, awayTicker, isBinary]);
 
-  // Own trade markers — placed on the correct line
+  // Own trade markers — filtered to current market's tickers only
   const ownTradeMarkers = useMemo(() => {
     const buys: { tradeId: string; ts: number; price: number; count: number }[] = [];
     const sells: { tradeId: string; ts: number; price: number; count: number }[] = [];
 
     for (const t of orderFeed) {
       if (!t.isOwn) continue;
-      // Only show markers for trades on the current market's tickers
       if (t.ticker !== homeTicker && t.ticker !== awayTicker) continue;
       const ts = Math.floor(t.timestamp / 1000) * 1000;
       const price = isBinary
@@ -138,9 +133,10 @@ export function PriceChart({
   const lastHome = [...chartData].reverse().find(p => p.homePrice !== undefined)?.homePrice;
   const lastAway = [...chartData].reverse().find(p => p.awayPrice !== undefined)?.awayPrice;
 
-  // Extend the right domain past the last candle if own trades landed after it,
-  // so ReferenceDots for recent executions are never clipped.
-  // Only consider trades on the current market's tickers (old sessions pollute timestamps otherwise).
+  /**
+   * Extend the right domain so ReferenceDots for very recent own trades
+   * are never clipped. Only considers trades on the current market's tickers.
+   */
   const ownMaxTs = useMemo(() => {
     const ts = orderFeed
       .filter(t => t.isOwn && (t.ticker === homeTicker || t.ticker === awayTicker))
@@ -149,30 +145,25 @@ export function PriceChart({
   }, [orderFeed, homeTicker, awayTicker]);
 
   /**
-   * Locked game-start timestamp — fixed the moment a price breakout is first
-   * detected for the current market. Never advances afterward so the X-axis
-   * left edge stays pinned (Kalshi LIVE behaviour).
+   * Locked game-start timestamp — pinned once a price breakout is first detected
+   * so the left edge never creeps right as new data arrives.
    * Keyed by "homeTicker::awayTicker" so a new market resets it automatically.
+   *
+   * NOTE: we intentionally do NOT factor own-trade timestamps into this value.
+   * Doing so caused empty left-side gaps when stale own-trade entries from
+   * previous sessions (same ticker, different day) pulled the start far into
+   * the past. Own trades are always during active game time, so they're always
+   * within the candle window anyway.
    */
   const lockedStartRef = useRef<{ key: string; ts: number } | null>(null);
 
   const activeStartTs = useMemo<number>(() => {
     const marketKey = `${homeTicker}::${awayTicker}`;
 
-    // Own-trade lower-bound (dots must never be clipped after market ends).
-    // Filter to current market's tickers — old sessions have stale timestamps that would
-    // push activeStartTs hours into the past and create a huge empty gap on the left.
-    const ownTs = orderFeed
-      .filter(t => t.isOwn && (t.ticker === homeTicker || t.ticker === awayTicker))
-      .map(t => Math.floor(t.timestamp / 1000) * 1000);
-    const ownMin = ownTs.length > 0 ? Math.min(...ownTs) - 5 * 60 * 1000 : Infinity;
-
-    // Return locked start for the current market (never advance the left edge).
     if (lockedStartRef.current?.key === marketKey) {
-      return Math.min(lockedStartRef.current.ts, ownMin);
+      return lockedStartRef.current.ts;
     }
 
-    // --- First-time calculation (new market or page load) ---
     const pts = homeHistory.length > 0 ? homeHistory : awayHistory;
     let start: number;
     let foundBreakout = false;
@@ -194,44 +185,29 @@ export function PriceChart({
       }
     }
 
-    // Once a real breakout is found, lock the left edge for this market forever.
     if (foundBreakout) {
       lockedStartRef.current = { key: marketKey, ts: start };
     }
 
-    return Math.min(start, ownMin);
-  }, [homeHistory, awayHistory, orderFeed, homeTicker, awayTicker]);
+    return start;
+  }, [homeHistory, awayHistory, homeTicker, awayTicker]);
 
   /**
-   * Filter chart data to the active window.
-   * IMPORTANT: recharts domain prop alone doesn't clip rendered data —
-   * we must filter the array directly so the x-axis auto-ticks correctly.
+   * Filter chart data to the active window then trim any leading points that
+   * have no price data (price=0 placeholders from before trading opens).
+   * Passing this filtered array — not an explicit domain — as `data` to
+   * ComposedChart means recharts derives its left edge from `'dataMin'`,
+   * which always equals displayChartData[0].ts. This makes an empty left
+   * gap geometrically impossible regardless of own-trade timestamps.
    */
-  const visibleChartData = useMemo(
-    () => chartData.filter(p => p.ts >= activeStartTs),
-    [chartData, activeStartTs],
-  );
-
-  /**
-   * Actual domain left edge. The locked activeStartTs can land before the
-   * first real candle (e.g. the market was quiet at open so those candles
-   * get filtered out as price=0). In that case snap to the first candle —
-   * UNLESS we have own-trade dots sitting in that empty gap (we need the
-   * space to keep them visible).
-   */
-  const effectiveDomainStart = useMemo(() => {
-    const firstTs = visibleChartData[0]?.ts;
-    if (!firstTs || firstTs <= activeStartTs) return activeStartTs;
-    // There is a gap [activeStartTs, firstTs) with no candles.
-    // Keep it only if an own trade dot for the current market lives inside it.
-    const hasOwnInGap = orderFeed.some(t => {
-      if (!t.isOwn) return false;
-      if (t.ticker !== homeTicker && t.ticker !== awayTicker) return false;
-      const ts = Math.floor(t.timestamp / 1000) * 1000;
-      return ts >= activeStartTs && ts < firstTs;
-    });
-    return hasOwnInGap ? activeStartTs : firstTs;
-  }, [activeStartTs, visibleChartData, orderFeed, homeTicker, awayTicker]);
+  const displayChartData = useMemo(() => {
+    const windowed = chartData.filter(p => p.ts >= activeStartTs);
+    // Skip leading all-undefined points (zero-price pre-game candles)
+    const firstReal = windowed.findIndex(
+      p => p.homePrice !== undefined || p.awayPrice !== undefined,
+    );
+    return firstReal > 0 ? windowed.slice(firstReal) : windowed;
+  }, [chartData, activeStartTs]);
 
   if (!hasMarket) {
     return (
@@ -267,13 +243,13 @@ export function PriceChart({
           <div className="pc-empty pc-empty-chart">Waiting for price data…</div>
         ) : (
           <ResponsiveContainer width="100%" height={320}>
-            <ComposedChart data={visibleChartData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+            <ComposedChart data={displayChartData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
               <CartesianGrid strokeDasharray="2 4" stroke="rgba(255,255,255,0.06)" vertical={false} />
               <XAxis
                 dataKey="ts"
                 type="number"
                 scale="time"
-                domain={[effectiveDomainStart, (dataMax: number) => ownMaxTs !== null ? Math.max(dataMax, ownMaxTs) : dataMax]}
+                domain={['dataMin', (dataMax: number) => ownMaxTs !== null ? Math.max(dataMax, ownMaxTs) : dataMax]}
                 tickFormatter={formatTime}
                 tick={{ fill: '#5A5A5A', fontSize: 11 }}
                 tickLine={false}
