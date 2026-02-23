@@ -71,9 +71,11 @@ export function Scoreboard({ game, homeScore, awayScore, onHomeScoreChange, onAw
 
   return (
     <View style={styles.scoreboardRow}>
-      <View style={styles.teamSection}>
-        <Text style={styles.abbreviation}>{game.homeTeam.abbreviation}</Text>
-        <Text style={styles.teamName}>{game.homeTeam.name.toUpperCase()}</Text>
+      {/* Home team — right-aligned so name hugs the score */}
+      <View style={[styles.teamSection, styles.homeSection]}>
+        <Text style={[styles.teamName, styles.homeTeamName]}>
+          {game.homeTeam.name.toUpperCase()}
+        </Text>
       </View>
 
       <View style={styles.scoreContainer}>
@@ -82,9 +84,11 @@ export function Scoreboard({ game, homeScore, awayScore, onHomeScoreChange, onAw
         <ScoreCell value={awayScore} onChange={onAwayScoreChange} />
       </View>
 
-      <View style={styles.teamSection}>
-        <Text style={styles.abbreviation}>{game.awayTeam.abbreviation}</Text>
-        <Text style={styles.teamName}>{game.awayTeam.name.toUpperCase()}</Text>
+      {/* Away team — left-aligned so name hugs the score */}
+      <View style={[styles.teamSection, styles.awaySection]}>
+        <Text style={[styles.teamName, styles.awayTeamName]}>
+          {game.awayTeam.name.toUpperCase()}
+        </Text>
       </View>
     </View>
   );
@@ -105,33 +109,37 @@ const styles = StyleSheet.create({
   },
   scoreboardRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
+    alignItems: 'center',
+    paddingHorizontal: 16,
     paddingVertical: 16,
-    gap: 20,
   },
   teamSection: {
-    alignItems: 'center',
-    gap: 2,
+    flex: 1,
+  },
+  homeSection: {
+    alignItems: 'flex-end',
+    paddingRight: 10,
+  },
+  awaySection: {
+    alignItems: 'flex-start',
+    paddingLeft: 10,
+  },
+  teamName: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+  homeTeamName: {
+    textAlign: 'right',
+  },
+  awayTeamName: {
+    textAlign: 'left',
   },
   scoreContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-  },
-  abbreviation: {
-    color: '#868686',
-    fontSize: 12,
-    fontWeight: '900',
-    textAlign: 'center',
-    marginTop: 14,
-  },
-  teamName: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
   },
   score: {
     color: '#FFFFFF',

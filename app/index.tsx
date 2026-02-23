@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LiveBadge } from '../components/LiveBadge';
 import { Scoreboard } from '../components/Scoreboard';
@@ -84,16 +84,6 @@ export default function GameScreen() {
         </View>
         {/* Big connection banner with IP input */}
         <ConnectionBanner status={status} url={botUrl} />
-        {/* Market status — shows what the dashboard pushed */}
-        <View style={styles.marketRow}>
-          {activeMarket ? (
-            <Text style={styles.marketActive}>
-              {activeMarket.description || `${activeMarket.homeKalshiTicker} / ${activeMarket.awayKalshiTicker}`}
-            </Text>
-          ) : (
-            <Text style={styles.marketWaiting}>Waiting for market from dashboard…</Text>
-          )}
-        </View>
         <Scoreboard game={{ ...mockGame, homeTeam, awayTeam }} marketQuestion={marketQuestion} />
       </View>
 
@@ -154,22 +144,6 @@ const styles = StyleSheet.create({
   cardContent: {
     paddingTop: 24,
     paddingHorizontal: 20,
-  },
-  marketRow: {
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  marketActive: {
-    color: '#4caf50',
-    fontSize: 13,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  marketWaiting: {
-    color: '#aaa',
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
   },
 });
 
