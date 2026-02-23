@@ -210,6 +210,9 @@ function useBotData() {
           setPriceHistoryData(histData);
           savePriceHistCache(histData);
 
+        } else if (msg.type === 'default_size_update') {
+          setServerDefaultSize(msg.data.size ?? null);
+
         } else if (msg.type === 'log') {
           setLogs(prev => [msg.data, ...prev].slice(0, 1000));
 

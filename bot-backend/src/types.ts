@@ -214,6 +214,12 @@ export interface DashboardStateMessage {
   };
 }
 
+/** Broadcast to every connected client whenever the default trade size changes. */
+export interface DefaultSizeUpdateMessage {
+  type: "default_size_update";
+  data: { size: number };
+}
+
 export type BotMessage =
   | StatusMessage
   | TradeUpdateMessage
@@ -225,7 +231,8 @@ export type BotMessage =
   | LogMessage
   | KalshiOrderFeedMessage
   | PriceHistoryMessage
-  | DashboardStateMessage;
+  | DashboardStateMessage
+  | DefaultSizeUpdateMessage;
 
 export interface LogMessage {
   type: "log";

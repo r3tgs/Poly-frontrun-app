@@ -679,6 +679,8 @@ async function handleMessage(
           send(ws, { type: "market_configured", data: globalMarket.current });
           log.info(`Re-sent last market to reconnecting phone ${senderInfo?.id}`);
         }
+        // Send current default trade size so phone stays in sync with dashboard.
+        send(ws, { type: "default_size_update", data: { size: defaultTradeSizeRef.current } });
       }
       // Send this dashboard the current phone list, full history, and restore price history.
       if (message.data.clientType === "dashboard") {
@@ -1005,6 +1007,12 @@ async function handleMessage(
         defaultTradeSizeRef.current = size;
         dataStore.setDefaultTradeSize(size);
         log.info(`Default trade size set to $${size}`);
+        // Broadcast to all other connected clients (phones + dashboards) so they stay in sync.
+        for (const [targetWs] of clients) {
+          if (targetWs !== ws && targetWs.readyState === WebSocket.OPEN) {
+            send(targetWs, { type: "default_size_update", data: { size } });
+          }
+        }
       }
       return;
     }

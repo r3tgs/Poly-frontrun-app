@@ -40,7 +40,8 @@ type BotMessage =
   | { type: 'market_configured'; data: ActiveMarketData }
   | { type: 'pnl'; data: PnlData }
   | { type: 'set_label'; data: { label: string } }
-  | { type: 'error'; data: { message: string } };
+  | { type: 'error'; data: { message: string } }
+  | { type: 'default_size_update'; data: { size: number } };
 
 // ---------- Hook options ----------
 
@@ -109,6 +110,7 @@ export function useBotConnection({
 
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [testMode, setTestMode] = useState(false);
+  const [defaultTradeSize, setDefaultTradeSize] = useState<number>(50);
   const [activeMarket, setActiveMarket] = useState<ActiveMarketData | null>(() => {
     try {
       const stored = localStorage.getItem(MARKET_STORAGE_KEY);
@@ -216,6 +218,10 @@ export function useBotConnection({
           );
           break;
         }
+
+        case 'default_size_update':
+          setDefaultTradeSize(msg.data.size);
+          break;
 
         case 'error':
           pushLog(`Bot error: ${msg.data.message}`, 'info');
@@ -380,5 +386,13 @@ export function useBotConnection({
     }
   }, []);
 
-  return { status, testMode, activeMarket, sendSignal, sendSell, requestPnl, sendSetTestMode };
+  /** Set the default trade size on the bot (syncs to all connected clients). */
+  const sendSetDefaultSize = useCallback((size: number) => {
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'set_default_size', data: { size } }));
+    }
+  }, []);
+
+  return { status, testMode, activeMarket, defaultTradeSize, sendSignal, sendSell, requestPnl, sendSetTestMode, sendSetDefaultSize };
 }

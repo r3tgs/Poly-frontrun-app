@@ -5,6 +5,7 @@ import { LiveBadge } from '../components/LiveBadge';
 import { Scoreboard } from '../components/Scoreboard';
 import { PlatformToggles } from '../components/PlatformToggles';
 import { TeamButtons } from '../components/TeamButtons';
+import { TradeSize } from '../components/TradeSize';
 import { ActivityLog } from '../components/ActivityLog';
 import { ConnectionBanner } from '../components/ConnectionBanner';
 import { Colors } from '../constants/colors';
@@ -26,7 +27,7 @@ export default function GameScreen() {
     setLogEntries((prev) => [entry, ...prev]);
   }, []);
 
-  const { status, activeMarket, sendSignal, sendSell } = useBotConnection({
+  const { status, activeMarket, defaultTradeSize, sendSignal, sendSell, sendSetDefaultSize } = useBotConnection({
     url: botUrl,
     homeLabel: mockGame.homeTeam.name,
     awayLabel: mockGame.awayTeam.name,
@@ -99,6 +100,7 @@ export default function GameScreen() {
             status={platformStatus}
             onToggle={handleTogglePlatform}
           />
+          <TradeSize size={defaultTradeSize} onApply={sendSetDefaultSize} />
           <TeamButtons
             homeTeam={homeTeam}
             awayTeam={awayTeam}
