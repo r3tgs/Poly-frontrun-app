@@ -21,6 +21,10 @@ export const Colors = {
   starsGreen: '#2D9F6F',
   rangersBlue: '#2962FF',
 
+  // Outcome buttons
+  yesGreen: '#2D9F6F',
+  noRed: '#E53935',
+
   // Logos
   starsLogoBg: '#006D3F',
   rangersLogoBg: '#0038A8',

@@ -1,26 +1,56 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LiveBadge } from './components/LiveBadge';
 import { Scoreboard } from './components/Scoreboard';
 import { PlatformToggles } from './components/PlatformToggles';
 import { TeamButtons } from './components/TeamButtons';
 import { ActivityLog } from './components/ActivityLog';
+import { ConnectionBanner } from './components/ConnectionBanner';
 import { Colors } from './constants/colors';
-import { mockGame, mockLogEntries, mockPlatformStatus } from './mocks/gameData';
-import { selectTeam, togglePlatform } from './api';
-import type { GameState, LogEntry, PlatformStatus } from './types';
+import { BOT_WS_URL } from './constants/config';
+import { mockGame, mockPlatformStatus } from './mocks/gameData';
+import { useBotConnection } from './hooks/useBotConnection';
+import { MARKET_CONFIG } from './constants/market';
+import { togglePlatform } from './api';
+import type { LogEntry, PlatformStatus } from './types';
 
 const CARD_PADDING = 20;
 
 function GameScreen() {
   const insets = useSafeAreaInsets();
-  const [game, setGame] = useState<GameState>(mockGame);
   const [platformStatus, setPlatformStatus] =
     useState<PlatformStatus>(mockPlatformStatus);
-  const [logEntries, setLogEntries] = useState<LogEntry[]>(mockLogEntries);
-  const pendingTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
+  const [homeScore, setHomeScore] = useState(0);
+  const [awayScore, setAwayScore] = useState(0);
+
+  const addLogEntry = useCallback((entry: LogEntry) => {
+    setLogEntries((prev) => [entry, ...prev]);
+  }, []);
+
+  const { status, testMode, activeMarket, sendSignal, sendSell, sendSetTestMode } = useBotConnection({
+    url: BOT_WS_URL,
+    homeLabel: `${mockGame.homeTeam.city} ${mockGame.homeTeam.name}`,
+    awayLabel: `${mockGame.awayTeam.city} ${mockGame.awayTeam.name}`,
+    onLogEntry: addLogEntry,
+    marketConfig: MARKET_CONFIG,
+  });
+
+  // Override team names with live market data when available.
+  // Fall back to the Kalshi ticker when homeTitle/awayTitle are empty.
+  const homeName = activeMarket
+    ? (activeMarket.homeTitle || activeMarket.homeKalshiTicker || 'Home')
+    : null;
+  const awayName = activeMarket
+    ? (activeMarket.awayTitle || activeMarket.awayKalshiTicker || 'Away')
+    : null;
+  const homeTeam = homeName
+    ? { ...mockGame.homeTeam, id: 'home', city: '', name: homeName, abbreviation: homeName.slice(0, 4).toUpperCase() }
+    : mockGame.homeTeam;
+  const awayTeam = awayName
+    ? { ...mockGame.awayTeam, id: 'away', city: '', name: awayName, abbreviation: awayName.slice(0, 4).toUpperCase() }
+    : mockGame.awayTeam;
 
   const handleTogglePlatform = useCallback(
     (platform: 'poly' | 'kalshi') => {
@@ -39,57 +69,41 @@ function GameScreen() {
       second: '2-digit',
     });
 
-  const addLog = (message: string, type: LogEntry['type']) => {
-    setLogEntries((prev) => [
-      { id: String(Date.now() + Math.random()), timestamp: getTimestamp(), message, type },
-      ...prev,
-    ]);
-  };
-
   const handleSelectTeam = useCallback(
     (teamId: string) => {
-      const isHome = teamId === game.homeTeam.id;
-      const team = isHome ? game.homeTeam : game.awayTeam;
-      const buyPrice = (Math.random() * 0.3 + 0.3).toFixed(2);
-      const sellPrice = (parseFloat(buyPrice) + Math.random() * 0.2 + 0.1).toFixed(2);
-      const contracts = Math.floor(Math.random() * 150 + 50);
+      const isHome = teamId === 'home' || teamId === mockGame.homeTeam.id;
+      const team = isHome ? homeTeam : awayTeam;
 
-      // Clear any pending timers from previous rapid presses
-      pendingTimers.current.forEach(clearTimeout);
-      pendingTimers.current = [];
+      addLogEntry({
+        id: String(Date.now()),
+        timestamp: getTimestamp(),
+        message: `User selected '${team.name}'`,
+        type: 'info',
+      });
 
-      // Step 1: User selected (immediate)
-      addLog(`User selected '${team.city} ${team.name}'`, 'info');
-      selectTeam(teamId);
+      if (isHome) setHomeScore((s) => s + 1);
+      else setAwayScore((s) => s + 1);
 
-      // Step 2: Sent to bot (~400ms)
-      pendingTimers.current.push(
-        setTimeout(() => addLog('Sent to bot', 'info'), 400)
-      );
-
-      // Step 3: Bought contracts (~1200ms)
-      pendingTimers.current.push(
-        setTimeout(() => addLog(`Bought ${contracts} contracts @ ${buyPrice}`, 'trade'), 1200)
-      );
-
-      // Step 4: Score update (~2000ms) — increment the score
-      pendingTimers.current.push(
-        setTimeout(() => {
-          setGame((prev) => {
-            const newHome = isHome ? prev.homeScore + 1 : prev.homeScore;
-            const newAway = isHome ? prev.awayScore : prev.awayScore + 1;
-            addLog(`Poly updated score to ${newHome}-${newAway}`, 'info');
-            return { ...prev, homeScore: newHome, awayScore: newAway };
-          });
-        }, 2000)
-      );
-
-      // Step 5: Sold contracts (~2800ms)
-      pendingTimers.current.push(
-        setTimeout(() => addLog(`Sold ${contracts} contracts @ ${sellPrice}`, 'sell'), 2800)
-      );
+      sendSignal(isHome ? 'home' : 'away');
     },
-    [game]
+    [addLogEntry, sendSignal, homeTeam, awayTeam]
+  );
+
+  const handleSellTeam = useCallback(
+    (teamId: string) => {
+      const isHome = teamId === 'home' || teamId === mockGame.homeTeam.id;
+      const team = isHome ? homeTeam : awayTeam;
+
+      addLogEntry({
+        id: String(Date.now()),
+        timestamp: getTimestamp(),
+        message: `Sell '${team.name}'`,
+        type: 'info',
+      });
+
+      sendSell(isHome ? 'home' : 'away', 0);
+    },
+    [addLogEntry, sendSell, homeTeam, awayTeam]
   );
 
   return (
@@ -97,25 +111,42 @@ function GameScreen() {
       <StatusBar style="light" />
 
       <View style={styles.header}>
-        <LiveBadge />
-        <Scoreboard game={game} />
+        <ConnectionBanner status={status} url={BOT_WS_URL} />
+        <View style={styles.marketRow}>
+          {activeMarket ? (
+            <Text style={styles.marketActive}>
+              {activeMarket.description || `${activeMarket.homeKalshiTicker} / ${activeMarket.awayKalshiTicker}`}
+              {'\n'}{homeName} vs {awayName}
+            </Text>
+          ) : (
+            <Text style={styles.marketWaiting}>Waiting for market from dashboard…</Text>
+          )}
+        </View>
+        <Scoreboard
+          game={{ ...mockGame, homeTeam, awayTeam }}
+          homeScore={homeScore}
+          awayScore={awayScore}
+          onHomeScoreChange={setHomeScore}
+          onAwayScoreChange={setAwayScore}
+        />
       </View>
 
       <View style={styles.card}>
-        {/* Fixed content: toggles + buttons */}
         <View style={styles.fixedContent}>
           <PlatformToggles
             status={platformStatus}
             onToggle={handleTogglePlatform}
+            testMode={testMode}
+            onToggleTestMode={() => sendSetTestMode(!testMode)}
           />
           <TeamButtons
-            homeTeam={game.homeTeam}
-            awayTeam={game.awayTeam}
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
             onSelect={handleSelectTeam}
+            onSell={handleSellTeam}
           />
         </View>
 
-        {/* Only the log scrolls */}
         <ActivityLog
           entries={logEntries}
           bottomInset={insets.bottom}
@@ -155,5 +186,21 @@ const styles = StyleSheet.create({
   fixedContent: {
     paddingTop: CARD_PADDING,
     paddingHorizontal: CARD_PADDING,
+  },
+  marketRow: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  marketActive: {
+    color: '#4caf50',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  marketWaiting: {
+    color: '#aaa',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

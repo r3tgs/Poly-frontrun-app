@@ -1,0 +1,5 @@
+{
+  "buildCommand": "npx expo export --platform web --clear && node scripts/stamp-bundle.js",
+  "outputDirectory": "dist",
+  "installCommand": "npm install"
+}

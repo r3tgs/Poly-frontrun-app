@@ -7,11 +7,14 @@ import type { PlatformStatus } from '../types';
 interface PlatformTogglesProps {
   status: PlatformStatus;
   onToggle: (platform: 'poly' | 'kalshi') => void;
+  testMode?: boolean;
+  onToggleTestMode?: () => void;
 }
 
 const TOGGLE_COLORS = {
   poly: '#2E5CFF',
   kalshi: '#21C891',
+  real: '#4CAF50',
 };
 
 const CASING_WIDTH = 47;
@@ -19,7 +22,7 @@ const CASING_PADDING = 2;
 const THUMB_WIDTH = 24;
 const SLIDE_DISTANCE = CASING_WIDTH - CASING_PADDING * 2 - THUMB_WIDTH;
 
-function ToggleSwitch({ enabled, platform }: { enabled: boolean; platform: 'poly' | 'kalshi' }) {
+function ToggleSwitch({ enabled, platform }: { enabled: boolean; platform: 'poly' | 'kalshi' | 'real' }) {
   const anim = useRef(new Animated.Value(enabled ? 1 : 0)).current;
 
   useEffect(() => {
@@ -61,47 +64,80 @@ function ToggleSwitch({ enabled, platform }: { enabled: boolean; platform: 'poly
   );
 }
 
-export function PlatformToggles({ status, onToggle }: PlatformTogglesProps) {
+export function PlatformToggles({ status, onToggle, testMode, onToggleTestMode }: PlatformTogglesProps) {
+  // real mode = toggle is ON (testMode = false)
+  const realEnabled = testMode === false;
+
   return (
     <View style={styles.container}>
-      <Pressable
-        style={({ pressed }) => [
-          styles.pill,
-          status.poly ? styles.pillEnabled : styles.pillDisabled,
-          pressed ? styles.pillPressed : undefined,
-        ]}
-        onPress={() => onToggle('poly')}
-      >
-        <View style={styles.labelRow}>
-          <PolyIcon width={16} height={16} color={status.poly ? '#2E5CFF' : '#868686'} />
-          <Text style={styles.label}>Poly</Text>
-        </View>
-        <ToggleSwitch enabled={status.poly} platform="poly" />
-      </Pressable>
+      <View style={styles.row}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.pill,
+            status.poly ? styles.pillEnabled : styles.pillDisabled,
+            pressed ? styles.pillPressed : undefined,
+          ]}
+          onPress={() => onToggle('poly')}
+        >
+          <View style={styles.labelRow}>
+            <PolyIcon width={16} height={16} color={status.poly ? '#2E5CFF' : '#868686'} />
+            <Text style={styles.label}>Poly</Text>
+          </View>
+          <ToggleSwitch enabled={status.poly} platform="poly" />
+        </Pressable>
 
-      <Pressable
-        style={({ pressed }) => [
-          styles.pill,
-          status.kalshi ? styles.pillEnabled : styles.pillDisabled,
-          pressed ? styles.pillPressed : undefined,
-        ]}
-        onPress={() => onToggle('kalshi')}
-      >
-        <View style={styles.labelRow}>
-          <KalshiIcon width={16} height={16} color={status.kalshi ? '#21C891' : '#868686'} />
-          <Text style={styles.label}>Kalshi</Text>
+        <Pressable
+          style={({ pressed }) => [
+            styles.pill,
+            status.kalshi ? styles.pillEnabled : styles.pillDisabled,
+            pressed ? styles.pillPressed : undefined,
+          ]}
+          onPress={() => onToggle('kalshi')}
+        >
+          <View style={styles.labelRow}>
+            <KalshiIcon width={16} height={16} color={status.kalshi ? '#21C891' : '#868686'} />
+            <Text style={styles.label}>Kalshi</Text>
+          </View>
+          <ToggleSwitch enabled={status.kalshi} platform="kalshi" />
+        </Pressable>
+      </View>
+
+      {onToggleTestMode !== undefined && (
+        <View style={styles.row}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.pill,
+              realEnabled ? styles.pillEnabled : styles.pillDisabled,
+              pressed ? styles.pillPressed : undefined,
+            ]}
+            onPress={onToggleTestMode}
+          >
+            <View style={styles.labelRow}>
+              <View style={[styles.modeDot, { backgroundColor: realEnabled ? '#4CAF50' : '#868686' }]} />
+              <Text style={styles.label}>{realEnabled ? 'Real Mode' : 'Test Mode'}</Text>
+            </View>
+            <ToggleSwitch enabled={realEnabled} platform="real" />
+          </Pressable>
         </View>
-        <ToggleSwitch enabled={status.kalshi} platform="kalshi" />
-      </Pressable>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 10,
     marginBottom: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  modeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   pill: {
     flex: 1,

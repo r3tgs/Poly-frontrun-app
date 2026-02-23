@@ -1,0 +1,104 @@
+import { loadConfig } from "./config";
+import { initializeClient } from "./polymarket/client";
+import { initializeUSClient } from "./polymarket-us/client";
+import { initializeKalshiClient } from "./kalshi/client";
+import { PriceCache } from "./kalshi/priceCache";
+import { TradeStream } from "./kalshi/tradeStream";
+import * as realTrading from "./polymarket/trading";
+import * as realUSTrading from "./polymarket-us/trading";
+import * as realKalshiTrading from "./kalshi/trading";
+import * as simTrading from "./sim/trading";
+import { startWebSocketServer, TradingBackend } from "./ws/server";
+import { PnLTracker } from "./pnl";
+import { createLogger, setLogLevel, LogLevel } from "./logger";
+
+const log = createLogger("Main");
+
+async function main(): Promise<void> {
+  // 1. Config
+  const config = loadConfig();
+  if (process.env.LOG_LEVEL === "debug") {
+    setLogLevel(LogLevel.DEBUG);
+  }
+
+  if (config.testMode) {
+    log.info("╔═══════════════════════════════════════════╗");
+    log.info("║        TEST MODE — no real trades         ║");
+    log.info("╚═══════════════════════════════════════════╝");
+  } else {
+    log.info(`Starting Polymarket Trading Bot — platform: ${config.platform}`);
+  }
+
+  log.info(`WS port ${config.wsPort}`);
+
+  // 2. Client + trading backend
+  let client: any = null;
+  let walletAddress = "0xTEST_WALLET";
+  let kalshiCache: PriceCache | undefined;
+  let kalshiTradeStream: TradeStream | undefined;
+
+  // platformTrading is the real backend for the configured platform.
+  // It is used even in test mode as the "real" target so the runtime toggle works.
+  let platformTrading: TradingBackend = simTrading;
+
+  if (config.testMode) {
+    log.info(`Simulated wallet: ${walletAddress}`);
+    // Determine the platform backend for runtime toggling (but don't init the client).
+    if (config.platform === "polymarket-us") platformTrading = realUSTrading;
+    else if (config.platform === "kalshi") platformTrading = realKalshiTrading;
+    else platformTrading = realTrading;
+  } else if (config.platform === "polymarket-us") {
+    const pm = await initializeUSClient(config);
+    client = pm;
+    walletAddress = "Polymarket US";
+    platformTrading = realUSTrading;
+    log.info("Polymarket US client ready");
+  } else if (config.platform === "kalshi") {
+    const km = await initializeKalshiClient(config);
+    client = km;
+    walletAddress = "Kalshi";
+    platformTrading = realKalshiTrading;
+    kalshiCache = new PriceCache(km.keyId, km.privateKeyPem);
+    kalshiTradeStream = new TradeStream(km.keyId, km.privateKeyPem);
+    realKalshiTrading.setPriceCache(kalshiCache);
+    log.info("Kalshi client ready (price cache + trade stream initialised)");
+  } else {
+    const pm = await initializeClient(config);
+    client = pm;
+    walletAddress = pm.address;
+    platformTrading = realTrading;
+    log.info(`Wallet ready: ${walletAddress}`);
+  }
+
+  // 4. P&L tracker (works in both modes, but most useful in test mode)
+  const pnl = new PnLTracker();
+
+  // 5. WebSocket server
+  // Pass both the platform's real backend and simTrading so the server can
+  // switch between them at runtime when the phone toggles test mode.
+  const wss = startWebSocketServer(config, client, walletAddress, platformTrading, simTrading, pnl, kalshiCache, kalshiTradeStream);
+
+  // 6. Graceful shutdown
+  const shutdown = () => {
+    log.info("Shutting down…");
+    pnl.printSummary();
+    kalshiCache?.stop();
+    kalshiTradeStream?.stop();
+    wss.close(() => {
+      log.info("Stopped.");
+      process.exit(0);
+    });
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+}
+
+main().catch((err) => {
+  const msg = err instanceof Error
+    ? err.message
+    : (typeof err === "object" ? JSON.stringify(err) : String(err));
+  process.stderr.write(`[FATAL] ${msg}\n`);
+  // Delay exit so Fly.io log forwarder has time to flush the error.
+  setTimeout(() => process.exit(1), 5000);
+});

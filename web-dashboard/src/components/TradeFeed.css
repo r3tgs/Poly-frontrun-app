@@ -4,6 +4,70 @@
   gap: 16px;
 }
 
+.trade-feed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.feed-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.feed-filter-toggle {
+  display: flex;
+  gap: 2px;
+  margin-right: 4px;
+}
+
+.feed-filter-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  transition: background 0.15s, color 0.15s;
+}
+
+.feed-filter-btn:hover {
+  color: #aaa;
+  background: #1e1e24;
+}
+
+.feed-filter-btn.active {
+  color: #fff;
+  background: #1e1e24;
+}
+
+.feed-mode-btn {
+  background: none;
+  border: 1px solid #2a2a30;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.feed-mode-btn:hover {
+  color: #aaa;
+  border-color: #444;
+}
+
+.feed-mode-btn.active {
+  color: #fff;
+  background: #1e1e24;
+  border-color: #444;
+}
+
 .trade-list {
   display: flex;
   flex-direction: column;
@@ -14,8 +78,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
   height: 56px;
   padding: 8px;
+  padding-right: 120px;
   align-self: stretch;
   background-color: #16161A;
   border-radius: 14px;
@@ -63,10 +129,41 @@
   line-height: normal;
 }
 
+.trade-action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trade-pnl-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.trade-pnl-cost {
+  background: rgba(134, 134, 134, 0.15);
+  color: #868686;
+}
+
+.trade-pnl-pos {
+  background: rgba(21, 223, 131, 0.15);
+  color: #15DF83;
+}
+
+.trade-pnl-neg {
+  background: rgba(246, 54, 88, 0.15);
+  color: #F63658;
+}
+
 .trade-right {
   display: flex;
   align-items: center;
-  gap: 18px;
 }
 
 .trade-matchup {
@@ -106,8 +203,129 @@
 
 /* Platform Badges */
 .platform-badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
   overflow: hidden;
+}
+
+.trade-right-meta {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 8px;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.trade-time {
+  color: #868686;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.trade-feed-empty {
+  color: #555;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 24px 0;
+  text-align: center;
+}
+
+/* Sim trade indicator */
+.trade-row-sim {
+  opacity: 0.7;
+}
+
+.sim-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #aaa;
+  background: #2a2a35;
+  vertical-align: middle;
+}
+
+/* Log terminal */
+.log-terminal {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  height: 420px;
+  overflow-y: auto;
+  background: #0e0e12;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a35 transparent;
+}
+
+.log-terminal::-webkit-scrollbar {
+  width: 4px;
+}
+
+.log-terminal::-webkit-scrollbar-thumb {
+  background: #2a2a35;
+  border-radius: 2px;
+}
+
+.log-line {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.log-ts {
+  color: #868686;
+  flex-shrink: 0;
+}
+
+.log-level-badge {
+  flex-shrink: 0;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  width: 36px;
+  text-align: center;
+}
+
+.log-level-badge.log-level-info  { color: #4a9eff; }
+.log-level-badge.log-level-warn  { color: #f5a623; }
+.log-level-badge.log-level-error { color: #F63658; }
+.log-level-badge.log-level-debug { color: #444; }
+
+.log-ctx {
+  color: #555;
+  flex-shrink: 0;
+}
+
+.log-msg {
+  color: #ccc;
+  flex: 1;
+}
+
+.log-line.log-level-warn  .log-msg { color: #f5a623; }
+.log-line.log-level-error .log-msg { color: #F63658; }
+.log-line.log-level-debug .log-msg { color: #444; }
+
+.log-line-buy  .log-msg { color: #15DF83; }
+.log-line-sell .log-msg { color: #F63658; }
+
+.log-empty {
+  color: #333;
+  font-size: 12px;
+  padding: 16px 0;
+  text-align: center;
 }

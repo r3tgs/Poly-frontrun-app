@@ -1,38 +1,63 @@
 import React, { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LiveBadge } from '../components/LiveBadge';
 import { Scoreboard } from '../components/Scoreboard';
 import { PlatformToggles } from '../components/PlatformToggles';
 import { TeamButtons } from '../components/TeamButtons';
 import { ActivityLog } from '../components/ActivityLog';
+import { ConnectionBanner } from '../components/ConnectionBanner';
 import { Colors } from '../constants/colors';
-import { mockGame, mockLogEntries, mockPlatformStatus } from '../mocks/gameData';
-import { selectTeam, togglePlatform } from '../api';
+import { mockGame, mockPlatformStatus, MARKET_QUESTION } from '../mocks/gameData';
+import { MARKET_CONFIG } from '../constants/market';
+import { useBotConnection } from '../hooks/useBotConnection';
 import type { LogEntry, PlatformStatus } from '../types';
+
+const DEFAULT_BOT_URL = 'wss://pm-frontrun-snowy-waterfall-1028.fly.dev';
 
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
+  const [botUrl, setBotUrl] = useState(DEFAULT_BOT_URL);
   const [platformStatus, setPlatformStatus] =
     useState<PlatformStatus>(mockPlatformStatus);
-  const [logEntries, setLogEntries] = useState<LogEntry[]>(mockLogEntries);
+  const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
+
+  const addLogEntry = useCallback((entry: LogEntry) => {
+    setLogEntries((prev) => [entry, ...prev]);
+  }, []);
+
+  const { status, activeMarket, sendSignal, sendSell } = useBotConnection({
+    url: botUrl,
+    homeLabel: mockGame.homeTeam.name,
+    awayLabel: mockGame.awayTeam.name,
+    onLogEntry: addLogEntry,
+    marketConfig: MARKET_CONFIG,
+  });
+
+  // Override team names with live market data when available
+  const homeTeam = activeMarket?.homeTitle
+    ? { ...mockGame.homeTeam, name: activeMarket.homeTitle, abbreviation: activeMarket.homeTitle.slice(0, 4).toUpperCase() }
+    : mockGame.homeTeam;
+  const awayTeam = activeMarket?.awayTitle
+    ? { ...mockGame.awayTeam, name: activeMarket.awayTitle, abbreviation: activeMarket.awayTitle.slice(0, 4).toUpperCase() }
+    : mockGame.awayTeam;
+  const marketQuestion = activeMarket?.description ?? MARKET_QUESTION;
 
   const handleTogglePlatform = useCallback(
     (platform: 'poly' | 'kalshi') => {
       const newValue = !platformStatus[platform];
       setPlatformStatus((prev) => ({ ...prev, [platform]: newValue }));
-      togglePlatform(platform, newValue);
     },
-    [platformStatus]
+    [platformStatus],
   );
 
   const handleSelectTeam = useCallback(
     (teamId: string) => {
-      const team = teamId === mockGame.homeTeam.id
-        ? mockGame.homeTeam
-        : mockGame.awayTeam;
+      const isHome = teamId === mockGame.homeTeam.id;
+      const team = isHome ? homeTeam : awayTeam;
 
-      const newEntry: LogEntry = {
+      // Local log: "User selected X"
+      addLogEntry({
         id: String(Date.now()),
         timestamp: new Date().toLocaleTimeString('en-US', {
           hour12: false,
@@ -40,22 +65,36 @@ export default function GameScreen() {
           minute: '2-digit',
           second: '2-digit',
         }),
-        message: `User selected '${team.city} ${team.name}'`,
+        message: `User selected '${team.name}'`,
         type: 'info',
-      };
+      });
 
-      setLogEntries((prev) => [newEntry, ...prev]);
-      selectTeam(teamId);
+      // Send buy signal to the bot
+      sendSignal(isHome ? 'home' : 'away');
     },
-    []
+    [addLogEntry, sendSignal, homeTeam, awayTeam],
   );
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* Header: Live badge + Scoreboard */}
+      {/* Header */}
       <View style={styles.header}>
-        <LiveBadge />
-        <Scoreboard game={mockGame} />
+        <View style={styles.badges}>
+          <LiveBadge />
+        </View>
+        {/* Big connection banner with IP input */}
+        <ConnectionBanner status={status} url={botUrl} />
+        {/* Market status — shows what the dashboard pushed */}
+        <View style={styles.marketRow}>
+          {activeMarket ? (
+            <Text style={styles.marketActive}>
+              {activeMarket.description || `${activeMarket.homeKalshiTicker} / ${activeMarket.awayKalshiTicker}`}
+            </Text>
+          ) : (
+            <Text style={styles.marketWaiting}>Waiting for market from dashboard…</Text>
+          )}
+        </View>
+        <Scoreboard game={{ ...mockGame, homeTeam, awayTeam }} marketQuestion={marketQuestion} />
       </View>
 
       {/* Bottom card */}
@@ -73,9 +112,13 @@ export default function GameScreen() {
             onToggle={handleTogglePlatform}
           />
           <TeamButtons
-            homeTeam={mockGame.homeTeam}
-            awayTeam={mockGame.awayTeam}
+            homeTeam={homeTeam}
+            awayTeam={awayTeam}
             onSelect={handleSelectTeam}
+            onSell={(teamId) => {
+              const isHome = teamId === mockGame.homeTeam.id;
+              sendSell(isHome ? 'home' : 'away', 0);
+            }}
           />
           <ActivityLog entries={logEntries} />
         </ScrollView>
@@ -92,6 +135,11 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 8,
     paddingBottom: 12,
+    gap: 10,
+  },
+  badges: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     gap: 8,
   },
   card: {
@@ -107,4 +155,21 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingHorizontal: 20,
   },
+  marketRow: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  marketActive: {
+    color: '#4caf50',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  marketWaiting: {
+    color: '#aaa',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
 });
+

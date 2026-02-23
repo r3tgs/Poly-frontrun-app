@@ -1,0 +1,118 @@
+.price-chart {
+  background: #16171C;
+  border-radius: 16px;
+  padding: 20px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.price-chart-empty {
+  min-height: 160px;
+  justify-content: flex-start;
+}
+
+/* Header */
+.pc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pc-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pc-last-price {
+  font-size: 18px;
+  font-weight: 600;
+  color: #15DF83;
+}
+
+.pc-ticker {
+  font-size: 11px;
+  color: #5A5A5A;
+  font-family: 'SF Mono', 'Fira Mono', monospace;
+  letter-spacing: 0.04em;
+}
+
+/* Live prices in header */
+.pc-header-prices {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.pc-cur-price {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'SF Mono', 'Fira Mono', monospace;
+}
+
+/* Legend */
+.pc-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+}
+
+.pc-legend-item {
+  color: #868686;
+}
+
+.pc-legend-sep {
+  flex: 1;
+}
+
+.pc-legend-buy {
+  color: #15DF83;
+}
+
+.pc-legend-sell {
+  color: #F63658;
+}
+
+/* Chart area */
+.pc-area {
+  width: 100%;
+  position: relative;
+}
+
+/* Empty states */
+.pc-empty {
+  color: #4A4A4A;
+  font-size: 13px;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.pc-empty-chart {
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tooltip */
+.pc-tooltip {
+  background: #1E1F26;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.pc-tooltip-time {
+  color: #6B6B6B;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.pc-tooltip-row {
+  font-weight: 600;
+  font-size: 12px;
+}

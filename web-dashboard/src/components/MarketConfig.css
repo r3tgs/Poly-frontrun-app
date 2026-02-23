@@ -1,0 +1,392 @@
+.market-config {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.market-config-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* WS connection status dot */
+.ws-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.ws-status-connected { background: #4caf50; }
+.ws-status-connecting { background: #ff9800; }
+.ws-status-disconnected { background: #555; }
+
+/* Empty state */
+.instances-empty {
+  background: #16161A;
+  border-radius: 14px;
+  padding: 24px 16px;
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Instance list */
+.instance-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.instance-card {
+  background: #16161A;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.instance-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.instance-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.instance-id {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  font-family: monospace;
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 0.15s;
+}
+.instance-id:hover {
+  border-bottom-color: #555;
+}
+
+.instance-label-input {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: monospace;
+  color: #fff;
+  background: #2a2a2e;
+  border: 1px solid #4caf50;
+  border-radius: 5px;
+  padding: 2px 7px;
+  outline: none;
+  width: 180px;
+}
+
+.instance-status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.instance-pill {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.instance-pill-connected {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+
+.instance-pill-disconnected {
+  background: rgba(120, 120, 120, 0.12);
+  color: #666;
+}
+
+.instance-time {
+  font-size: 11px;
+  color: #555;
+}
+
+.instance-configure-btn {
+  background: #2a2a2e;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #aaa;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.instance-configure-btn:hover {
+  background: #3a3a3e;
+  color: #fff;
+}
+
+/* Market display inside instance card */
+.instance-market {
+  display: flex;
+  align-items: center;
+}
+
+.instance-tickers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.instance-ticker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.instance-ticker-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.instance-ticker-value {
+  font-size: 11px;
+  font-weight: 500;
+  color: #ccc;
+  font-family: monospace;
+  background: #222;
+  padding: 2px 7px;
+  border-radius: 5px;
+}
+
+.instance-no-market {
+  font-size: 12px;
+  color: #444;
+  font-style: italic;
+}
+
+/* Search panel (shown when Configure is clicked) */
+.instance-search-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #222;
+  padding-top: 10px;
+}
+
+.market-search-row {
+  display: flex;
+  gap: 8px;
+}
+
+.market-search-input {
+  flex: 1;
+  background: #0e0e11;
+  border: 1px solid #2a2a2e;
+  border-radius: 10px;
+  padding: 9px 13px;
+  font-size: 13px;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.market-search-input::placeholder {
+  color: #444;
+}
+
+.market-search-input:focus {
+  border-color: #444;
+}
+
+.market-search-btn {
+  background: #2a2a2e;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.market-search-btn:hover:not(:disabled) {
+  background: #3a3a3e;
+}
+
+.market-search-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.market-error {
+  font-size: 12px;
+  color: #ff6b6b;
+  margin: 0;
+}
+
+.market-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.market-result-item {
+  background: #1e1e22;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.market-result-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.market-result-teams {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #aaa;
+}
+
+.market-result-team {
+  color: #bbb;
+  font-weight: 500;
+}
+
+.market-result-vs {
+  color: #444;
+  font-size: 10px;
+}
+
+.market-set-btn {
+  align-self: flex-end;
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 7px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.market-set-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.market-set-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* URL input row */
+.market-url-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* Market preview card */
+.market-preview {
+  background: #1e1e22;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.market-preview-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.market-preview-teams {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.market-preview-team {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.market-preview-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.market-preview-ticker {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  font-family: monospace;
+}
+
+.market-preview-name {
+  font-size: 11px;
+  color: #888;
+}
+
+.market-preview-vs {
+  font-size: 11px;
+  color: #444;
+  flex-shrink: 0;
+}
+
+.market-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.market-clear-btn {
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 7px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.market-clear-btn:hover {
+  border-color: #555;
+  color: #aaa;
+}

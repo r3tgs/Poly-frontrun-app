@@ -2,7 +2,7 @@
   "expo": {
     "name": "PM",
     "slug": "pm-app",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "scheme": "pm",
     "icon": "./assets/icon.png",
@@ -15,7 +15,14 @@
     },
     "ios": {
       "supportsTablet": false,
-      "backgroundColor": "#000000"
+      "backgroundColor": "#000000",
+      "bundleIdentifier": "com.benny.pmapp",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        },
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,10 +30,18 @@
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "usesCleartextTraffic": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "backgroundColor": "#000000",
+      "themeColor": "#000000"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "47908a5d-3660-4123-8a33-ce5c7ffac797"
+      }
     }
   }
 }

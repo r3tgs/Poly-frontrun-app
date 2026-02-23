@@ -1,58 +1,88 @@
-import React from 'react';
-import { Image, ImageSourcePropType, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Colors } from '../constants/colors';
 import type { GameState } from '../types';
 
 interface ScoreboardProps {
   game: GameState;
+  homeScore: number;
+  awayScore: number;
+  onHomeScoreChange: (score: number) => void;
+  onAwayScoreChange: (score: number) => void;
+  marketQuestion?: string;
 }
 
-const logos: Record<string, { source: ImageSourcePropType; bg: string; glow: string }> = {
-  dal: {
-    source: require('../assets/Stars logo.png'),
-    bg: '#006847',
-    glow: 'rgba(0, 104, 71, 0.30)',
-  },
-  nyr: {
-    source: require('../assets/Rangers logo.png'),
-    bg: '#0038A7',
-    glow: 'rgba(0, 56, 167, 0.30)',
-  },
-};
+function ScoreCell({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(String(value));
 
-function TeamLogo({ teamId }: { teamId: string }) {
-  const logo = logos[teamId];
-  if (!logo) return null;
+  // Keep display text in sync when value changes externally (button press)
+  useEffect(() => {
+    if (!editing) setText(String(value));
+  }, [value, editing]);
+
+  const commit = () => {
+    const n = parseInt(text, 10);
+    if (!isNaN(n) && n >= 0) onChange(n);
+    else setText(String(value));
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <TextInput
+        style={styles.scoreInput}
+        value={text}
+        onChangeText={setText}
+        keyboardType="number-pad"
+        onBlur={commit}
+        onSubmitEditing={commit}
+        autoFocus
+        maxLength={3}
+        selectTextOnFocus
+      />
+    );
+  }
 
   return (
-    <View style={[styles.logoGlow, { backgroundColor: logo.glow }]}>
-      <View style={[styles.logoBorder, { backgroundColor: logo.bg }]}>
-        <Image source={logo.source} style={styles.logoImage} resizeMode="contain" />
-      </View>
-    </View>
+    <Pressable
+      onPress={() => { setText(String(value)); setEditing(true); }}
+      hitSlop={12}
+    >
+      <Text style={styles.score}>{value}</Text>
+    </Pressable>
   );
 }
 
-export function Scoreboard({ game }: ScoreboardProps) {
+export function Scoreboard({ game, homeScore, awayScore, onHomeScoreChange, onAwayScoreChange, marketQuestion }: ScoreboardProps) {
+  if (marketQuestion) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.marketQuestion}>{marketQuestion}</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      {/* Home team column */}
+    <View style={styles.scoreboardRow}>
       <View style={styles.teamSection}>
-        <TeamLogo teamId={game.homeTeam.id} />
         <Text style={styles.abbreviation}>{game.homeTeam.abbreviation}</Text>
         <Text style={styles.teamName}>{game.homeTeam.name.toUpperCase()}</Text>
       </View>
 
-      {/* Score */}
       <View style={styles.scoreContainer}>
-        <Text style={styles.score}>{game.homeScore}</Text>
+        <ScoreCell value={homeScore} onChange={onHomeScoreChange} />
         <Text style={styles.score}>-</Text>
-        <Text style={styles.score}>{game.awayScore}</Text>
+        <ScoreCell value={awayScore} onChange={onAwayScoreChange} />
       </View>
 
-      {/* Away team column */}
       <View style={styles.teamSection}>
-        <TeamLogo teamId={game.awayTeam.id} />
         <Text style={styles.abbreviation}>{game.awayTeam.abbreviation}</Text>
         <Text style={styles.teamName}>{game.awayTeam.name.toUpperCase()}</Text>
       </View>
@@ -60,10 +90,20 @@ export function Scoreboard({ game }: ScoreboardProps) {
   );
 }
 
-const LOGO_SIZE = 72;
-
 const styles = StyleSheet.create({
   container: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  marketQuestion: {
+    color: Colors.white,
+    fontSize: 22,
+    fontWeight: '800',
+    textAlign: 'center',
+    lineHeight: 30,
+  },
+  scoreboardRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'center',
@@ -78,33 +118,14 @@ const styles = StyleSheet.create({
   scoreContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: LOGO_SIZE + 4, // match logo glow height (logo + 2px padding each side)
     gap: 14,
-  },
-  logoGlow: {
-    borderRadius: 50,
-    padding: 2,
-  },
-  logoBorder: {
-    width: LOGO_SIZE,
-    height: LOGO_SIZE,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: '#000000',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  logoImage: {
-    width: LOGO_SIZE - 6,
-    height: LOGO_SIZE - 6,
   },
   abbreviation: {
     color: '#868686',
     fontSize: 12,
     fontWeight: '900',
     textAlign: 'center',
-    marginTop: 14, // 16px total with 2px gap
+    marginTop: 14,
   },
   teamName: {
     color: '#FFFFFF',
@@ -117,5 +138,18 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: '900',
     letterSpacing: -1.92,
+    minWidth: 48,
+    textAlign: 'center',
+  },
+  scoreInput: {
+    color: '#FFFFFF',
+    fontSize: 48,
+    fontWeight: '900',
+    letterSpacing: -1.92,
+    minWidth: 48,
+    textAlign: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: '#4caf50',
+    padding: 0,
   },
 });
