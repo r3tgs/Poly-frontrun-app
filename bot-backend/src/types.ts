@@ -68,7 +68,8 @@ export type AppMessage =
   | RegisterMessage
   | ConfigureClientMarketMessage
   | RenameClientMessage
-  | SetTestModeMessage;
+  | SetTestModeMessage
+  | SetDefaultSizeMessage;
 
 /** Set the active market before sending trade signals. */
 export interface ConfigureMarketMessage {
@@ -132,6 +133,12 @@ export interface SetTestModeMessage {
   data: { enabled: boolean };
 }
 
+/** Dashboard → bot: override the default buy size (USD) for all future signals. */
+export interface SetDefaultSizeMessage {
+  type: "set_default_size";
+  data: { size: number };
+}
+
 // ============================================================
 // WebSocket Messages — Bot → App
 // ============================================================
@@ -157,6 +164,56 @@ export interface KalshiTradeEntry {
   ownSide?: "yes" | "no";
 }
 
+export interface PricePoint {
+  /** Unix ms */
+  ts: number;
+  /** YES price in cents (1–99) */
+  price: number;
+}
+
+export interface PriceHistoryMessage {
+  type: "price_history";
+  data: {
+    homeTicker: string;
+    awayTicker: string;       // equals homeTicker for binary markets
+    homePoints: PricePoint[];
+    awayPoints: PricePoint[]; // empty for binary — frontend derives as 100 - homePrice
+  };
+}
+
+// ============================================================
+// Stored Trade (persisted server-side, matches frontend TradeEntry)
+// ============================================================
+
+export interface StoredTrade {
+  id: string;
+  action: "buy" | "sell";
+  team: "home" | "away";
+  contracts: number;
+  /** Gross fill price in dollars (e.g. 0.19 = 19¢) */
+  price: number;
+  fee?: number;
+  latencyMs?: number;
+  marketDesc?: string;
+  homeTitle?: string;
+  awayTitle?: string;
+  platform: "kalshi";
+  timestamp: number;
+  sim?: boolean;
+  tradePnl?: number;
+}
+
+/** Sent once to a dashboard immediately after it registers, carrying the full
+ *  server-side history so all devices see the same state regardless of localStorage. */
+export interface DashboardStateMessage {
+  type: "dashboard_state";
+  data: {
+    trades: StoredTrade[];
+    ownFeed: KalshiTradeEntry[];
+    defaultTradeSize: number;
+  };
+}
+
 export type BotMessage =
   | StatusMessage
   | TradeUpdateMessage
@@ -166,7 +223,9 @@ export type BotMessage =
   | ClientsUpdateMessage
   | SetLabelMessage
   | LogMessage
-  | KalshiOrderFeedMessage;
+  | KalshiOrderFeedMessage
+  | PriceHistoryMessage
+  | DashboardStateMessage;
 
 export interface LogMessage {
   type: "log";
@@ -207,6 +266,8 @@ export interface TradeUpdateMessage {
     error?: string;
     /** True when this trade was executed by the simulated (test-mode) backend */
     sim?: boolean;
+    /** Realized P&L for this individual sell trade (net proceeds minus cost basis). Only set for sells. */
+    tradePnl?: number;
   };
 }
 
@@ -232,6 +293,8 @@ export interface ClientsUpdateMessage {
     connectedAt: number;
     activeMarket: MarketConfig | null;
     label?: string;
+    /** True while the WebSocket is open; false after disconnect (card stays visible). */
+    connected: boolean;
   }>;
 }
 

@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import './TradeSize.css';
 
 const PRESETS = [10, 25, 50, 100];
-const STORAGE_KEY = 'default_trade_size';
 
 interface Props {
   wsRef: React.MutableRefObject<WebSocket | null>;
   wsStatus: 'connecting' | 'connected' | 'disconnected';
+  /** Server-authoritative default size received via dashboard_state. When set,
+   *  it overrides the local display so all devices show the same value. */
+  serverDefaultSize: number | null;
 }
 
 function sendSize(ws: WebSocket | null, size: number) {
@@ -15,12 +17,14 @@ function sendSize(ws: WebSocket | null, size: number) {
   }
 }
 
-export function TradeSize({ wsRef, wsStatus }: Props) {
-  const [size, setSize] = useState<number>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? parseFloat(stored) : 50;
-  });
+export function TradeSize({ wsRef, wsStatus, serverDefaultSize }: Props) {
+  const [size, setSize] = useState<number>(serverDefaultSize ?? 50);
   const [customVal, setCustomVal] = useState('');
+
+  // Sync to server value whenever it arrives (e.g. page load, reconnect)
+  useEffect(() => {
+    if (serverDefaultSize != null) setSize(serverDefaultSize);
+  }, [serverDefaultSize]);
 
   // Re-send on every fresh connection so the bot is always in sync
   useEffect(() => {
@@ -31,7 +35,6 @@ export function TradeSize({ wsRef, wsStatus }: Props) {
 
   const applySize = (s: number) => {
     setSize(s);
-    localStorage.setItem(STORAGE_KEY, String(s));
     sendSize(wsRef.current, s);
   };
 

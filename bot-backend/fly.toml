@@ -35,6 +35,11 @@ primary_region = 'iad'
 
 [[vm]]
   size = 'performance-1x'
-  memory = '1024mb'
+  memory = '2048mb'
   cpus = 1
-  memory_mb = 1024
+  memory_mb = 2048
+
+[[mounts]]
+  source = 'bot_data'
+  destination = '/data'
+  initial_size = '1gb'

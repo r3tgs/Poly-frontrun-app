@@ -4,12 +4,15 @@ import { WebSocketServer, WebSocket } from "ws";
 import { Config } from "../config";
 import { TradeResult } from "../polymarket/trading";
 import { PnLTracker } from "../pnl";
+import { DataStore } from "../dataStore";
 import {
   AppMessage,
   BotMessage,
   MarketConfig,
   TradeUpdateMessage,
   KalshiTradeEntry,
+  PricePoint,
+  StoredTrade,
 } from "../types";
 import { createLogger, addLogListener } from "../logger";
 
@@ -30,6 +33,133 @@ interface MarketSearchResult {
   homeTitle: string;
   awayKalshiTicker: string;
   awayTitle: string;
+}
+
+/** Get market open timestamp from the public Kalshi API. Falls back to 7 days ago. */
+async function getMarketOpenTs(ticker: string): Promise<number> {
+  const now = Math.floor(Date.now() / 1000);
+  try {
+    const resp = await fetch(`${KALSHI_BASE}/markets/${ticker}`);
+    if (resp.ok) {
+      const data = await resp.json() as { market: any };
+      const m = data.market ?? {};
+      const openStr: string | undefined = m.open_time ?? m.created_time;
+      if (openStr) {
+        const parsed = Math.floor(new Date(openStr).getTime() / 1000);
+        if (parsed > 0 && parsed < now) return parsed;
+      }
+    }
+  } catch { /* use fallback */ }
+  return now - 7 * 24 * 3600;
+}
+
+/**
+ * Fetch price history via the authenticated Kalshi SDK and broadcast to dashboards.
+ *
+ * Mirrors Kalshi's default LIVE view:
+ *   - Always 1-minute candles (shows jagged real price movement)
+ *   - Start from the later of: market open time OR 24 hours ago
+ *     (caps at ~1440 points for older markets while always showing today's full session)
+ *
+ * Uses batchGetMarketCandlesticks to fetch both tickers in one authenticated call.
+ *
+ * If targetWs is set, sends only to that connection (e.g. on page refresh).
+ * Otherwise broadcasts to all connected dashboards.
+ */
+function fetchAndBroadcastPriceHistory(
+  clients: Map<WebSocket, ClientInfo>,
+  market: MarketConfig,
+  kalshiClient: any,
+  targetWs?: WebSocket,
+): void {
+  const homeTicker = market.homeKalshiTicker ?? "";
+  const awayTicker = market.awayKalshiTicker ?? homeTicker;
+  if (!homeTicker) return;
+
+  if (!kalshiClient?.markets?.batchGetMarketCandlesticks) {
+    log.warn("No authenticated Kalshi client — skipping price history fetch");
+    return;
+  }
+
+  const isBinary = homeTicker === awayTicker;
+
+  (async () => {
+    try {
+      const now = Math.floor(Date.now() / 1000);
+      const marketOpenTs = await getMarketOpenTs(homeTicker);
+
+      // LIVE view: 1-minute candles, starting from the later of market open or 3h ago.
+      // 3h cap keeps the dataset tight (~180 pts max) and matches Kalshi's LIVE chart
+      // which focuses on the current session, not the full pre-match history.
+      const periodInterval = 1;
+      const startTs = Math.max(marketOpenTs, now - 3 * 3600);
+
+      // Fetch both tickers in one authenticated SDK call
+      const tickerParam = isBinary ? homeTicker : `${homeTicker},${awayTicker}`;
+      const resp = await kalshiClient.markets.batchGetMarketCandlesticks(
+        tickerParam,
+        startTs,
+        now,
+        periodInterval,
+      );
+
+      const marketsList: any[] = resp.data.markets ?? [];
+
+      /**
+       * Parse candlestick array into PricePoint[].
+       *
+       * Price priority (mirrors Kalshi's continuous chart):
+       *   1. price.close  — last actual trade in this 1-min window (most accurate)
+       *   2. bid/ask midpoint — always present even with no trades; keeps the line
+       *      continuous during quiet periods (this is what Kalshi uses to avoid gaps)
+       *   3. ask alone / bid alone — edge cases where only one side has an order
+       */
+      const parseCandles = (arr: any[]): PricePoint[] =>
+        arr
+          .map((c: any) => {
+            const traded = Number(c.price?.close ?? 0);
+            const bid    = Number(c.yes_bid?.close ?? 0);
+            const ask    = Number(c.yes_ask?.close ?? 0);
+            const mid    = bid > 0 && ask > 0 ? Math.round((bid + ask) / 2) : 0;
+            const price  = traded > 0 ? traded
+                         : mid    > 0 ? mid
+                         : ask    > 0 ? ask
+                         : bid;
+            return { ts: Number(c.end_period_ts ?? 0) * 1000, price };
+          })
+          .filter((p: PricePoint) => p.ts > 0 && p.price > 0);
+
+      const homeData = marketsList.find((m: any) => m.market_ticker === homeTicker);
+      const awayData = isBinary ? null : marketsList.find((m: any) => m.market_ticker === awayTicker);
+
+      const homePoints = parseCandles(homeData?.candlesticks ?? []);
+      const awayPoints = isBinary ? [] : parseCandles(awayData?.candlesticks ?? []);
+
+      if (homePoints.length === 0 && awayPoints.length === 0) {
+        log.warn(`Price history: no data returned for ${tickerParam}`);
+        return;
+      }
+
+      const msg: BotMessage = {
+        type: "price_history",
+        data: { homeTicker, awayTicker, homePoints, awayPoints },
+      };
+      const payload = JSON.stringify(msg);
+
+      if (targetWs) {
+        if (targetWs.readyState === WebSocket.OPEN) targetWs.send(payload);
+      } else {
+        for (const [ws, info] of clients) {
+          if (info.type === "dashboard" && ws.readyState === WebSocket.OPEN) {
+            ws.send(payload);
+          }
+        }
+      }
+
+    } catch (err) {
+      log.warn(`Price history fetch failed for ${homeTicker}/${awayTicker}: ${err}`);
+    }
+  })();
 }
 
 async function searchKalshiMarkets(q: string): Promise<MarketSearchResult[]> {
@@ -254,16 +384,29 @@ function broadcastPnlToDashboards(clients: Map<WebSocket, ClientInfo>, pnl: PnLT
 }
 
 /** Send a clients_update message to every connected dashboard. */
-function broadcastClientsUpdate(clients: Map<WebSocket, ClientInfo>): void {
-  const phones = [...clients.values()].filter((c) => c.type === "phone");
+function broadcastClientsUpdate(
+  clients: Map<WebSocket, ClientInfo>,
+  disconnectedPhones: Map<string, ClientInfo>,
+): void {
+  const connectedPhones = [...clients.values()].filter((c) => c.type === "phone");
   const msg: BotMessage = {
     type: "clients_update",
-    data: phones.map((c) => ({
-      id: c.id,
-      connectedAt: c.connectedAt,
-      activeMarket: c.activeMarket,
-      label: c.label,
-    })),
+    data: [
+      ...connectedPhones.map((c) => ({
+        id: c.id,
+        connectedAt: c.connectedAt,
+        activeMarket: c.activeMarket,
+        label: c.label,
+        connected: true,
+      })),
+      ...[...disconnectedPhones.values()].map((c) => ({
+        id: c.id,
+        connectedAt: c.connectedAt,
+        activeMarket: c.activeMarket,
+        label: c.label,
+        connected: false,
+      })),
+    ],
   };
   const payload = JSON.stringify(msg);
   for (const [ws, info] of clients) {
@@ -301,9 +444,11 @@ export function startWebSocketServer(
     }
   });
 
-  // Stream live Kalshi order-feed entries to dashboards.
+  // Stream live Kalshi order-feed entries to dashboards and persist own trades.
   if (tradeStream) {
     tradeStream.addListener((entry) => {
+      // Persist own-trade entries so all devices see chart dots after connect.
+      if (entry.isOwn) dataStore.upsertOwnFeedEntry(entry);
       const msg: BotMessage = { type: "kalshi_order_feed", data: entry };
       const payload = JSON.stringify(msg);
       for (const [ws, info] of clients) {
@@ -314,13 +459,23 @@ export function startWebSocketServer(
     });
   }
 
+  // Persistent store — survives page refreshes and is shared across all devices.
+  const dataStore = new DataStore(config.defaultBuySize);
+
   // Last market set by the dashboard — re-sent to any phone that (re)connects.
   const globalMarket: { current: MarketConfig | null } = { current: null };
+
+  // Phones that have disconnected — kept visible in the dashboard with a "disconnected"
+  // badge until the phone reconnects (matched by label) or the server restarts.
+  const disconnectedPhones = new Map<string, ClientInfo>();
 
   // Mutable trading backend — swapped when phone toggles test mode.
   const tradingRef: { current: TradingBackend } = {
     current: config.testMode ? simTradingBackend : realTradingBackend,
   };
+
+  // Default buy size — initialised from persisted DataStore value.
+  const defaultTradeSizeRef = { current: dataStore.getDefaultTradeSize() };
 
   // HTTP server: health check, market search, and WebSocket host.
   const httpServer = http.createServer((req, res) => {
@@ -427,7 +582,7 @@ export function startWebSocketServer(
       }
 
       try {
-        await handleMessage(ws, wss, clients, message, config, client, walletAddress, tradingRef, realTradingBackend, simTradingBackend, pnl, priceCache, tradeStream, globalMarket);
+        await handleMessage(ws, wss, clients, disconnectedPhones, message, config, client, walletAddress, tradingRef, realTradingBackend, simTradingBackend, pnl, priceCache, tradeStream, globalMarket, defaultTradeSizeRef, dataStore);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         log.error(`Unhandled error: ${msg}`);
@@ -442,14 +597,32 @@ export function startWebSocketServer(
       const info = clients.get(ws);
       clients.delete(ws);
       log.info(`Client disconnected: ${info?.id}`);
-      // Notify dashboards whenever a phone drops
+      // Keep phone card visible with a "disconnected" badge instead of removing it.
       if (info?.type === "phone") {
-        broadcastClientsUpdate(clients);
+        disconnectedPhones.set(info.id, info);
+        broadcastClientsUpdate(clients, disconnectedPhones);
       }
     });
 
     ws.on("error", (err) => log.error("Socket error", err));
   });
+
+  // Poll price history every 30 s so live candles stream into connected dashboards
+  // without requiring a page refresh. Skips when no dashboard is watching or no
+  // market is configured.
+  setInterval(() => {
+    const hasDashboard = [...clients.values()].some(c => c.type === "dashboard");
+    if (!hasDashboard) return;
+    const market =
+      globalMarket.current ??
+      [...clients.values()].find(
+        c => c.type === "phone" && c.activeMarket?.homeKalshiTicker,
+      )?.activeMarket ??
+      null;
+    if (market?.homeKalshiTicker || market?.awayKalshiTicker) {
+      fetchAndBroadcastPriceHistory(clients, market, client);
+    }
+  }, 30_000);
 
   return wss;
 }
@@ -462,6 +635,7 @@ async function handleMessage(
   ws: WebSocket,
   wss: WebSocketServer,
   clients: Map<WebSocket, ClientInfo>,
+  disconnectedPhones: Map<string, ClientInfo>,
   message: AppMessage,
   config: Config,
   client: any,
@@ -473,6 +647,8 @@ async function handleMessage(
   priceCache: TickerSubscriber | undefined,
   tradeStream: TradeStreamInterface | undefined,
   globalMarket: { current: MarketConfig | null },
+  defaultTradeSizeRef: { current: number },
+  dataStore: DataStore,
 ): Promise<void> {
   const senderInfo = clients.get(ws);
 
@@ -487,6 +663,16 @@ async function handleMessage(
       }
       log.info(`Client registered as ${message.data.clientType}: ${senderInfo?.id}`);
       if (message.data.clientType === "phone") {
+        // Remove from disconnected list if this phone is reconnecting with a known label.
+        const reconnectLabel = message.data.label ?? senderInfo?.label;
+        if (reconnectLabel) {
+          for (const [dId, dInfo] of disconnectedPhones) {
+            if (dInfo.label === reconnectLabel) {
+              disconnectedPhones.delete(dId);
+              break;
+            }
+          }
+        }
         // Re-send last dashboard-configured market so phone restores state after refresh.
         if (globalMarket.current) {
           if (senderInfo) senderInfo.activeMarket = globalMarket.current;
@@ -494,21 +680,42 @@ async function handleMessage(
           log.info(`Re-sent last market to reconnecting phone ${senderInfo?.id}`);
         }
       }
-      // Send this dashboard the current phone list immediately
+      // Send this dashboard the current phone list, full history, and restore price history.
       if (message.data.clientType === "dashboard") {
         const phones = [...clients.values()].filter((c) => c.type === "phone");
         send(ws, {
           type: "clients_update",
-          data: phones.map((c) => ({
-            id: c.id,
-            connectedAt: c.connectedAt,
-            activeMarket: c.activeMarket,
-            label: c.label,
-          })),
+          data: [
+            ...phones.map((c) => ({
+              id: c.id,
+              connectedAt: c.connectedAt,
+              activeMarket: c.activeMarket,
+              label: c.label,
+              connected: true,
+            })),
+            ...[...disconnectedPhones.values()].map((c) => ({
+              id: c.id,
+              connectedAt: c.connectedAt,
+              activeMarket: c.activeMarket,
+              label: c.label,
+              connected: false,
+            })),
+          ],
         });
+        // Send full persisted state so all devices share the same history.
+        const { trades, ownFeed, defaultTradeSize } = dataStore.getState();
+        send(ws, { type: "dashboard_state", data: { trades, ownFeed, defaultTradeSize } });
+        // Re-send price history so the chart loads even after a page refresh.
+        const market =
+          globalMarket.current ??
+          phones.find((p) => p.activeMarket?.homeKalshiTicker)?.activeMarket ??
+          null;
+        if (market?.homeKalshiTicker || market?.awayKalshiTicker) {
+          fetchAndBroadcastPriceHistory(clients, market, client, ws);
+        }
       }
       // Tell all dashboards the updated roster
-      broadcastClientsUpdate(clients);
+      broadcastClientsUpdate(clients, disconnectedPhones);
       return;
     }
 
@@ -526,7 +733,7 @@ async function handleMessage(
           break;
         }
       }
-      broadcastClientsUpdate(clients);
+      broadcastClientsUpdate(clients, disconnectedPhones);
       return;
     }
 
@@ -544,13 +751,15 @@ async function handleMessage(
             const tickers = [...new Set([market.homeKalshiTicker, market.awayKalshiTicker].filter(Boolean) as string[])];
             if (priceCache) { priceCache.subscribe(tickers); log.info(`Price cache subscribing to: ${tickers.join(", ")}`); }
             if (tradeStream) { tradeStream.subscribe(tickers); log.info(`Trade stream subscribing to: ${tickers.join(", ")}`); }
+            // Fetch and broadcast price history for both teams
+            fetchAndBroadcastPriceHistory(clients, market, client);
           }
           send(targetWs, { type: "market_configured", data: market });
           log.info(`Market configured for client ${clientId}: ${JSON.stringify(market)}`);
           break;
         }
       }
-      broadcastClientsUpdate(clients);
+      broadcastClientsUpdate(clients, disconnectedPhones);
       return;
     }
 
@@ -567,10 +776,12 @@ async function handleMessage(
         const tickers = [...new Set([market.homeKalshiTicker, market.awayKalshiTicker].filter(Boolean) as string[])];
         if (priceCache) { priceCache.subscribe(tickers); log.info(`Price cache subscribing to: ${tickers.join(", ")}`); }
         if (tradeStream) { tradeStream.subscribe(tickers); log.info(`Trade stream subscribing to: ${tickers.join(", ")}`); }
+        // Fetch and broadcast price history for both teams
+        fetchAndBroadcastPriceHistory(clients, market, client);
       }
       send(ws, { type: "market_configured", data: market });
       if (senderInfo?.type === "phone") {
-        broadcastClientsUpdate(clients);
+        broadcastClientsUpdate(clients, disconnectedPhones);
       }
       return;
     }
@@ -593,17 +804,35 @@ async function handleMessage(
 
       const { team, size } = message.data;
       const tokenId = getTradeId(activeMarket, team);
+      const buySize = size ?? defaultTradeSizeRef.current;
 
-      log.info(`BUY signal — team=${team}  token=${tokenId}`);
+      log.info(`BUY signal — team=${team}  size=$${buySize}  token=${tokenId}`);
 
       // Notify all clients the order is in-flight.
       broadcast(wss, pendingUpdate("buy", team));
 
       const isSim = tradingRef.current === simTradingBackend;
-      const result = await tradingRef.current.executeBuy(client, config, tokenId, size);
+      const result = await tradingRef.current.executeBuy(client, config, tokenId, buySize);
 
+      const buyTs = Date.now();
       if (result.success && result.size) {
         pnl.recordBuy(tokenId, team, result.size, result.price ?? 0, result.fee ?? 0);
+        const storedBuy: StoredTrade = {
+          id: `${buyTs}-${Math.random().toString(36).slice(2, 6)}`,
+          action: "buy",
+          team,
+          contracts: result.size,
+          price: result.price ?? 0,
+          fee: result.fee,
+          latencyMs: result.latencyMs,
+          marketDesc: activeMarket.description,
+          homeTitle: activeMarket.homeTitle,
+          awayTitle: activeMarket.awayTitle,
+          platform: "kalshi",
+          timestamp: buyTs,
+          sim: isSim,
+        };
+        dataStore.addTrade(storedBuy);
       }
 
       const update: TradeUpdateMessage = {
@@ -616,7 +845,7 @@ async function handleMessage(
           price: result.price,
           size: result.size,
           fee: result.fee,
-          timestamp: Date.now(),
+          timestamp: buyTs,
           latencyMs: result.latencyMs,
           error: result.error,
           sim: isSim,
@@ -657,11 +886,30 @@ async function handleMessage(
       const isSim = tradingRef.current === simTradingBackend;
       const result = await tradingRef.current.executeSell(client, config, tokenId, sellSize, price);
 
+      const sellTs = Date.now();
+      let tradePnl: number | undefined;
       if (result.success && result.price && result.size) {
-        pnl.recordSell(tokenId, result.size, result.price, result.fee ?? 0);
-        // Position closed — print summary once and push updated PnL to all dashboards.
+        const pnlResult = pnl.recordSell(tokenId, result.size, result.price, result.fee ?? 0);
+        if (pnlResult != null) tradePnl = pnlResult;
         pnl.printSummary();
         broadcastPnlToDashboards(clients, pnl);
+        const storedSell: StoredTrade = {
+          id: `${sellTs}-${Math.random().toString(36).slice(2, 6)}`,
+          action: "sell",
+          team,
+          contracts: result.size,
+          price: result.price,
+          fee: result.fee,
+          latencyMs: result.latencyMs,
+          marketDesc: activeMarket.description,
+          homeTitle: activeMarket.homeTitle,
+          awayTitle: activeMarket.awayTitle,
+          platform: "kalshi",
+          timestamp: sellTs,
+          sim: isSim,
+          tradePnl,
+        };
+        dataStore.addTrade(storedSell);
       }
 
       const sellUpdate: TradeUpdateMessage = {
@@ -674,10 +922,11 @@ async function handleMessage(
           price: result.price,
           size: result.size,
           fee: result.fee,
-          timestamp: Date.now(),
+          timestamp: sellTs,
           latencyMs: result.latencyMs,
           error: result.error,
           sim: isSim,
+          tradePnl,
         },
       };
       broadcast(wss, sellUpdate);
@@ -743,6 +992,19 @@ async function handleMessage(
       } satisfies BotMessage);
       for (const [targetWs] of clients) {
         if (targetWs.readyState === WebSocket.OPEN) targetWs.send(statusPayload);
+      }
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Set Default Trade Size  (dashboard → bot)
+    // ----------------------------------------------------------
+    case "set_default_size": {
+      const { size } = message.data;
+      if (typeof size === "number" && size > 0) {
+        defaultTradeSizeRef.current = size;
+        dataStore.setDefaultTradeSize(size);
+        log.info(`Default trade size set to $${size}`);
       }
       return;
     }
