@@ -5,11 +5,10 @@ import type { GameState } from '../types';
 
 interface ScoreboardProps {
   game: GameState;
-  homeScore: number;
-  awayScore: number;
-  onHomeScoreChange: (score: number) => void;
-  onAwayScoreChange: (score: number) => void;
-  marketQuestion?: string;
+  homeScore?: number;
+  awayScore?: number;
+  onHomeScoreChange?: (score: number) => void;
+  onAwayScoreChange?: (score: number) => void;
 }
 
 function ScoreCell({
@@ -60,15 +59,7 @@ function ScoreCell({
   );
 }
 
-export function Scoreboard({ game, homeScore, awayScore, onHomeScoreChange, onAwayScoreChange, marketQuestion }: ScoreboardProps) {
-  if (marketQuestion) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.marketQuestion}>{marketQuestion}</Text>
-      </View>
-    );
-  }
-
+export function Scoreboard({ game, homeScore = 0, awayScore = 0, onHomeScoreChange, onAwayScoreChange }: ScoreboardProps) {
   return (
     <View style={styles.scoreboardRow}>
       {/* Home team — right-aligned so name hugs the score */}
@@ -95,18 +86,6 @@ export function Scoreboard({ game, homeScore, awayScore, onHomeScoreChange, onAw
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  marketQuestion: {
-    color: Colors.white,
-    fontSize: 22,
-    fontWeight: '800',
-    textAlign: 'center',
-    lineHeight: 30,
-  },
   scoreboardRow: {
     flexDirection: 'row',
     alignItems: 'center',

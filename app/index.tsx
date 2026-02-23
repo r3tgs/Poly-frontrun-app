@@ -8,7 +8,7 @@ import { TeamButtons } from '../components/TeamButtons';
 import { ActivityLog } from '../components/ActivityLog';
 import { ConnectionBanner } from '../components/ConnectionBanner';
 import { Colors } from '../constants/colors';
-import { mockGame, mockPlatformStatus, MARKET_QUESTION } from '../mocks/gameData';
+import { mockGame, mockPlatformStatus } from '../mocks/gameData';
 import { MARKET_CONFIG } from '../constants/market';
 import { useBotConnection } from '../hooks/useBotConnection';
 import type { LogEntry, PlatformStatus } from '../types';
@@ -41,8 +41,6 @@ export default function GameScreen() {
   const awayTeam = activeMarket?.awayTitle
     ? { ...mockGame.awayTeam, name: activeMarket.awayTitle, abbreviation: activeMarket.awayTitle.slice(0, 4).toUpperCase() }
     : mockGame.awayTeam;
-  const marketQuestion = activeMarket?.description ?? MARKET_QUESTION;
-
   const handleTogglePlatform = useCallback(
     (platform: 'poly' | 'kalshi') => {
       const newValue = !platformStatus[platform];
@@ -84,7 +82,7 @@ export default function GameScreen() {
         </View>
         {/* Big connection banner with IP input */}
         <ConnectionBanner status={status} url={botUrl} />
-        <Scoreboard game={{ ...mockGame, homeTeam, awayTeam }} marketQuestion={marketQuestion} />
+        <Scoreboard game={{ ...mockGame, homeTeam, awayTeam }} />
       </View>
 
       {/* Bottom card */}
