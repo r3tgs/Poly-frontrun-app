@@ -1,0 +1,187 @@
+.upcoming-games {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---- City chip row ---- */
+
+.ug-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  background: #16161A;
+  border-radius: 14px;
+  padding: 10px 12px;
+  min-height: 46px;
+}
+
+.ug-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #2a2a2e;
+  border-radius: 20px;
+  padding: 4px 10px 4px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ccc;
+}
+
+.ug-chip-remove {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 0 0 2px;
+  transition: color 0.15s;
+}
+.ug-chip-remove:hover { color: #ccc; }
+
+/* ---- Input + suggestions ---- */
+
+.ug-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 120px;
+}
+
+.ug-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #fff;
+  font-family: inherit;
+  padding: 4px 2px;
+  box-sizing: border-box;
+}
+.ug-input::placeholder { color: #444; }
+
+.ug-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 180px;
+  background: #1e1e22;
+  border: 1px solid #2a2a2e;
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.ug-suggestion {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 14px;
+  color: #ccc;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+.ug-suggestion:hover { background: #2a2a2e; color: #fff; }
+
+/* ---- Games list ---- */
+
+.ug-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ug-empty {
+  background: #16161A;
+  border-radius: 14px;
+  padding: 20px 16px;
+  font-size: 14px;
+  color: #444;
+  font-weight: 500;
+  text-align: center;
+}
+
+.ug-error { color: #ff6b6b; }
+
+/* ---- Day group ---- */
+
+.ug-day {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ug-day-label {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #555;
+  padding: 0 2px;
+}
+
+/* ---- Single game row ---- */
+
+.ug-game {
+  background: #16161A;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Sport badge */
+.ug-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.ug-badge-nhl {
+  background: rgba(100, 160, 255, 0.15);
+  color: #64a0ff;
+}
+.ug-badge-mls {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+
+/* Matchup */
+.ug-matchup {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ug-team {
+  font-size: 16px;
+  font-weight: 590;
+  color: #fff;
+  font-family: monospace;
+}
+
+.ug-vs {
+  font-size: 13px;
+  color: #444;
+}
+
+/* Time */
+.ug-time {
+  font-size: 13px;
+  color: #868686;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

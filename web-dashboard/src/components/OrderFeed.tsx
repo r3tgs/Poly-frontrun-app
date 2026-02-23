@@ -95,16 +95,18 @@ export function OrderFeed({ trades, market }: Props) {
       </div>
 
       <div className="of-terminal">
-        {!hasKalshi ? (
-          <div className="of-empty">No Kalshi market configured</div>
-        ) : trades.length === 0 ? (
-          <div className="of-empty">Waiting for trades…</div>
-        ) : (
+        {trades.length > 0 ? (
           // column-reverse renders newest (first in array) at the visual bottom.
           // New prepended entries appear at the bottom; scroll anchors there natively.
+          // Always show trades when present — market prop is only used for labels,
+          // not for gating display (avoids flash-to-empty on phone disconnect/reconnect).
           trades.map((t) => (
             <TradeRow key={t.tradeId} trade={t} market={market} />
           ))
+        ) : !hasKalshi ? (
+          <div className="of-empty">No Kalshi market configured</div>
+        ) : (
+          <div className="of-empty">Waiting for trades…</div>
         )}
       </div>
     </div>

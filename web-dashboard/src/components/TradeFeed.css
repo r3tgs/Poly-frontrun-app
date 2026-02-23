@@ -129,6 +129,38 @@
   line-height: normal;
 }
 
+.trade-action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trade-pnl-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.trade-pnl-cost {
+  background: rgba(134, 134, 134, 0.15);
+  color: #868686;
+}
+
+.trade-pnl-pos {
+  background: rgba(21, 223, 131, 0.15);
+  color: #15DF83;
+}
+
+.trade-pnl-neg {
+  background: rgba(246, 54, 88, 0.15);
+  color: #F63658;
+}
+
 .trade-right {
   display: flex;
   align-items: center;

@@ -88,6 +88,31 @@
   width: 180px;
 }
 
+.instance-status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.instance-pill {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.instance-pill-connected {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4caf50;
+}
+
+.instance-pill-disconnected {
+  background: rgba(120, 120, 120, 0.12);
+  color: #666;
+}
+
 .instance-time {
   font-size: 11px;
   color: #555;

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import type { TradeEntry, LogEntry } from '../types';
 import buyIcon from '../assets/PM Buy Icon.svg';
 import sellIcon from '../assets/PM Sell Icon.svg';
@@ -28,6 +28,47 @@ function applyFilter(trades: TradeEntry[], filter: FeedFilter): TradeEntry[] {
   return trades;
 }
 
+/**
+ * FIFO matching of buys → sells across the full trade history.
+ * Returns a map of trade.id → per-trade realized P&L for sell entries.
+ * Used as a fallback when the backend doesn't send tradePnl (e.g. after a restart).
+ */
+function computeFrontendPnl(trades: TradeEntry[]): Map<string, number> {
+  const pnlMap = new Map<string, number>();
+  // Process oldest-first so FIFO order is correct
+  const sorted = [...trades].sort((a, b) => a.timestamp - b.timestamp);
+
+  // Position keyed by team + market (homeTitle::awayTitle)
+  const positions = new Map<string, { totalCost: number; contracts: number; avgPrice: number }>();
+
+  for (const trade of sorted) {
+    const key = `${trade.team}::${trade.homeTitle ?? ''}::${trade.awayTitle ?? ''}`;
+    if (trade.action === 'buy') {
+      const cost = trade.contracts * trade.price + (trade.fee ?? 0);
+      const ex = positions.get(key);
+      if (ex) {
+        const n = ex.contracts + trade.contracts;
+        ex.avgPrice = (ex.totalCost + cost) / n;
+        ex.contracts = n;
+        ex.totalCost += cost;
+      } else {
+        positions.set(key, { totalCost: cost, contracts: trade.contracts, avgPrice: cost / trade.contracts });
+      }
+    } else if (trade.action === 'sell') {
+      const pos = positions.get(key);
+      if (pos && pos.contracts > 0) {
+        const net = trade.contracts * trade.price - (trade.fee ?? 0);
+        const costBasis = trade.contracts * pos.avgPrice;
+        pnlMap.set(trade.id, net - costBasis);
+        pos.contracts -= trade.contracts;
+        pos.totalCost = pos.contracts > 0 ? pos.contracts * pos.avgPrice : 0;
+        if (pos.contracts <= 0) positions.delete(key);
+      }
+    }
+  }
+  return pnlMap;
+}
+
 function PlatformBadge({ platform }: { platform: 'poly' | 'kalshi' }) {
   return (
     <img
@@ -50,7 +91,7 @@ function formatTime(ts: number): string {
   return `${time}.${ms}`;
 }
 
-function TradeRow({ trade }: { trade: TradeEntry }) {
+function TradeRow({ trade, fallbackPnl }: { trade: TradeEntry; fallbackPnl?: number }) {
   const isBuy = trade.action === 'buy';
   const teamLabel = trade.team === 'home'
     ? (trade.homeTitle ?? 'Home')
@@ -59,6 +100,15 @@ function TradeRow({ trade }: { trade: TradeEntry }) {
   const priceDisplay = `${(trade.price * 100).toFixed(0)}¢`;
   const feeDisplay = trade.fee != null ? ` · $${trade.fee.toFixed(2)} fee` : '';
   const latencyDisplay = trade.latencyMs != null ? ` · ${trade.latencyMs}ms` : '';
+
+  // Per-trade financial summary — use backend value if present, else frontend FIFO computation
+  const buyCost = isBuy ? trade.contracts * trade.price + (trade.fee ?? 0) : null;
+  const effectivePnl = !isBuy ? (trade.tradePnl ?? fallbackPnl) : null;
+  const tradePnlDisplay = effectivePnl != null
+    ? effectivePnl >= 0
+      ? `+$${effectivePnl.toFixed(2)}`
+      : `-$${Math.abs(effectivePnl).toFixed(2)}`
+    : null;
 
   return (
     <div className={`trade-row ${trade.sim ? 'trade-row-sim' : ''}`}>
@@ -69,10 +119,20 @@ function TradeRow({ trade }: { trade: TradeEntry }) {
           className="trade-icon"
         />
         <div className="trade-info">
-          <span className={`trade-action ${isBuy ? 'action-buy' : 'action-sell'}`}>
-            {isBuy ? 'Bought' : 'Sold'} {teamLabel}
-            {trade.sim && <span className="sim-badge">SIM</span>}
-          </span>
+          <div className="trade-action-row">
+            <span className={`trade-action ${isBuy ? 'action-buy' : 'action-sell'}`}>
+              {isBuy ? 'Bought' : 'Sold'} {teamLabel}
+              {trade.sim && <span className="sim-badge">SIM</span>}
+            </span>
+            {tradePnlDisplay != null && (
+              <span className={`trade-pnl-badge ${effectivePnl! >= 0 ? 'trade-pnl-pos' : 'trade-pnl-neg'}`}>
+                P&L {tradePnlDisplay}
+              </span>
+            )}
+            {tradePnlDisplay == null && buyCost != null && (
+              <span className="trade-pnl-badge trade-pnl-cost">cost ${buyCost.toFixed(2)}</span>
+            )}
+          </div>
           <span className="trade-details">
             {trade.contracts} contracts @ {priceDisplay}{feeDisplay}{latencyDisplay}
           </span>
@@ -123,10 +183,10 @@ function LogTerminal({ logs }: { logs: LogEntry[] }) {
         // Reverse so oldest renders first (top), newest last (bottom)
         [...logs].reverse().map((entry, i) => {
           const msg = entry.message.toLowerCase();
-          // Only highlight the actual fill/post log — these are the only lines containing "orderid="
-          const isFill = msg.includes('orderid=');
-          const isBuy  = isFill && msg.includes('buy');
-          const isSell = isFill && !isBuy && msg.includes('sell');
+          // Highlight order fills (orderid=) and per-trade PnL lines from the PnL tracker
+          const isPnlLine = entry.context === 'PnL' && (msg.startsWith('buy ') || msg.startsWith('sell '));
+          const isBuy  = (msg.includes('orderid=') && msg.includes('buy'))  || (isPnlLine && msg.startsWith('buy '));
+          const isSell = (msg.includes('orderid=') && msg.includes('sell') && !msg.includes('buy')) || (isPnlLine && msg.startsWith('sell '));
           const tradeClass = isBuy ? 'log-line-buy' : isSell ? 'log-line-sell' : '';
           return (
             <div key={i} className={`log-line log-level-${entry.level.toLowerCase()} ${tradeClass}`}>
@@ -149,6 +209,9 @@ export function TradeFeed({ trades, logs }: { trades: TradeEntry[]; logs: LogEnt
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [showSim, setShowSim] = useState(false);
   const [logMode, setLogMode] = useState(false);
+
+  // Compute P&L for all trades via FIFO matching (fallback when backend doesn't supply it)
+  const frontendPnlMap = useMemo(() => computeFrontendPnl(trades), [trades]);
 
   const filtered = applyFilter(
     showSim ? trades : trades.filter(t => !t.sim),
@@ -202,7 +265,7 @@ export function TradeFeed({ trades, logs }: { trades: TradeEntry[]; logs: LogEnt
             </div>
           ) : (
             filtered.map((trade) => (
-              <TradeRow key={trade.id} trade={trade} />
+              <TradeRow key={trade.id} trade={trade} fallbackPnl={frontendPnlMap.get(trade.id)} />
             ))
           )}
         </div>

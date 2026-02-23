@@ -232,11 +232,17 @@ export function MarketConfig({ wsRef, wsStatus, phones }: MarketConfigProps) {
                       {phone.label ?? `Phone ${phone.id.slice(0, 8)}`}
                     </span>
                   )}
-                  <span className="instance-time">{timeAgo(phone.connectedAt)}</span>
+                  <div className="instance-status-row">
+                    <span className={`instance-pill ${phone.connected === false ? 'instance-pill-disconnected' : 'instance-pill-connected'}`}>
+                      {phone.connected === false ? 'Disconnected' : 'Connected'}
+                    </span>
+                    <span className="instance-time">{timeAgo(phone.connectedAt)}</span>
+                  </div>
                 </div>
                 <button
                   className="instance-configure-btn"
                   onClick={() => toggleExpand(phone.id)}
+                  disabled={phone.connected === false}
                 >
                   {expandedId === phone.id ? 'Done' : 'Configure'}
                 </button>

@@ -50,6 +50,8 @@ export interface TradeEntry {
   timestamp: number;
   /** True when executed by the simulated (test-mode) trading backend */
   sim?: boolean;
+  /** Realized P&L for this sell trade (net proceeds minus cost basis, after fees). Only set for sells. */
+  tradePnl?: number;
 }
 
 export interface LogEntry {
@@ -58,6 +60,11 @@ export interface LogEntry {
   context: string;
   message: string;
   timestamp: number;
+}
+
+export interface PricePoint {
+  ts: number;    // Unix ms
+  price: number; // YES price in cents
 }
 
 export interface KalshiTrade {
@@ -94,4 +101,6 @@ export interface PhoneClient {
   connectedAt: number;
   activeMarket: PhoneActiveMarket | null;
   label?: string;
+  /** False while the phone is disconnected — card stays visible with a badge. */
+  connected?: boolean;
 }

@@ -1,10 +1,47 @@
-.app {
+/* Outer shell — holds the tab bar and the page content */
+.app-shell {
   display: flex;
-  gap: 24px;
+  flex-direction: column;
   max-width: 1440px;
   min-height: 100vh;
   margin: 0 auto;
-  padding: 40px;
+  padding: 40px 40px 0;
+}
+
+/* Tab bar */
+.app-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 32px;
+}
+
+.app-tab {
+  padding: 7px 20px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: #555;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  font-family: inherit;
+}
+
+.app-tab:hover {
+  color: #aaa;
+}
+
+.app-tab-active {
+  background: #1e1e22;
+  color: #fff;
+}
+
+/* Page content — two-column layout */
+.app {
+  display: flex;
+  gap: 24px;
+  padding-bottom: 40px;
 }
 
 .left-column {
