@@ -335,7 +335,7 @@ function App() {
             <TradeFeed trades={trades} logs={logs} />
           </div>
           <div className="right-column">
-            <TradeSize wsRef={wsRef} serverDefaultSize={serverDefaultSize} />
+            <TradeSize wsRef={wsRef} serverDefaultSize={serverDefaultSize} onSizeChange={setServerDefaultSize} />
             <MarketConfig wsRef={wsRef} wsStatus={wsStatus} phones={phones} />
             <OrderFeed trades={orderFeed} market={activeMarket} />
           </div>

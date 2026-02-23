@@ -8,6 +8,9 @@ interface Props {
   /** Server-authoritative default size received via dashboard_state. When set,
    *  it overrides the local display so all devices show the same value. */
   serverDefaultSize: number | null;
+  /** Called whenever the user applies a new size, so the parent can update its
+   *  cached value and pass the correct initial state on remount. */
+  onSizeChange: (size: number) => void;
 }
 
 function sendSize(ws: WebSocket | null, size: number) {
@@ -16,7 +19,7 @@ function sendSize(ws: WebSocket | null, size: number) {
   }
 }
 
-export function TradeSize({ wsRef, serverDefaultSize }: Props) {
+export function TradeSize({ wsRef, serverDefaultSize, onSizeChange }: Props) {
   const [size, setSize] = useState<number>(serverDefaultSize ?? 50);
   const [customVal, setCustomVal] = useState('');
 
@@ -27,6 +30,7 @@ export function TradeSize({ wsRef, serverDefaultSize }: Props) {
 
   const applySize = (s: number) => {
     setSize(s);
+    onSizeChange(s);
     sendSize(wsRef.current, s);
   };
 
