@@ -5,7 +5,6 @@ const PRESETS = [10, 25, 50, 100];
 
 interface Props {
   wsRef: React.MutableRefObject<WebSocket | null>;
-  wsStatus: 'connecting' | 'connected' | 'disconnected';
   /** Server-authoritative default size received via dashboard_state. When set,
    *  it overrides the local display so all devices show the same value. */
   serverDefaultSize: number | null;
@@ -17,7 +16,7 @@ function sendSize(ws: WebSocket | null, size: number) {
   }
 }
 
-export function TradeSize({ wsRef, wsStatus, serverDefaultSize }: Props) {
+export function TradeSize({ wsRef, serverDefaultSize }: Props) {
   const [size, setSize] = useState<number>(serverDefaultSize ?? 50);
   const [customVal, setCustomVal] = useState('');
 
@@ -25,13 +24,6 @@ export function TradeSize({ wsRef, wsStatus, serverDefaultSize }: Props) {
   useEffect(() => {
     if (serverDefaultSize != null) setSize(serverDefaultSize);
   }, [serverDefaultSize]);
-
-  // Re-send on every fresh connection so the bot is always in sync
-  useEffect(() => {
-    if (wsStatus === 'connected') {
-      sendSize(wsRef.current, size);
-    }
-  }, [wsStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const applySize = (s: number) => {
     setSize(s);
