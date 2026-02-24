@@ -2,6 +2,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  background: var(--BASE_DARK_2);
+  border: 1px solid var(--BASE_DARK_4);
+  padding: 16px;
 }
 
 .v2-equity-stats {

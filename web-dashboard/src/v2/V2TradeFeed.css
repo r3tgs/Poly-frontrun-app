@@ -3,6 +3,9 @@
   flex-direction: column;
   gap: 12px;
   height: 100%;
+  background: var(--BASE_DARK_2);
+  border: 1px solid var(--BASE_DARK_4);
+  padding: 16px;
 }
 
 .v2-tf-header {
@@ -78,7 +81,7 @@
   min-height: 52px;
   padding: 8px;
   padding-right: 80px;
-  background-color: var(--BASE_DARK_2);
+  background-color: var(--BASE_DARK_3);
   border-radius: 0;
   flex-shrink: 0;
 }
@@ -222,7 +225,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  background: var(--BASE_DARK_2);
+  background: var(--BASE_DARK_3);
   border-radius: 0;
   padding: 10px 12px;
   font-family: 'Menlo', 'Consolas', 'Monaco', monospace;

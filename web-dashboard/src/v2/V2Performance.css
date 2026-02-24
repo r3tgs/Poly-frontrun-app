@@ -2,6 +2,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  background: var(--BASE_DARK_2);
+  border: 1px solid var(--BASE_DARK_4);
+  padding: 16px;
 }
 
 .v2-perf-header {
@@ -78,7 +81,7 @@
 .v2-perf-toggle {
   display: flex;
   align-items: center;
-  background-color: var(--BASE_DARK_2);
+  background-color: var(--BASE_DARK_3);
   border-radius: 0;
   padding: 3px;
   gap: 2px;
@@ -149,7 +152,7 @@
 .v2-cal-pos-hi { background-color: var(--PRIMARY_GREEN_20); }
 .v2-cal-neg-lo { background-color: var(--PRIMARY_RED_10); }
 .v2-cal-neg-hi { background-color: var(--PRIMARY_RED_20); }
-.v2-cal-zero   { background-color: var(--BASE_DARK_2); }
+.v2-cal-zero   { background-color: var(--BASE_DARK_3); }
 .v2-cal-dimmed { opacity: 0.4; }
 
 .v2-cal-day {
