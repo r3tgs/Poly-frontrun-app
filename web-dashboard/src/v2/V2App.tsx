@@ -7,7 +7,7 @@ import { V2SourceDelays } from './V2SourceDelays';
 import { V2TradeFeed } from './V2TradeFeed';
 import { V2UpcomingGames } from './V2UpcomingGames';
 import { mockSourceDelays } from '../mocks/data';
-import type { TradeEntry, LogEntry, PerformanceStats, PhoneClient, PricePoint, PhoneActiveMarket, KalshiTrade, DayData } from '../types';
+import type { TradeEntry, LogEntry, PerformanceStats, PhoneClient, PricePoint, KalshiTrade, DayData } from '../types';
 import './v2.css';
 
 const BOT_WS_URL = 'wss://pm-frontrun-snowy-waterfall-1028.fly.dev';
