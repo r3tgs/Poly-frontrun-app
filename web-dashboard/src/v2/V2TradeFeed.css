@@ -29,7 +29,7 @@
   border: none;
   cursor: pointer;
   padding: 4px 10px;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 12px;
   font-weight: 400;
   color: var(--TEXT_SECONDARY);
@@ -45,7 +45,7 @@
   border: 1px solid var(--BASE_DARK_4);
   cursor: pointer;
   padding: 4px 10px;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 12px;
   font-weight: 400;
   color: var(--TEXT_SECONDARY);
@@ -68,7 +68,7 @@
 }
 
 .v2-tf-list::-webkit-scrollbar { width: 4px; }
-.v2-tf-list::-webkit-scrollbar-thumb { background: var(--BASE_DARK_4); border-radius: 2px; }
+.v2-tf-list::-webkit-scrollbar-thumb { background: var(--BASE_DARK_4); border-radius: 0; }
 
 .v2-tf-row {
   display: flex;
@@ -79,7 +79,7 @@
   padding: 8px;
   padding-right: 80px;
   background-color: var(--BASE_DARK_3);
-  border-radius: 12px;
+  border-radius: 0;
   flex-shrink: 0;
 }
 
@@ -97,7 +97,7 @@
   width: 36px;
   height: 36px;
   min-width: 36px;
-  border-radius: 9px;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -149,7 +149,7 @@
   display: inline-block;
   margin-left: 6px;
   padding: 1px 5px;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 9px;
   font-weight: 400;
   letter-spacing: 0.05em;
@@ -162,7 +162,7 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 6px;
-  border-radius: 5px;
+  border-radius: 0;
   font-size: 11px;
   font-weight: 400;
   white-space: nowrap;
@@ -196,7 +196,7 @@
 .v2-tf-platform {
   width: 18px;
   height: 18px;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .v2-tf-time {
@@ -223,7 +223,7 @@
   min-height: 0;
   overflow-y: auto;
   background: var(--BASE_DARK_2);
-  border-radius: 12px;
+  border-radius: 0;
   padding: 10px 12px;
   font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
   font-size: 12px;
@@ -233,7 +233,7 @@
 }
 
 .v2-tf-log::-webkit-scrollbar { width: 4px; }
-.v2-tf-log::-webkit-scrollbar-thumb { background: var(--BASE_DARK_4); border-radius: 2px; }
+.v2-tf-log::-webkit-scrollbar-thumb { background: var(--BASE_DARK_4); border-radius: 0; }
 
 .v2-tf-log-line {
   display: flex;

@@ -16,7 +16,7 @@
   color: var(--TEXT_PRIMARY);
   padding: 4px 10px;
   border: 1px solid var(--BASE_DARK_4);
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 .v2-perf-top-row {
@@ -79,7 +79,7 @@
   display: flex;
   align-items: center;
   background-color: var(--BASE_DARK_3);
-  border-radius: 10px;
+  border-radius: 0;
   padding: 3px;
   gap: 2px;
 }
@@ -87,7 +87,7 @@
 .v2-perf-toggle-btn {
   padding: 8px 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   background: transparent;
   color: var(--TEXT_SECONDARY);
   font-size: 14px;
@@ -141,7 +141,7 @@
 .v2-cal-cell {
   position: relative;
   flex: 1 0 0;
-  border-radius: 10px;
+  border-radius: 0;
   min-height: 76px;
 }
 

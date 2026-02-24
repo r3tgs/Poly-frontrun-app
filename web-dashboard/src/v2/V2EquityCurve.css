@@ -43,7 +43,7 @@
   font-size: 13px;
   font-weight: 400;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 0;
   white-space: nowrap;
 }
 
@@ -64,7 +64,7 @@
 }
 
 .v2-equity-chart {
-  border-radius: 12px;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -77,5 +77,5 @@
   font-size: 14px;
   font-weight: 400;
   background: var(--BASE_DARK_3);
-  border-radius: 12px;
+  border-radius: 0;
 }
