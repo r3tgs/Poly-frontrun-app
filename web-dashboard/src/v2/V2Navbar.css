@@ -35,7 +35,7 @@
   background: transparent;
   color: var(--TEXT_SECONDARY);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.5px;
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
@@ -71,7 +71,7 @@
 
 .v2-platform-name {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--TEXT_PRIMARY);
 }
 
@@ -108,7 +108,7 @@
   background: var(--PRIMARY_GREEN_10);
   color: var(--PRIMARY_GREEN);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 0.3px;
 }
 

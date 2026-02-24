@@ -3,6 +3,8 @@
    All classes prefixed with v2- to avoid conflicts
    ================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400&display=swap');
+
 .v2-root {
   --BASE_DARK_1: rgb(0, 0, 0);
   --BASE_DARK_2: rgb(5, 5, 5);
@@ -41,7 +43,7 @@
 /* Shared section label style */
 .v2-section-label {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--TEXT_SECONDARY);

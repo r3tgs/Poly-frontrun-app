@@ -35,13 +35,13 @@
 
 .v2-delay-name {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .v2-delay-value {
   color: var(--TEXT_WHITE);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .v2-delay-chart {
@@ -75,7 +75,7 @@
 .v2-delay-label {
   color: var(--TEXT_SECONDARY);
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1;
 }
 
@@ -85,7 +85,7 @@
   background: var(--BASE_DARK_4);
   color: var(--TEXT_WHITE);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   padding: 4px 8px;
   border-radius: 6px;
   white-space: nowrap;

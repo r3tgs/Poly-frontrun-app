@@ -12,7 +12,7 @@
 
 .v2-perf-month {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--TEXT_PRIMARY);
   padding: 4px 10px;
   border: 1px solid var(--BASE_DARK_4);
@@ -51,7 +51,7 @@
 
 .v2-perf-stat-value {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--TEXT_WHITE);
 }
 
@@ -60,7 +60,7 @@
   align-items: center;
   gap: 3px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--PRIMARY_GREEN);
 }
 
@@ -91,7 +91,7 @@
   background: transparent;
   color: var(--TEXT_SECONDARY);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
@@ -121,7 +121,7 @@
 .v2-cal-weekday {
   flex: 1 0 0;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--TEXT_SECONDARY);
   text-align: center;
   padding: 8px 0;
@@ -157,7 +157,7 @@
   top: 8px;
   left: 8px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--TEXT_SECONDARY);
   line-height: 1;
 }
@@ -171,7 +171,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 .v2-cal-pnl-pos  { color: var(--PRIMARY_GREEN); }

@@ -31,7 +31,7 @@
   padding: 4px 10px;
   border-radius: 8px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--TEXT_SECONDARY);
   transition: background 0.15s, color 0.15s;
   font-family: inherit;
@@ -47,7 +47,7 @@
   padding: 4px 10px;
   border-radius: 8px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--TEXT_SECONDARY);
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   font-family: inherit;
@@ -138,7 +138,7 @@
 
 .v2-tf-action {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0.2px;
 }
 
@@ -151,7 +151,7 @@
   padding: 1px 5px;
   border-radius: 4px;
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.05em;
   color: var(--TEXT_PRIMARY);
   background: var(--BASE_DARK_4);
@@ -164,7 +164,7 @@
   padding: 2px 6px;
   border-radius: 5px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   white-space: nowrap;
 }
 
@@ -174,7 +174,7 @@
 
 .v2-tf-details {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--TEXT_WHITE);
   white-space: nowrap;
   overflow: hidden;
@@ -202,14 +202,14 @@
 .v2-tf-time {
   color: var(--TEXT_SECONDARY);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 400;
   white-space: nowrap;
 }
 
 .v2-tf-empty {
   color: var(--TEXT_SECONDARY);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   padding: 24px 0;
   text-align: center;
 }
@@ -249,7 +249,7 @@
 
 .v2-tf-log-level {
   flex-shrink: 0;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.05em;
   width: 36px;
   text-align: center;
