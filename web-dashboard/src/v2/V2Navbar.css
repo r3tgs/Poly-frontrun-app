@@ -1,0 +1,119 @@
+.v2-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--BASE_DARK_4);
+}
+
+.v2-navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.v2-navbar-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--BASE_DARK_4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.v2-nav-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.v2-nav-tab {
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--TEXT_SECONDARY);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  font-family: inherit;
+}
+
+.v2-nav-tab:hover {
+  color: var(--TEXT_PRIMARY);
+}
+
+.v2-nav-tab-active {
+  background: var(--BASE_DARK_4);
+  color: var(--TEXT_WHITE);
+}
+
+.v2-navbar-center {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.v2-platform-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.v2-platform-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+}
+
+.v2-platform-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--TEXT_PRIMARY);
+}
+
+.v2-platform-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--TEXT_SECONDARY);
+}
+
+.v2-platform-dot.v2-dot-connected {
+  background: var(--PRIMARY_GREEN);
+  box-shadow: 0 0 6px var(--PRIMARY_GREEN_40);
+}
+
+.v2-platform-divider {
+  color: var(--TEXT_SECONDARY);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.v2-navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.v2-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--PRIMARY_GREEN_10);
+  color: var(--PRIMARY_GREEN);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.v2-live-badge-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}

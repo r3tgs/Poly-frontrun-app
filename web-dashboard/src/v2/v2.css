@@ -1,0 +1,89 @@
+/* ================================================
+   V2 Dashboard — Design Tokens & Global Styles
+   All classes prefixed with v2- to avoid conflicts
+   ================================================ */
+
+.v2-root {
+  --BASE_DARK_1: rgb(0, 0, 0);
+  --BASE_DARK_2: rgb(5, 5, 5);
+  --BASE_DARK_3: rgb(13, 13, 13);
+  --BASE_DARK_4: rgb(19, 20, 21);
+  --TEXT_WHITE: rgb(255, 255, 255);
+  --TEXT_SECONDARY: rgb(75, 75, 77);
+  --TEXT_PRIMARY: rgb(162, 162, 162);
+  --PRIMARY_RED: rgb(255, 60, 119);
+  --PRIMARY_RED_70: rgba(255, 60, 119, 0.7);
+  --PRIMARY_RED_40: rgba(255, 60, 119, 0.4);
+  --PRIMARY_RED_20: rgba(255, 60, 119, 0.2);
+  --PRIMARY_RED_10: rgba(255, 60, 119, 0.1);
+  --PRIMARY_GREEN: rgb(0, 253, 214);
+  --PRIMARY_GREEN_70: rgba(0, 253, 214, 0.7);
+  --PRIMARY_GREEN_40: rgba(0, 253, 214, 0.4);
+  --PRIMARY_GREEN_20: rgba(0, 253, 214, 0.2);
+  --PRIMARY_GREEN_10: rgba(0, 253, 214, 0.1);
+  --PRIMARY_ORANGE: rgb(255, 143, 44);
+  --PRIMARY_ORANGE_70: rgba(255, 143, 44, 0.7);
+  --PRIMARY_ORANGE_40: rgba(255, 143, 44, 0.4);
+  --PRIMARY_ORANGE_20: rgba(255, 143, 44, 0.2);
+  --PRIMARY_ORANGE_10: rgba(255, 143, 44, 0.1);
+  --PRIMARY_BLUE: rgb(18, 212, 255);
+  --PRIMARY_BLUE_70: rgba(18, 212, 255, 0.7);
+  --PRIMARY_BLUE_40: rgba(18, 212, 255, 0.4);
+  --PRIMARY_BLUE_20: rgba(18, 212, 255, 0.2);
+  --PRIMARY_BLUE_10: rgba(18, 212, 255, 0.1);
+
+  font-family: 'Barlow', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--TEXT_WHITE);
+  background: var(--BASE_DARK_1);
+  min-height: 100vh;
+}
+
+/* Shared section label style */
+.v2-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--TEXT_SECONDARY);
+  margin: 0;
+}
+
+/* ---- V2 App Shell ---- */
+
+.v2-shell {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.v2-page {
+  display: flex;
+  gap: 32px;
+  padding-bottom: 40px;
+}
+
+.v2-col-left {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.v2-col-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.v2-col-right {
+  width: 360px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}

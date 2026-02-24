@@ -1,0 +1,168 @@
+.v2-ug {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.v2-ug-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  background: var(--BASE_DARK_3);
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-height: 44px;
+}
+
+.v2-ug-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--BASE_DARK_4);
+  border-radius: 20px;
+  padding: 4px 10px 4px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--TEXT_PRIMARY);
+}
+
+.v2-ug-chip-x {
+  background: none;
+  border: none;
+  color: var(--TEXT_SECONDARY);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 0 0 2px;
+  transition: color 0.15s;
+}
+.v2-ug-chip-x:hover { color: var(--TEXT_PRIMARY); }
+
+.v2-ug-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 120px;
+}
+
+.v2-ug-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--TEXT_WHITE);
+  font-family: inherit;
+  padding: 4px 2px;
+}
+.v2-ug-input::placeholder { color: var(--TEXT_SECONDARY); }
+
+.v2-ug-suggest {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 180px;
+  background: var(--BASE_DARK_3);
+  border: 1px solid var(--BASE_DARK_4);
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.v2-ug-suggest-item {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--TEXT_PRIMARY);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+.v2-ug-suggest-item:hover { background: var(--BASE_DARK_4); color: var(--TEXT_WHITE); }
+
+.v2-ug-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.v2-ug-empty {
+  background: var(--BASE_DARK_3);
+  border-radius: 12px;
+  padding: 20px 16px;
+  font-size: 13px;
+  color: var(--TEXT_SECONDARY);
+  font-weight: 500;
+  text-align: center;
+}
+
+.v2-ug-error { color: var(--PRIMARY_RED); }
+
+.v2-ug-day {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.v2-ug-day-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--TEXT_SECONDARY);
+  padding: 0 2px;
+}
+
+.v2-ug-game {
+  background: var(--BASE_DARK_3);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.v2-ug-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.v2-ug-badge-nhl { background: var(--PRIMARY_BLUE_10); color: var(--PRIMARY_BLUE); }
+.v2-ug-badge-mls { background: var(--PRIMARY_RED_10); color: var(--PRIMARY_RED); }
+.v2-ug-badge-nba { background: var(--PRIMARY_ORANGE_10); color: var(--PRIMARY_ORANGE); }
+
+.v2-ug-matchup {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.v2-ug-team {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--TEXT_WHITE);
+}
+
+.v2-ug-vs {
+  font-size: 12px;
+  color: var(--TEXT_SECONDARY);
+}
+
+.v2-ug-time {
+  font-size: 12px;
+  color: var(--TEXT_SECONDARY);
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
