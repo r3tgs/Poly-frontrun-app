@@ -388,6 +388,7 @@ export function useBotConnection({
 
   /** Set the default trade size on the bot (syncs to all connected clients). */
   const sendSetDefaultSize = useCallback((size: number) => {
+    setDefaultTradeSize(size);
     const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'set_default_size', data: { size } }));
