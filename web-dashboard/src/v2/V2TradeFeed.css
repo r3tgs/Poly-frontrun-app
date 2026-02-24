@@ -3,7 +3,7 @@
   flex-direction: column;
   gap: 12px;
   height: 100%;
-  background: var(--BASE_DARK_2);
+  background: var(--BASE_DARK_1);
   border: 1px solid var(--BASE_DARK_4);
   padding: 16px;
 }

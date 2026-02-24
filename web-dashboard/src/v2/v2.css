@@ -62,9 +62,10 @@
 
 .v2-page {
   display: flex;
-  gap: 32px;
-  padding-bottom: 40px;
+  gap: 0;
+  padding-bottom: 0;
   width: 100%;
+  margin-top: -1px;
 }
 
 .v2-col-left {
@@ -72,7 +73,6 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 36px;
 }
 
 .v2-col-center {
@@ -80,7 +80,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  margin-left: -1px;
 }
 
 .v2-col-right {
@@ -88,5 +88,11 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  margin-left: -1px;
+}
+
+.v2-col-left > :not(:first-child),
+.v2-col-center > :not(:first-child),
+.v2-col-right > :not(:first-child) {
+  margin-top: -1px;
 }
