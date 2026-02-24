@@ -1,7 +1,7 @@
 import type { PhoneClient } from '../types';
-import kalshiLogo from '../assets/PM Kalshi.svg';
-import polyLogo from '../assets/PM Poly.svg';
-import instanceIcon from '../assets/PM Instance Icon.svg';
+import kalshiLogo from './assets/PM Kalshi.svg';
+import polyLogo from './assets/PM Poly.svg';
+import instanceIcon from './assets/PM Instance Icon.svg';
 import './V2Navbar.css';
 
 interface V2NavbarProps {

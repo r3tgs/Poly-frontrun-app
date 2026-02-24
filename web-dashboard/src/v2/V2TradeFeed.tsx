@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { TradeEntry, LogEntry } from '../types';
-import buyIcon from '../assets/PM Buy Icon.svg';
-import sellIcon from '../assets/PM Sell Icon.svg';
-import kalshiLogo from '../assets/PM Kalshi.svg';
-import polyLogo from '../assets/PM Poly.svg';
+import buyIcon from './assets/PM Buy Icon.svg';
+import sellIcon from './assets/PM Sell Icon.svg';
+import kalshiLogo from './assets/PM Kalshi.svg';
+import polyLogo from './assets/PM Poly.svg';
 import './V2TradeFeed.css';
 
 type FeedFilter = 'all' | 'today' | '24h' | '1h';

@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react';
 import type { DelayDataPoint, SourceDelay } from '../types';
-import polyLogo from '../assets/PM Poly.svg';
-import kalshiLogo from '../assets/PM Kalshi.svg';
-import espnLogo from '../assets/PM ESPN.svg';
-import realLogo from '../assets/PM Real.svg';
+import polyLogo from './assets/PM Poly.svg';
+import kalshiLogo from './assets/PM Kalshi.svg';
+import espnLogo from './assets/PM ESPN.svg';
+import realLogo from './assets/PM Real.svg';
 import './V2SourceDelays.css';
 
 const SOURCE_CONFIG: Record<string, { icon: string; color: string }> = {
