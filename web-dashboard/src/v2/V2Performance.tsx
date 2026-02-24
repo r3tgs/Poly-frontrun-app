@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { DayData, PerformanceStats, Period } from '../types';
-import chevronIcon from './assets/PM chevron.svg';
+import chevronIcon from './assets/PM Chevron Icon.svg';
 import './V2Performance.css';
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];

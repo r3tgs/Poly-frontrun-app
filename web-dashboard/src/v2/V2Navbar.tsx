@@ -1,7 +1,7 @@
 import type { PhoneClient } from '../types';
-import kalshiLogo from './assets/PM Kalshi.svg';
-import polyLogo from './assets/PM Poly.svg';
-import instanceIcon from './assets/PM Instance Icon.svg';
+import kalshiLogo from './assets/PM Kalshi Header.svg';
+import polyLogo from './assets/PM Poly Header.svg';
+import logo from './assets/PM Logo.svg';
 import './V2Navbar.css';
 
 interface V2NavbarProps {
@@ -17,14 +17,7 @@ export function V2Navbar({ activeTab, onTabChange, wsStatus, phones }: V2NavbarP
   return (
     <nav className="v2-navbar">
       <div className="v2-navbar-left">
-        <div className="v2-navbar-logo">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M13 2L4.09 12.62C3.74 13.04 3.96 13.67 4.48 13.78L11 15.25L10 22L18.91 11.38C19.26 10.96 19.04 10.33 18.52 10.22L12 8.75L13 2Z"
-              fill="var(--PRIMARY_GREEN)"
-            />
-          </svg>
-        </div>
+        <img src={logo} alt="PM" className="v2-navbar-logo" />
         <div className="v2-nav-tabs">
           <button
             className={`v2-nav-tab ${activeTab === 'home' ? 'v2-nav-tab-active' : ''}`}
@@ -57,7 +50,7 @@ export function V2Navbar({ activeTab, onTabChange, wsStatus, phones }: V2NavbarP
       <div className="v2-navbar-right">
         {liveCount > 0 && (
           <div className="v2-live-badge">
-            <img src={instanceIcon} alt="" className="v2-live-badge-icon" />
+            <span className="v2-live-badge-dot" />
             <span>{liveCount} LIVE INSTANCE{liveCount !== 1 ? 'S' : ''}</span>
           </div>
         )}

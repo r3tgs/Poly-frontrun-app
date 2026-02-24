@@ -1,5 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
+import hockeyIcon from './assets/PM Sport Hockey.svg';
+import soccerIcon from './assets/PM Sport Soccer.svg';
+import basketballIcon from './assets/PM Sport Basketball.svg';
 import './V2UpcomingGames.css';
+
+const SPORT_ICONS: Record<string, string> = {
+  NHL: hockeyIcon,
+  MLS: soccerIcon,
+  NBA: basketballIcon,
+};
 
 const STORAGE_KEY = 'upcoming_games_cities';
 
@@ -175,7 +184,7 @@ export function V2UpcomingGames() {
             <div className="v2-ug-day-label">{group.label}</div>
             {group.games.map(game => (
               <div key={game.id} className="v2-ug-game">
-                <span className={`v2-ug-badge v2-ug-badge-${game.sport.toLowerCase()}`}>{game.sport}</span>
+                <img src={SPORT_ICONS[game.sport]} alt={game.sport} className="v2-ug-sport-icon" />
                 <span className="v2-ug-matchup">
                   <span className="v2-ug-team">{game.awayAbbr}</span>
                   <span className="v2-ug-vs">@</span>

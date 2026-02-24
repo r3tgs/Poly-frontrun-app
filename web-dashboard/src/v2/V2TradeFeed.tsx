@@ -1,9 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { TradeEntry, LogEntry } from '../types';
-import buyIcon from './assets/PM Buy Icon.svg';
-import sellIcon from './assets/PM Sell Icon.svg';
-import kalshiLogo from './assets/PM Kalshi.svg';
-import polyLogo from './assets/PM Poly.svg';
+import kalshiLogo from './assets/PM Kalshi Trade Feed.svg';
+import polyLogo from './assets/PM Poly Trade Feed.svg';
 import './V2TradeFeed.css';
 
 type FeedFilter = 'all' | 'today' | '24h' | '1h';
@@ -75,7 +73,7 @@ function TradeRow({ trade, fallbackPnl }: { trade: TradeEntry; fallbackPnl?: num
   return (
     <div className={`v2-tf-row ${trade.sim ? 'v2-tf-row-sim' : ''}`}>
       <div className="v2-tf-left">
-        <img src={isBuy ? buyIcon : sellIcon} alt="" className="v2-tf-icon" />
+        <span className={`v2-tf-icon ${isBuy ? 'v2-tf-icon-buy' : 'v2-tf-icon-sell'}`} />
         <div className="v2-tf-info">
           <div className="v2-tf-action-row">
             <span className={`v2-tf-action ${isBuy ? 'v2-tf-buy' : 'v2-tf-sell'}`}>

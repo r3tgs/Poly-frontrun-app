@@ -127,19 +127,12 @@
   gap: 10px;
 }
 
-.v2-ug-badge {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 3px 7px;
-  border-radius: 4px;
+.v2-ug-sport-icon {
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
+  border-radius: 6px;
 }
-
-.v2-ug-badge-nhl { background: var(--PRIMARY_BLUE_10); color: var(--PRIMARY_BLUE); }
-.v2-ug-badge-mls { background: var(--PRIMARY_RED_10); color: var(--PRIMARY_RED); }
-.v2-ug-badge-nba { background: var(--PRIMARY_ORANGE_10); color: var(--PRIMARY_ORANGE); }
 
 .v2-ug-matchup {
   flex: 1;
