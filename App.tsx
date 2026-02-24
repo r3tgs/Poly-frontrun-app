@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Scoreboard } from './components/Scoreboard';
 import { PlatformToggles } from './components/PlatformToggles';
 import { TeamButtons } from './components/TeamButtons';
-import { ActivityLog } from './components/ActivityLog';
+import { TradeSize } from './components/TradeSize';
 import { ConnectionBanner } from './components/ConnectionBanner';
 import { Colors } from './constants/colors';
 import { BOT_WS_URL } from './constants/config';
@@ -29,7 +29,7 @@ function GameScreen() {
     setLogEntries((prev) => [entry, ...prev]);
   }, []);
 
-  const { status, testMode, activeMarket, sendSignal, sendSell, sendSetTestMode } = useBotConnection({
+  const { status, testMode, activeMarket, defaultTradeSize, sendSignal, sendSell, sendSetTestMode, sendSetDefaultSize } = useBotConnection({
     url: BOT_WS_URL,
     homeLabel: `${mockGame.homeTeam.city} ${mockGame.homeTeam.name}`,
     awayLabel: `${mockGame.awayTeam.city} ${mockGame.awayTeam.name}`,
@@ -37,8 +37,6 @@ function GameScreen() {
     marketConfig: MARKET_CONFIG,
   });
 
-  // Override team names with live market data when available.
-  // Fall back to the Kalshi ticker when homeTitle/awayTitle are empty.
   const homeName = activeMarket
     ? (activeMarket.homeTitle || activeMarket.homeKalshiTicker || 'Home')
     : null;
@@ -112,16 +110,6 @@ function GameScreen() {
 
       <View style={styles.header}>
         <ConnectionBanner status={status} url={BOT_WS_URL} />
-        <View style={styles.marketRow}>
-          {activeMarket ? (
-            <Text style={styles.marketActive}>
-              {activeMarket.description || `${activeMarket.homeKalshiTicker} / ${activeMarket.awayKalshiTicker}`}
-              {'\n'}{homeName} vs {awayName}
-            </Text>
-          ) : (
-            <Text style={styles.marketWaiting}>Waiting for market from dashboard…</Text>
-          )}
-        </View>
         <Scoreboard
           game={{ ...mockGame, homeTeam, awayTeam }}
           homeScore={homeScore}
@@ -132,25 +120,41 @@ function GameScreen() {
       </View>
 
       <View style={styles.card}>
-        <View style={styles.fixedContent}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[styles.cardContent, { paddingBottom: insets.bottom + 24 }]}
+          showsVerticalScrollIndicator={false}
+        >
           <PlatformToggles
             status={platformStatus}
             onToggle={handleTogglePlatform}
             testMode={testMode}
             onToggleTestMode={() => sendSetTestMode(!testMode)}
           />
+          <TradeSize size={defaultTradeSize} onApply={sendSetDefaultSize} />
           <TeamButtons
             homeTeam={homeTeam}
             awayTeam={awayTeam}
             onSelect={handleSelectTeam}
             onSell={handleSellTeam}
           />
-        </View>
-
-        <ActivityLog
-          entries={logEntries}
-          bottomInset={insets.bottom}
-        />
+          <View style={styles.logSection}>
+            <Text style={styles.logHeading}>Log</Text>
+            {logEntries.map((entry) => {
+              const color =
+                entry.type === 'trade'
+                  ? Colors.green
+                  : entry.type === 'sell'
+                    ? Colors.red
+                    : Colors.gray;
+              return (
+                <Text key={entry.id} style={[styles.logEntry, { color }]}>
+                  {entry.timestamp} — {entry.message}
+                </Text>
+              );
+            })}
+          </View>
+        </ScrollView>
       </View>
     </View>
   );
@@ -168,39 +172,37 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: Colors.background,
-    justifyContent: 'flex-end',
   },
   header: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
+    paddingVertical: 12,
+    gap: 10,
   },
   card: {
-    height: 530,
+    flex: 1,
     backgroundColor: Colors.cardBackground,
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     borderCurve: 'continuous',
   },
-  fixedContent: {
+  scrollView: {
+    flex: 1,
+  },
+  cardContent: {
     paddingTop: CARD_PADDING,
     paddingHorizontal: CARD_PADDING,
   },
-  marketRow: {
-    paddingHorizontal: 16,
-    alignItems: 'center',
+  logSection: {
+    marginTop: 8,
   },
-  marketActive: {
-    color: '#4caf50',
-    fontSize: 13,
+  logHeading: {
+    color: Colors.white,
+    fontSize: 26,
     fontWeight: '700',
-    textAlign: 'center',
+    marginBottom: 10,
   },
-  marketWaiting: {
-    color: '#aaa',
+  logEntry: {
     fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 4,
   },
 });
