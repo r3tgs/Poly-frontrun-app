@@ -101,7 +101,7 @@
   content: '';
   position: absolute;
   left: -1px;
-  top: 8px;
+  top: 11px;
   width: 2px;
   height: 12px;
 }
@@ -161,7 +161,8 @@
 .v2-tf-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 6px;
+  height: 19px;
+  padding: 0 6px;
   border-radius: 0;
   font-size: 12px;
   font-weight: 400;
