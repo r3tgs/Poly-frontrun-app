@@ -197,16 +197,19 @@
 .v2-ug-league-nhl {
   color: #12D4FF;
   border-left: 1px solid #12D4FF;
+  background: var(--PRIMARY_BLUE_10);
 }
 
 .v2-ug-league-nba {
   color: #FF8F2C;
   border-left: 1px solid #FF8F2C;
+  background: var(--PRIMARY_ORANGE_10);
 }
 
 .v2-ug-league-mls {
   color: #FFFF00;
   border-left: 1px solid #FFFF00;
+  background: rgba(255, 255, 0, 0.1);
 }
 
 .v2-ug-game-bottom {
