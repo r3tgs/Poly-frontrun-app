@@ -125,7 +125,7 @@
 }
 
 .v2-tf-time {
-  color: var(--TEXT_SECONDARY);
+  color: var(--TEXT_PRIMARY);
   font-size: 14px;
   font-weight: 400;
   white-space: nowrap;
