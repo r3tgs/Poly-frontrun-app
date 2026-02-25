@@ -103,15 +103,15 @@
 }
 
 .v2-tf-details {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
-  color: var(--TEXT_WHITE);
+  color: var(--TEXT_PRIMARY);
   white-space: nowrap;
 }
 
 .v2-tf-time {
   color: var(--TEXT_SECONDARY);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   white-space: nowrap;
 }
@@ -122,7 +122,7 @@
 }
 
 .v2-tf-teams {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--TEXT_SECONDARY);
   white-space: nowrap;
