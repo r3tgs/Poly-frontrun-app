@@ -69,22 +69,22 @@
 
 .v2-tf-toggle-track {
   position: relative;
-  width: 28px;
-  height: 14px;
+  width: 35px;
+  height: 19px;
   background: var(--BASE_DARK_4);
-  border-radius: 7px;
+  border-radius: 0;
   transition: background 0.2s;
 }
 
 .v2-tf-toggle-track::after {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 10px;
-  height: 10px;
+  top: 3px;
+  left: 3px;
+  width: 13px;
+  height: 13px;
   background: var(--TEXT_SECONDARY);
-  border-radius: 50%;
+  border-radius: 0;
   transition: transform 0.2s, background 0.2s;
 }
 
@@ -93,7 +93,7 @@
 }
 
 .v2-tf-toggle input:checked ~ .v2-tf-toggle-track::after {
-  transform: translateX(14px);
+  transform: translateX(16px);
   background: var(--PRIMARY_GREEN);
 }
 
