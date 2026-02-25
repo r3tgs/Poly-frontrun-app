@@ -14,11 +14,11 @@ interface V2EquityCurveProps {
 }
 
 export function V2EquityCurve({ pnlHistory, stats }: V2EquityCurveProps) {
-  const { chartData, todayPnl } = useMemo(() => {
+  const chartData = useMemo(() => {
     const entries = Object.entries(pnlHistory).sort(([a], [b]) => a.localeCompare(b));
-    if (entries.length === 0) return { chartData: [], todayPnl: 0 };
+    if (entries.length === 0) return [];
     let cumulative = 0;
-    const chartData = entries.map(([date, data]) => {
+    return entries.map(([date, data]) => {
       cumulative += data.realized;
       return {
         date,
@@ -29,12 +29,6 @@ export function V2EquityCurve({ pnlHistory, stats }: V2EquityCurveProps) {
         }),
       };
     });
-
-    const today = new Date();
-    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    const todayPnl = pnlHistory[todayKey]?.realized ?? 0;
-
-    return { chartData, todayPnl };
   }, [pnlHistory]);
 
   return (
