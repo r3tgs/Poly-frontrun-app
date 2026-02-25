@@ -14,11 +14,11 @@ interface V2EquityCurveProps {
 }
 
 export function V2EquityCurve({ pnlHistory, stats }: V2EquityCurveProps) {
-  const chartData = useMemo(() => {
+  const { chartData, todayPnl } = useMemo(() => {
     const entries = Object.entries(pnlHistory).sort(([a], [b]) => a.localeCompare(b));
-    if (entries.length === 0) return [];
+    if (entries.length === 0) return { chartData: [] as { date: string; pnl: number; label: string }[], todayPnl: 0 };
     let cumulative = 0;
-    return entries.map(([date, data]) => {
+    const chartData = entries.map(([date, data]) => {
       cumulative += data.realized;
       return {
         date,
@@ -29,6 +29,12 @@ export function V2EquityCurve({ pnlHistory, stats }: V2EquityCurveProps) {
         }),
       };
     });
+
+    const today = new Date();
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const todayPnl = pnlHistory[todayKey]?.realized ?? 0;
+
+    return { chartData, todayPnl };
   }, [pnlHistory]);
 
   return (
@@ -38,19 +44,31 @@ export function V2EquityCurve({ pnlHistory, stats }: V2EquityCurveProps) {
       <div className="v2-equity-stats">
         <div className="v2-equity-stat">
           <span className="v2-equity-stat-label">Cumulative PNL</span>
-          <span
-            className="v2-equity-stat-value"
-            style={{
-              color: stats.totalProfit >= 0
-                ? 'var(--PRIMARY_GREEN)'
-                : 'var(--PRIMARY_RED)',
-            }}
-          >
-            ${Math.abs(stats.totalProfit).toLocaleString(undefined, {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0,
-            })}
-          </span>
+          <div className="v2-equity-stat-row">
+            <span
+              className="v2-equity-stat-value"
+              style={{
+                color: stats.totalProfit >= 0
+                  ? 'var(--PRIMARY_GREEN)'
+                  : 'var(--PRIMARY_RED)',
+              }}
+            >
+              ${Math.abs(stats.totalProfit).toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}
+            </span>
+            {todayPnl !== 0 && (
+              <span className="v2-equity-today-badge">
+                {todayPnl >= 0 ? '+' : '-'}$
+                {Math.abs(todayPnl).toLocaleString(undefined, {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}{' '}
+                today
+              </span>
+            )}
+          </div>
         </div>
         <div className="v2-equity-stat">
           <span className="v2-equity-stat-label">Avg. ROI</span>
