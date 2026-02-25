@@ -85,9 +85,8 @@
 .v2-tf-row {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   height: 80px;
-  padding: 10px 12px;
+  padding: 8px;
   background-color: var(--BASE_DARK_2);
   border-radius: 0;
   flex-shrink: 0;
@@ -134,6 +133,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: 10px;
 }
 
 .v2-tf-badges {
