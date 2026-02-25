@@ -74,7 +74,7 @@ function TradeRow({ trade, fallbackPnl }: { trade: TradeEntry; fallbackPnl?: num
     : (trade.marketDesc ?? '');
 
   return (
-    <div className={`v2-tf-row ${trade.sim ? 'v2-tf-row-sim' : ''}`}>
+    <div className={`v2-tf-row ${isBuy ? 'v2-tf-row-buy' : 'v2-tf-row-sell'} ${trade.sim ? 'v2-tf-row-sim' : ''}`}>
       <div className="v2-tf-row1">
         <span className="v2-tf-details">
           {trade.contracts} Contracts @ {(trade.price * 100).toFixed(0)}{'\u00A2'}

@@ -93,13 +93,31 @@
   box-sizing: border-box;
 }
 
+.v2-tf-row-buy  { border-left: 1px solid var(--PRIMARY_GREEN_10); }
+.v2-tf-row-sell { border-left: 1px solid var(--PRIMARY_RED_10); }
+
 .v2-tf-row-sim { opacity: 0.7; }
 
 .v2-tf-row1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
+  padding-left: 10px;
 }
+
+.v2-tf-row1::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 12px;
+}
+
+.v2-tf-row-buy .v2-tf-row1::before  { background: var(--PRIMARY_GREEN); }
+.v2-tf-row-sell .v2-tf-row1::before { background: var(--PRIMARY_RED); }
 
 .v2-tf-details {
   font-size: 14px;
