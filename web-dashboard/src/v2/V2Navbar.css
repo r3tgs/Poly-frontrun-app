@@ -50,7 +50,6 @@
 }
 
 .v2-nav-tab-active {
-  background: var(--BASE_DARK_4);
   color: var(--TEXT_WHITE);
 }
 
