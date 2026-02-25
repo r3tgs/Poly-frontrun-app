@@ -191,13 +191,16 @@ export function V2UpcomingGames() {
             <div className="v2-ug-day-label"><span className="v2-ug-day-prefix">{group.prefix}</span> <span className="v2-ug-day-date">{group.date}</span></div>
             {group.games.map(game => (
               <div key={game.id} className="v2-ug-game">
-                <img src={SPORT_ICONS[game.sport]} alt={game.sport} className="v2-ug-sport-icon" />
-                <span className="v2-ug-matchup">
-                  <span className="v2-ug-team">{game.awayAbbr}</span>
+                <div className="v2-ug-game-top">
+                  <img src={SPORT_ICONS[game.sport]} alt={game.sport} className="v2-ug-sport-icon" />
+                  <span className="v2-ug-league-badge">{game.sport}</span>
+                  <span className="v2-ug-time">{game.timeLabel}</span>
+                </div>
+                <div className="v2-ug-game-bottom">
+                  <span className="v2-ug-team">{game.awayCity} {game.awayTeam}</span>
                   <span className="v2-ug-vs">@</span>
-                  <span className="v2-ug-team">{game.homeAbbr}</span>
-                </span>
-                <span className="v2-ug-time">{game.timeLabel}</span>
+                  <span className="v2-ug-team">{game.homeCity} {game.homeTeam}</span>
+                </div>
               </div>
             ))}
           </div>

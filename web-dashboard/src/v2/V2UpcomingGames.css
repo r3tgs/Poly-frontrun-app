@@ -161,21 +161,41 @@
 .v2-ug-game {
   background: var(--BASE_DARK_3);
   border-radius: 0;
+  height: 60px;
   padding: 10px;
   display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.v2-ug-game-top {
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
 .v2-ug-sport-icon {
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   border-radius: 0;
 }
 
-.v2-ug-matchup {
-  flex: 1;
+.v2-ug-league-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 19px;
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--TEXT_PRIMARY);
+  background: var(--BASE_DARK_4);
+  border-radius: 0;
+  white-space: nowrap;
+}
+
+.v2-ug-game-bottom {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -184,11 +204,11 @@
 .v2-ug-team {
   font-size: 14px;
   font-weight: 400;
-  color: var(--TEXT_WHITE);
+  color: var(--TEXT_PRIMARY);
 }
 
 .v2-ug-vs {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--TEXT_SECONDARY);
 }
 
@@ -198,4 +218,5 @@
   font-weight: 400;
   white-space: nowrap;
   flex-shrink: 0;
+  margin-left: auto;
 }
