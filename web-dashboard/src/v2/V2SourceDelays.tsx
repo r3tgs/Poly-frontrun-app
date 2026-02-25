@@ -106,9 +106,11 @@ function DelayCard({ source }: { source: SourceDelay }) {
     <div className="v2-delay-card">
       <div className="v2-delay-header">
         <img src={config.icon} alt={source.source} className="v2-delay-icon" />
-        <span className="v2-delay-value">{numericPart}<span className="v2-delay-unit">s</span></span>
+        <div className="v2-delay-info">
+          <span className="v2-delay-name">{source.label}</span>
+          <span className="v2-delay-value">{numericPart}<span className="v2-delay-unit">s</span></span>
+        </div>
       </div>
-      <span className="v2-delay-name">{source.label}</span>
       <div className="v2-delay-chart">
         <SparkLine color={config.color} dataPoints={source.dataPoints} />
       </div>
