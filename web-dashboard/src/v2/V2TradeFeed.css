@@ -19,6 +19,7 @@
 
 .v2-tf > .v2-section-label {
   justify-content: space-between;
+  padding-right: 0;
 }
 
 .v2-tf-filters {
