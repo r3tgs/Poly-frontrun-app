@@ -23,24 +23,25 @@
 
 .v2-tf-filters {
   display: flex;
-  gap: 2px;
+  align-self: stretch;
 }
 
 .v2-tf-filter {
   background: none;
   border: none;
+  border-left: 1px solid var(--BASE_DARK_4);
   cursor: pointer;
-  padding: 4px 10px;
+  padding: 0 14px;
   border-radius: 0;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--TEXT_SECONDARY);
   transition: background 0.15s, color 0.15s;
   font-family: inherit;
 }
 
-.v2-tf-filter:hover { color: var(--TEXT_PRIMARY); background: var(--BASE_DARK_3); }
-.v2-tf-filter-active { color: var(--TEXT_WHITE); background: var(--BASE_DARK_3); }
+.v2-tf-filter:hover { color: var(--TEXT_PRIMARY); }
+.v2-tf-filter-active { color: var(--TEXT_WHITE); background: var(--BASE_DARK_4); }
 
 .v2-tf-list {
   display: flex;
