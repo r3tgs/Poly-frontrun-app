@@ -161,18 +161,17 @@
 .v2-ug-game {
   background: var(--BASE_DARK_2);
   border-radius: 0;
-  height: 60px;
-  padding: 10px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 6px;
   box-sizing: border-box;
 }
 
 .v2-ug-game-top {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 12px;
 }
 
 .v2-ug-sport-icon {
@@ -216,6 +215,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  padding-left: 32px;
 }
 
 .v2-ug-team {
