@@ -4,6 +4,7 @@ import soccerIcon from './assets/PM Sport Soccer.svg';
 import basketballIcon from './assets/PM Sport Basketball.svg';
 import searchIcon from './assets/PM Search Icon.svg';
 import closeIcon from './assets/PM Close Icon.svg';
+import ticketIcon from './assets/PM Ticket Icon.svg';
 import './V2UpcomingGames.css';
 
 const SPORT_ICONS: Record<string, string> = {
@@ -36,6 +37,7 @@ interface Game {
   homeCity: string;
   awayCity: string;
   timeLabel: string;
+  ticketsUrl: string;
 }
 
 async function fetchESPN(sportPath: string, sport: 'NHL' | 'MLS' | 'NBA'): Promise<Game[]> {
@@ -56,6 +58,7 @@ async function fetchESPN(sportPath: string, sport: 'NHL' | 'MLS' | 'NBA'): Promi
       const startUtc: string = event.date ?? '';
       if (new Date(startUtc).getTime() < Date.now() - 86_400_000) continue;
       const detail: string = comp.status?.type?.shortDetail ?? comp.status?.type?.detail ?? '';
+      const ticketsLink: string = comp.tickets?.[0]?.links?.[0]?.href ?? event.links?.find((l: any) => l.text === 'Gamecast')?.href ?? '';
       games.push({
         id: event.id,
         sport,
@@ -67,6 +70,7 @@ async function fetchESPN(sportPath: string, sport: 'NHL' | 'MLS' | 'NBA'): Promi
         homeCity: home.team.location ?? '',
         awayCity: away.team.location ?? '',
         timeLabel: detail || fmtTime(startUtc),
+        ticketsUrl: ticketsLink,
       });
     }
     return games;
@@ -76,6 +80,13 @@ async function fetchESPN(sportPath: string, sport: 'NHL' | 'MLS' | 'NBA'): Promi
 function fmtTime(iso: string): string {
   try {
     return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+  } catch { return ''; }
+}
+
+function fmtDate(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
   } catch { return ''; }
 }
 
@@ -191,15 +202,33 @@ export function V2UpcomingGames() {
             <div className="v2-ug-day-label"><span className="v2-ug-day-prefix">{group.prefix}</span> <span className="v2-ug-day-date">{group.date}</span></div>
             {group.games.map(game => (
               <div key={game.id} className="v2-ug-game">
-                <div className="v2-ug-game-top">
-                  <img src={SPORT_ICONS[game.sport]} alt={game.sport} className="v2-ug-sport-icon" />
-                  <span className={`v2-ug-league-badge v2-ug-league-${game.sport.toLowerCase()}`}>{game.sport}</span>
-                  <span className="v2-ug-time">{game.timeLabel}</span>
+                <div className="v2-ug-game-left">
+                  <div className="v2-ug-game-top">
+                    <img src={SPORT_ICONS[game.sport]} alt={game.sport} className="v2-ug-sport-icon" />
+                    <span className={`v2-ug-league-badge v2-ug-league-${game.sport.toLowerCase()}`}>{game.sport}</span>
+                  </div>
+                  <div className="v2-ug-game-bottom">
+                    <span className="v2-ug-team">{game.awayCity} {game.awayTeam}</span>
+                    <span className="v2-ug-vs">@</span>
+                    <span className="v2-ug-team">{game.homeCity} {game.homeTeam}</span>
+                  </div>
                 </div>
-                <div className="v2-ug-game-bottom">
-                  <span className="v2-ug-team">{game.awayCity} {game.awayTeam}</span>
-                  <span className="v2-ug-vs">@</span>
-                  <span className="v2-ug-team">{game.homeCity} {game.homeTeam}</span>
+                <div className="v2-ug-game-right">
+                  <span className="v2-ug-datetime">
+                    <span className="v2-ug-date">{fmtDate(game.startUtc)}</span>
+                    <span className="v2-ug-time">{fmtTime(game.startUtc)}</span>
+                  </span>
+                  {game.ticketsUrl ? (
+                    <a href={game.ticketsUrl} target="_blank" rel="noopener noreferrer" className="v2-ug-tickets">
+                      <img src={ticketIcon} alt="" className="v2-ug-ticket-icon" />
+                      Tickets
+                    </a>
+                  ) : (
+                    <span className="v2-ug-tickets" style={{ opacity: 0.4, cursor: 'default' }}>
+                      <img src={ticketIcon} alt="" className="v2-ug-ticket-icon" />
+                      Tickets
+                    </span>
+                  )}
                 </div>
               </div>
             ))}

@@ -163,9 +163,22 @@
   border-radius: 0;
   padding: 8px;
   display: flex;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.v2-ug-game-left {
+  display: flex;
   flex-direction: column;
   gap: 6px;
-  box-sizing: border-box;
+}
+
+.v2-ug-game-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .v2-ug-game-top {
@@ -229,11 +242,43 @@
   color: var(--TEXT_SECONDARY);
 }
 
-.v2-ug-time {
-  font-size: 12px;
+.v2-ug-datetime {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.v2-ug-date {
   color: var(--TEXT_SECONDARY);
   font-weight: 400;
-  white-space: nowrap;
-  flex-shrink: 0;
-  margin-left: auto;
+}
+
+.v2-ug-time {
+  color: var(--TEXT_WHITE);
+  font-weight: 400;
+}
+
+.v2-ug-tickets {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--PRIMARY_GREEN);
+}
+
+.v2-ug-tickets:hover {
+  opacity: 0.8;
+}
+
+.v2-ug-ticket-icon {
+  width: 16px;
+  height: 16px;
 }
