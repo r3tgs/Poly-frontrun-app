@@ -193,7 +193,7 @@ export function V2UpcomingGames() {
               <div key={game.id} className="v2-ug-game">
                 <div className="v2-ug-game-top">
                   <img src={SPORT_ICONS[game.sport]} alt={game.sport} className="v2-ug-sport-icon" />
-                  <span className="v2-ug-league-badge">{game.sport}</span>
+                  <span className={`v2-ug-league-badge v2-ug-league-${game.sport.toLowerCase()}`}>{game.sport}</span>
                   <span className="v2-ug-time">{game.timeLabel}</span>
                 </div>
                 <div className="v2-ug-game-bottom">

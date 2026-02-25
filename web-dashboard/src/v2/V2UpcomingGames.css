@@ -189,10 +189,24 @@
   padding: 0 6px;
   font-size: 12px;
   font-weight: 400;
-  color: var(--TEXT_PRIMARY);
   background: var(--BASE_DARK_4);
   border-radius: 0;
   white-space: nowrap;
+}
+
+.v2-ug-league-nhl {
+  color: #12D4FF;
+  border-left: 1px solid #12D4FF;
+}
+
+.v2-ug-league-nba {
+  color: #FF8F2C;
+  border-left: 1px solid #FF8F2C;
+}
+
+.v2-ug-league-mls {
+  color: #FFFF00;
+  border-left: 1px solid #FFFF00;
 }
 
 .v2-ug-game-bottom {
