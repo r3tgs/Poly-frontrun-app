@@ -142,8 +142,8 @@ export function V2TradeFeed({ trades, logs }: { trades: TradeEntry[]; logs: LogE
 
   return (
     <div className="v2-tf">
+      <h2 className="v2-section-label">TRADE FEED</h2>
       <div className="v2-tf-header">
-        <h2 className="v2-section-label">TRADE FEED</h2>
         <div className="v2-tf-controls">
           {!logMode && (
             <div className="v2-tf-filters">

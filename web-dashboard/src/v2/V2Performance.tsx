@@ -142,8 +142,8 @@ export function V2Performance({
 
   return (
     <div className="v2-perf">
+      <h2 className="v2-section-label">MONTHLY PERFORMANCE</h2>
       <div className="v2-perf-header">
-        <h2 className="v2-section-label">MONTHLY PERFORMANCE</h2>
         <span className="v2-perf-month">{monthLabel}</span>
       </div>
       <div className="v2-perf-top-row">
