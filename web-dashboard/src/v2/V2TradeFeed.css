@@ -234,7 +234,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  background: var(--BASE_DARK_3);
+  background: var(--BASE_DARK_2);
   border-radius: 0;
   padding: 10px 12px;
   font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
