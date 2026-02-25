@@ -5,7 +5,16 @@
   height: 100%;
   background: var(--BASE_DARK_1);
   border: 1px solid var(--BASE_DARK_4);
-  padding: 0 16px 16px;
+  padding: 0;
+}
+
+.v2-tf > *:not(.v2-section-label) {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.v2-tf > *:last-child {
+  padding-bottom: 16px;
 }
 
 .v2-tf-header {
