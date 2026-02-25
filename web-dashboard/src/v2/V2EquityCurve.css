@@ -17,62 +17,34 @@
 }
 
 .v2-equity-stats {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 .v2-equity-stat {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  justify-content: center;
+  gap: 4px;
+  height: 68px;
+  padding: 0 16px;
+  border: 1px solid var(--BASE_DARK_4);
+  margin-top: -1px;
+  margin-left: -1px;
 }
 
 .v2-equity-stat-label {
   font-size: 13px;
   font-weight: 400;
-  color: var(--TEXT_SECONDARY);
-}
-
-.v2-equity-stat-row {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
+  color: var(--TEXT_PRIMARY);
 }
 
 .v2-equity-stat-value {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 400;
   color: var(--TEXT_WHITE);
-}
-
-.v2-equity-stat-large {
-  font-size: 28px;
-  font-weight: 400;
-}
-
-.v2-equity-today {
-  font-size: 13px;
-  font-weight: 400;
-  padding: 2px 8px;
-  border-radius: 0;
-  white-space: nowrap;
-}
-
-.v2-equity-today-pos {
-  background: var(--PRIMARY_GREEN_10);
-  color: var(--PRIMARY_GREEN);
-}
-
-.v2-equity-today-neg {
-  background: var(--PRIMARY_RED_10);
-  color: var(--PRIMARY_RED);
-}
-
-.v2-equity-divider {
-  width: 1px;
-  height: 36px;
-  background-color: var(--BASE_DARK_4);
 }
 
 .v2-equity-chart {

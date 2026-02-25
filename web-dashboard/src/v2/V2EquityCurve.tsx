@@ -44,35 +44,20 @@ export function V2EquityCurve({ pnlHistory, stats }: V2EquityCurveProps) {
       <div className="v2-equity-stats">
         <div className="v2-equity-stat">
           <span className="v2-equity-stat-label">Cumulative PNL</span>
-          <div className="v2-equity-stat-row">
-            <span
-              className="v2-equity-stat-value v2-equity-stat-large"
-              style={{
-                color: stats.totalProfit >= 0
-                  ? 'var(--PRIMARY_GREEN)'
-                  : 'var(--PRIMARY_RED)',
-              }}
-            >
-              ${Math.abs(stats.totalProfit).toLocaleString(undefined, {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}
-            </span>
-            {todayPnl !== 0 && (
-              <span
-                className={`v2-equity-today ${todayPnl >= 0 ? 'v2-equity-today-pos' : 'v2-equity-today-neg'}`}
-              >
-                {todayPnl >= 0 ? '+' : '-'}$
-                {Math.abs(todayPnl).toLocaleString(undefined, {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })}{' '}
-                today
-              </span>
-            )}
-          </div>
+          <span
+            className="v2-equity-stat-value"
+            style={{
+              color: stats.totalProfit >= 0
+                ? 'var(--PRIMARY_GREEN)'
+                : 'var(--PRIMARY_RED)',
+            }}
+          >
+            ${Math.abs(stats.totalProfit).toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })}
+          </span>
         </div>
-        <div className="v2-equity-divider" />
         <div className="v2-equity-stat">
           <span className="v2-equity-stat-label">Avg. ROI</span>
           <span
@@ -87,7 +72,6 @@ export function V2EquityCurve({ pnlHistory, stats }: V2EquityCurveProps) {
             {stats.roi.toFixed(1)}%
           </span>
         </div>
-        <div className="v2-equity-divider" />
         <div className="v2-equity-stat">
           <span className="v2-equity-stat-label">Trades Placed</span>
           <span className="v2-equity-stat-value">{stats.totalTrades}</span>
