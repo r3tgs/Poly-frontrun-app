@@ -133,14 +133,20 @@ function LogTerminal({ logs }: { logs: LogEntry[] }) {
 
 export function V2TradeFeed({ trades, logs }: { trades: TradeEntry[]; logs: LogEntry[] }) {
   const [filter, setFilter] = useState<FeedFilter>('all');
+  const [showSim, setShowSim] = useState(false);
   const frontendPnlMap = useMemo(() => computeFrontendPnl(trades), [trades]);
-  const filtered = applyFilter(trades, filter);
+  const filtered = applyFilter(showSim ? trades : trades.filter(t => !t.sim), filter);
 
   return (
     <div className="v2-tf">
       <h2 className="v2-section-label">
         TRADE FEED
         <div className="v2-tf-filters">
+          <label className="v2-tf-toggle">
+            <input type="checkbox" checked={showSim} onChange={() => setShowSim(v => !v)} />
+            <span className="v2-tf-toggle-label">SIM</span>
+            <span className="v2-tf-toggle-track" />
+          </label>
           {FILTERS.map(f => (
             <button key={f.value} className={`v2-tf-filter ${filter === f.value ? 'v2-tf-filter-active' : ''}`} onClick={() => setFilter(f.value)}>
               {f.label}

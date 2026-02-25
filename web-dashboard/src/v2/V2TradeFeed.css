@@ -44,6 +44,59 @@
 .v2-tf-filter:hover { color: var(--TEXT_PRIMARY); }
 .v2-tf-filter-active { color: var(--TEXT_WHITE); background: var(--BASE_DARK_4); }
 
+/* Sim toggle switch */
+.v2-tf-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  cursor: pointer;
+  border-left: 1px solid var(--BASE_DARK_4);
+}
+
+.v2-tf-toggle input { display: none; }
+
+.v2-tf-toggle-label {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--TEXT_SECONDARY);
+  transition: color 0.15s;
+}
+
+.v2-tf-toggle input:checked ~ .v2-tf-toggle-label {
+  color: var(--TEXT_WHITE);
+}
+
+.v2-tf-toggle-track {
+  position: relative;
+  width: 28px;
+  height: 14px;
+  background: var(--BASE_DARK_4);
+  border-radius: 7px;
+  transition: background 0.2s;
+}
+
+.v2-tf-toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  background: var(--TEXT_SECONDARY);
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.v2-tf-toggle input:checked ~ .v2-tf-toggle-track {
+  background: var(--PRIMARY_GREEN_10);
+}
+
+.v2-tf-toggle input:checked ~ .v2-tf-toggle-track::after {
+  transform: translateX(14px);
+  background: var(--PRIMARY_GREEN);
+}
+
 .v2-tf-list {
   display: flex;
   flex-direction: column;
