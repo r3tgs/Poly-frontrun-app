@@ -20,8 +20,8 @@
   display: flex;
   align-items: center;
   height: 36px;
-  border: 1px solid var(--BASE_DARK_4);
-  border-radius: 0;
+  border-bottom: 1px solid var(--BASE_DARK_4);
+  border-left: 1px solid var(--BASE_DARK_4);
   padding: 0 8px;
   gap: 8px;
   margin-top: -12px;
