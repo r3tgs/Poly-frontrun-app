@@ -64,6 +64,7 @@
   font-weight: 400;
   color: var(--PRIMARY_GREEN);
   background: var(--PRIMARY_GREEN_10);
+  border-left: 1px solid var(--PRIMARY_GREEN);
   border-radius: 0;
   white-space: nowrap;
 }
