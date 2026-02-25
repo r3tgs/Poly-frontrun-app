@@ -69,35 +69,38 @@ function TradeRow({ trade, fallbackPnl }: { trade: TradeEntry; fallbackPnl?: num
   const pnlText = effectivePnl != null
     ? (effectivePnl >= 0 ? `+$${effectivePnl.toFixed(2)}` : `-$${Math.abs(effectivePnl).toFixed(2)}`)
     : null;
+  const teamsText = trade.homeTitle && trade.awayTitle
+    ? `${trade.homeTitle} vs ${trade.awayTitle}`
+    : (trade.marketDesc ?? '');
 
   return (
     <div className={`v2-tf-row ${trade.sim ? 'v2-tf-row-sim' : ''}`}>
-      <div className="v2-tf-left">
-        <span className={`v2-tf-icon ${isBuy ? 'v2-tf-icon-buy' : 'v2-tf-icon-sell'}`} />
-        <div className="v2-tf-info">
-          <div className="v2-tf-action-row">
-            <span className={`v2-tf-action ${isBuy ? 'v2-tf-buy' : 'v2-tf-sell'}`}>
-              {isBuy ? 'BUY' : 'SELL'} {teamLabel.toUpperCase()}
-              {trade.sim && <span className="v2-tf-sim">SIM</span>}
-            </span>
-            {pnlText != null && (
-              <span className={`v2-tf-badge ${effectivePnl! >= 0 ? 'v2-tf-badge-pos' : 'v2-tf-badge-neg'}`}>
-                PNL {pnlText}
-              </span>
-            )}
-            {pnlText == null && buyCost != null && (
-              <span className="v2-tf-badge v2-tf-badge-cost">COST ${buyCost.toFixed(2)}</span>
-            )}
-            {latency && <span className="v2-tf-badge v2-tf-badge-cost">{latency}</span>}
-          </div>
-          <span className="v2-tf-details">
-            {trade.contracts} Contracts @ {(trade.price * 100).toFixed(0)}{'\u00A2'}
-          </span>
-        </div>
-      </div>
-      <div className="v2-tf-meta">
-        <img src={trade.platform === 'kalshi' ? kalshiLogo : polyLogo} alt="" className="v2-tf-platform" />
+      <div className="v2-tf-row1">
+        <span className="v2-tf-details">
+          {trade.contracts} Contracts @ {(trade.price * 100).toFixed(0)}{'\u00A2'}
+        </span>
         <span className="v2-tf-time">{formatTime(trade.timestamp)}</span>
+      </div>
+      <div className="v2-tf-row2">
+        <span className="v2-tf-teams">{teamsText}</span>
+      </div>
+      <div className="v2-tf-row3">
+        <div className="v2-tf-badges">
+          <span className={`v2-tf-badge ${isBuy ? 'v2-tf-badge-buy' : 'v2-tf-badge-sell'}`}>
+            {isBuy ? 'BUY' : 'SELL'} {teamLabel.toUpperCase()}
+            {trade.sim && <span className="v2-tf-sim">SIM</span>}
+          </span>
+          {pnlText != null && (
+            <span className={`v2-tf-badge ${effectivePnl! >= 0 ? 'v2-tf-badge-pos' : 'v2-tf-badge-neg'}`}>
+              PNL {pnlText}
+            </span>
+          )}
+          {pnlText == null && buyCost != null && (
+            <span className="v2-tf-badge v2-tf-badge-cost">COST ${buyCost.toFixed(2)}</span>
+          )}
+          {latency && <span className="v2-tf-badge v2-tf-badge-cost">{latency}</span>}
+        </div>
+        <img src={trade.platform === 'kalshi' ? kalshiLogo : polyLogo} alt="" className="v2-tf-platform" />
       </div>
     </div>
   );

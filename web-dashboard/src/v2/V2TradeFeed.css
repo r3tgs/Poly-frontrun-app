@@ -84,90 +84,62 @@
 
 .v2-tf-row {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: space-between;
-  position: relative;
-  min-height: 52px;
-  padding: 8px;
-  padding-right: 80px;
+  height: 80px;
+  padding: 10px 12px;
   background-color: var(--BASE_DARK_3);
   border-radius: 0;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .v2-tf-row-sim { opacity: 0.7; }
 
-.v2-tf-left {
+.v2-tf-row1 {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
-  flex: 1;
+  justify-content: space-between;
 }
 
-.v2-tf-icon {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  border-radius: 0;
+.v2-tf-details {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--TEXT_WHITE);
+  white-space: nowrap;
+}
+
+.v2-tf-time {
+  color: var(--TEXT_SECONDARY);
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.v2-tf-row2 {
   display: flex;
   align-items: center;
-  justify-content: center;
 }
 
-.v2-tf-icon-buy  { background: var(--PRIMARY_GREEN_20); }
-.v2-tf-icon-sell { background: var(--PRIMARY_RED_20); }
-
-.v2-tf-icon-buy::after {
-  content: '';
-  width: 0; height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-bottom: 7px solid var(--PRIMARY_GREEN);
+.v2-tf-teams {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--TEXT_SECONDARY);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.v2-tf-icon-sell::after {
-  content: '';
-  width: 0; height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 7px solid var(--PRIMARY_RED);
-}
-
-.v2-tf-info {
+.v2-tf-row3 {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.v2-tf-action-row {
+.v2-tf-badges {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
-}
-
-.v2-tf-action {
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.2px;
-}
-
-.v2-tf-buy  { color: var(--PRIMARY_GREEN); }
-.v2-tf-sell { color: var(--PRIMARY_RED); }
-
-.v2-tf-sim {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 1px 5px;
-  border-radius: 0;
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 0.05em;
-  color: var(--TEXT_PRIMARY);
-  background: var(--BASE_DARK_4);
-  vertical-align: middle;
 }
 
 .v2-tf-badge {
@@ -180,42 +152,29 @@
   white-space: nowrap;
 }
 
+.v2-tf-badge-buy  { background: var(--PRIMARY_GREEN_10); color: var(--PRIMARY_GREEN); }
+.v2-tf-badge-sell { background: var(--PRIMARY_RED_10); color: var(--PRIMARY_RED); }
 .v2-tf-badge-pos  { background: var(--PRIMARY_GREEN_10); color: var(--PRIMARY_GREEN); }
 .v2-tf-badge-neg  { background: var(--PRIMARY_RED_10); color: var(--PRIMARY_RED); }
 .v2-tf-badge-cost { background: rgba(162, 162, 162, 0.1); color: var(--TEXT_PRIMARY); }
 
-.v2-tf-details {
-  font-size: 14px;
+.v2-tf-sim {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 5px;
+  border-radius: 0;
+  font-size: 9px;
   font-weight: 400;
-  color: var(--TEXT_WHITE);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.v2-tf-meta {
-  position: absolute;
-  top: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  padding: 8px;
-  gap: 4px;
-  pointer-events: none;
+  letter-spacing: 0.05em;
+  color: var(--TEXT_PRIMARY);
+  background: var(--BASE_DARK_4);
+  vertical-align: middle;
 }
 
 .v2-tf-platform {
   width: 18px;
   height: 18px;
   border-radius: 0;
-}
-
-.v2-tf-time {
-  color: var(--TEXT_SECONDARY);
-  font-size: 12px;
-  font-weight: 400;
-  white-space: nowrap;
 }
 
 .v2-tf-empty {
