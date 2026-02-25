@@ -17,23 +17,13 @@
   padding-bottom: 10px;
 }
 
-.v2-tf-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.v2-tf-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.v2-tf > .v2-section-label {
+  justify-content: space-between;
 }
 
 .v2-tf-filters {
   display: flex;
   gap: 2px;
-  margin-right: 4px;
 }
 
 .v2-tf-filter {
@@ -51,22 +41,6 @@
 
 .v2-tf-filter:hover { color: var(--TEXT_PRIMARY); background: var(--BASE_DARK_3); }
 .v2-tf-filter-active { color: var(--TEXT_WHITE); background: var(--BASE_DARK_3); }
-
-.v2-tf-mode {
-  background: none;
-  border: 1px solid var(--BASE_DARK_4);
-  cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 0;
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--TEXT_SECONDARY);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  font-family: inherit;
-}
-
-.v2-tf-mode:hover { color: var(--TEXT_PRIMARY); border-color: var(--TEXT_SECONDARY); }
-.v2-tf-mode-active { color: var(--TEXT_WHITE); background: var(--BASE_DARK_3); border-color: var(--TEXT_SECONDARY); }
 
 .v2-tf-list {
   display: flex;

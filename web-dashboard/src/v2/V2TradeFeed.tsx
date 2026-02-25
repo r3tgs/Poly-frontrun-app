@@ -138,40 +138,30 @@ function LogTerminal({ logs }: { logs: LogEntry[] }) {
 
 export function V2TradeFeed({ trades, logs }: { trades: TradeEntry[]; logs: LogEntry[] }) {
   const [filter, setFilter] = useState<FeedFilter>('all');
-  const [showSim, setShowSim] = useState(false);
-  const [logMode, setLogMode] = useState(false);
   const frontendPnlMap = useMemo(() => computeFrontendPnl(trades), [trades]);
-  const filtered = applyFilter(showSim ? trades : trades.filter(t => !t.sim), filter);
+  const filtered = applyFilter(trades, filter);
 
   return (
     <div className="v2-tf">
-      <h2 className="v2-section-label">TRADE FEED</h2>
-      <div className="v2-tf-header">
-        <div className="v2-tf-controls">
-          {!logMode && (
-            <div className="v2-tf-filters">
-              {FILTERS.map(f => (
-                <button key={f.value} className={`v2-tf-filter ${filter === f.value ? 'v2-tf-filter-active' : ''}`} onClick={() => setFilter(f.value)}>
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          )}
-          <button className={`v2-tf-mode ${showSim ? 'v2-tf-mode-active' : ''}`} onClick={() => setShowSim(v => !v)}>Sim</button>
-          <button className={`v2-tf-mode ${logMode ? 'v2-tf-mode-active' : ''}`} onClick={() => setLogMode(v => !v)}>Logs</button>
-        </div>
-      </div>
-      {logMode ? <LogTerminal logs={logs} /> : (
-        <div className="v2-tf-list">
-          {filtered.length === 0 ? (
-            <div className="v2-tf-empty">
-              {trades.filter(t => showSim || !t.sim).length === 0 ? 'No trades yet' : 'No trades in this period'}
-            </div>
-          ) : filtered.map(trade => (
-            <TradeRow key={trade.id} trade={trade} fallbackPnl={frontendPnlMap.get(trade.id)} />
+      <h2 className="v2-section-label">
+        TRADE FEED
+        <div className="v2-tf-filters">
+          {FILTERS.map(f => (
+            <button key={f.value} className={`v2-tf-filter ${filter === f.value ? 'v2-tf-filter-active' : ''}`} onClick={() => setFilter(f.value)}>
+              {f.label}
+            </button>
           ))}
         </div>
-      )}
+      </h2>
+      <div className="v2-tf-list">
+        {filtered.length === 0 ? (
+          <div className="v2-tf-empty">
+            {trades.length === 0 ? 'No trades yet' : 'No trades in this period'}
+          </div>
+        ) : filtered.map(trade => (
+          <TradeRow key={trade.id} trade={trade} fallbackPnl={frontendPnlMap.get(trade.id)} />
+        ))}
+      </div>
     </div>
   );
 }
