@@ -71,10 +71,14 @@
   position: relative;
   flex: 1;
   min-width: 80px;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .v2-ug-input {
   width: 100%;
+  height: 100%;
   background: transparent;
   border: none;
   outline: none;
