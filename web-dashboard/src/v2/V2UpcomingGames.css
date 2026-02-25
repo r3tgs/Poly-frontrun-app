@@ -256,7 +256,7 @@
 }
 
 .v2-ug-time {
-  color: var(--TEXT_WHITE);
+  color: var(--TEXT_PRIMARY);
   font-weight: 400;
 }
 
@@ -271,11 +271,12 @@
   font-family: inherit;
   font-size: 14px;
   font-weight: 400;
-  color: var(--PRIMARY_GREEN);
+  color: var(--PRIMARY_GREEN_70);
+  text-decoration: none;
 }
 
 .v2-ug-tickets:hover {
-  opacity: 0.8;
+  color: var(--PRIMARY_GREEN);
 }
 
 .v2-ug-ticket-icon {
