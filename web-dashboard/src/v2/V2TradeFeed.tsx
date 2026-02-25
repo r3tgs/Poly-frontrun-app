@@ -4,13 +4,12 @@ import kalshiLogo from './assets/PM Kalshi Trade Feed.svg';
 import polyLogo from './assets/PM Poly Trade Feed.svg';
 import './V2TradeFeed.css';
 
-type FeedFilter = 'all' | 'today' | '24h' | '1h';
+type FeedFilter = 'all' | '24h' | '1h';
 
 const FILTERS: { label: string; value: FeedFilter }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Today', value: 'today' },
-  { label: '24h', value: '24h' },
   { label: '1h', value: '1h' },
+  { label: '24h', value: '24h' },
+  { label: 'All', value: 'all' },
 ];
 
 function applyFilter(trades: TradeEntry[], filter: FeedFilter): TradeEntry[] {
@@ -18,10 +17,6 @@ function applyFilter(trades: TradeEntry[], filter: FeedFilter): TradeEntry[] {
   const now = Date.now();
   if (filter === '1h') return trades.filter(t => now - t.timestamp <= 3_600_000);
   if (filter === '24h') return trades.filter(t => now - t.timestamp <= 86_400_000);
-  if (filter === 'today') {
-    const start = new Date(); start.setHours(0, 0, 0, 0);
-    return trades.filter(t => t.timestamp >= start.getTime());
-  }
   return trades;
 }
 
