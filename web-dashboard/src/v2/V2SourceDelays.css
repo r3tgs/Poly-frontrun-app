@@ -23,28 +23,35 @@
   overflow: hidden;
 }
 
-.v2-delay-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 0;
+.v2-delay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
 }
 
-.v2-delay-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 12px;
+.v2-delay-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 0;
 }
 
 .v2-delay-name {
   font-size: 13px;
   font-weight: 400;
+  color: var(--TEXT_PRIMARY);
 }
 
 .v2-delay-value {
   color: var(--TEXT_WHITE);
   font-size: 16px;
   font-weight: 400;
+}
+
+.v2-delay-unit {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--TEXT_SECONDARY);
 }
 
 .v2-delay-chart {

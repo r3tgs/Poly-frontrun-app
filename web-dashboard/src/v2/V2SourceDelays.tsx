@@ -101,13 +101,14 @@ function SparkLine({ color, dataPoints }: { color: string; dataPoints: DelayData
 
 function DelayCard({ source }: { source: SourceDelay }) {
   const config = SOURCE_CONFIG[source.source];
+  const numericPart = source.delay.replace(/s$/i, '');
   return (
     <div className="v2-delay-card">
-      <img src={config.icon} alt={source.source} className="v2-delay-icon" />
-      <div className="v2-delay-text">
-        <span className="v2-delay-name" style={{ color: config.color }}>{source.label}</span>
-        <span className="v2-delay-value">{source.delay}</span>
+      <div className="v2-delay-header">
+        <img src={config.icon} alt={source.source} className="v2-delay-icon" />
+        <span className="v2-delay-value">{numericPart}<span className="v2-delay-unit">s</span></span>
       </div>
+      <span className="v2-delay-name">{source.label}</span>
       <div className="v2-delay-chart">
         <SparkLine color={config.color} dataPoints={source.dataPoints} />
       </div>
