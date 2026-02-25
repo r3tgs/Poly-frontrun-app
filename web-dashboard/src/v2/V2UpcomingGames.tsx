@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import hockeyIcon from './assets/PM Sport Hockey.svg';
 import soccerIcon from './assets/PM Sport Soccer.svg';
 import basketballIcon from './assets/PM Sport Basketball.svg';
+import searchIcon from './assets/PM Search Icon.svg';
+import closeIcon from './assets/PM Close Icon.svg';
 import './V2UpcomingGames.css';
 
 const SPORT_ICONS: Record<string, string> = {
@@ -145,18 +147,13 @@ export function V2UpcomingGames() {
   return (
     <div className="v2-ug">
       <h2 className="v2-section-label">UPCOMING GAMES</h2>
-      <div className="v2-ug-chips">
-        {cities.map(city => (
-          <span key={city} className="v2-ug-chip">
-            {city}
-            <button className="v2-ug-chip-x" onClick={() => removeCity(city)}>&times;</button>
-          </span>
-        ))}
+      <div className="v2-ug-search">
+        <img src={searchIcon} alt="" className="v2-ug-search-icon" />
         <div className="v2-ug-input-wrap">
           <input
             ref={inputRef}
             className="v2-ug-input"
-            placeholder="Add city..."
+            placeholder="Search city..."
             value={inputVal}
             onChange={e => handleInput(e.target.value)}
             onKeyDown={e => {
@@ -173,6 +170,14 @@ export function V2UpcomingGames() {
             </div>
           )}
         </div>
+        {cities.map(city => (
+          <span key={city} className="v2-ug-chip">
+            {city}
+            <button className="v2-ug-chip-x" onClick={() => removeCity(city)}>
+              <img src={closeIcon} alt="" className="v2-ug-chip-x-icon" />
+            </button>
+          </span>
+        ))}
       </div>
       <div className="v2-ug-list">
         {loading && <div className="v2-ug-empty">Loading schedule...</div>}
