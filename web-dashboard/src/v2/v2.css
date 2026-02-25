@@ -76,7 +76,7 @@
 }
 
 .v2-col-left {
-  flex: 0 0 22%;
+  flex: 0 0 28%;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -91,7 +91,7 @@
 }
 
 .v2-col-right {
-  flex: 0 0 24%;
+  flex: 0 0 28%;
   min-width: 0;
   display: flex;
   flex-direction: column;
