@@ -152,8 +152,8 @@
   white-space: nowrap;
 }
 
-.v2-tf-badge-buy  { background: var(--PRIMARY_GREEN_10); color: var(--PRIMARY_GREEN); }
-.v2-tf-badge-sell { background: var(--PRIMARY_RED_10); color: var(--PRIMARY_RED); }
+.v2-tf-badge-buy  { background: var(--PRIMARY_GREEN_10); color: var(--PRIMARY_GREEN); border-left: 1px solid var(--PRIMARY_GREEN); }
+.v2-tf-badge-sell { background: var(--PRIMARY_RED_10); color: var(--PRIMARY_RED); border-left: 1px solid var(--PRIMARY_RED); }
 .v2-tf-badge-pos  { background: var(--PRIMARY_GREEN_10); color: var(--PRIMARY_GREEN); }
 .v2-tf-badge-neg  { background: var(--PRIMARY_RED_10); color: var(--PRIMARY_RED); }
 .v2-tf-badge-cost { background: rgba(162, 162, 162, 0.1); color: var(--TEXT_PRIMARY); }
