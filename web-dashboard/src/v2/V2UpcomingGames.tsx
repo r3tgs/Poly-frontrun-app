@@ -79,13 +79,15 @@ function fmtTime(iso: string): string {
   } catch { return ''; }
 }
 
-function dayLabel(iso: string): string {
+function dayLabel(iso: string): { prefix: string; date: string } {
   const d = new Date(iso);
   const today = new Date();
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
-  if (d.toDateString() === today.toDateString()) return 'Today';
-  if (d.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
-  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).toUpperCase();
+  const datePart = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+  if (d.toDateString() === today.toDateString()) return { prefix: 'TODAY,', date: datePart };
+  if (d.toDateString() === tomorrow.toDateString()) return { prefix: 'TOMORROW,', date: datePart };
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  return { prefix: weekday + ',', date: datePart };
 }
 
 function matchesCity(game: Game, cities: string[]): boolean {
@@ -136,12 +138,12 @@ export function V2UpcomingGames() {
   const removeCity = (city: string) => setCities(prev => prev.filter(c => c !== city));
 
   const filtered = cities.length > 0 ? games.filter(g => matchesCity(g, cities)) : [];
-  const grouped: { label: string; games: Game[] }[] = [];
+  const grouped: { prefix: string; date: string; games: Game[] }[] = [];
   for (const g of filtered) {
     const lbl = dayLabel(g.startUtc);
-    const existing = grouped.find(x => x.label === lbl);
+    const existing = grouped.find(x => x.prefix === lbl.prefix && x.date === lbl.date);
     if (existing) existing.games.push(g);
-    else grouped.push({ label: lbl, games: [g] });
+    else grouped.push({ prefix: lbl.prefix, date: lbl.date, games: [g] });
   }
 
   return (
@@ -185,8 +187,8 @@ export function V2UpcomingGames() {
         {!loading && !error && cities.length === 0 && <div className="v2-ug-empty">Add a city above to see upcoming games</div>}
         {!loading && !error && cities.length > 0 && grouped.length === 0 && <div className="v2-ug-empty">No upcoming games found for selected cities</div>}
         {!loading && !error && grouped.map(group => (
-          <div key={group.label} className="v2-ug-day">
-            <div className="v2-ug-day-label">{group.label}</div>
+          <div key={group.prefix + group.date} className="v2-ug-day">
+            <div className="v2-ug-day-label"><span className="v2-ug-day-prefix">{group.prefix}</span> <span className="v2-ug-day-date">{group.date}</span></div>
             {group.games.map(game => (
               <div key={game.id} className="v2-ug-game">
                 <img src={SPORT_ICONS[game.sport]} alt={game.sport} className="v2-ug-sport-icon" />

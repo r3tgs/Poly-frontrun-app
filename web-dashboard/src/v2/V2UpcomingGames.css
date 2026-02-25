@@ -143,12 +143,19 @@
 }
 
 .v2-ug-day-label {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: var(--TEXT_SECONDARY);
   padding: 0 2px;
+}
+
+.v2-ug-day-prefix {
+  color: var(--TEXT_SECONDARY);
+}
+
+.v2-ug-day-date {
+  color: var(--TEXT_PRIMARY);
 }
 
 .v2-ug-game {
