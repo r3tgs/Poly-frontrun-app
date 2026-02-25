@@ -279,11 +279,12 @@
   color: var(--PRIMARY_GREEN);
 }
 
-.v2-ug-tickets:hover .v2-ug-ticket-icon {
-  filter: brightness(1.43);
-}
-
 .v2-ug-ticket-icon {
   width: 16px;
   height: 16px;
+  opacity: 0.7;
+}
+
+.v2-ug-tickets:hover .v2-ug-ticket-icon {
+  opacity: 1;
 }
