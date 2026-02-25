@@ -40,9 +40,9 @@
   padding: 0 6px;
   font-size: 12px;
   font-weight: 400;
-  color: var(--PRIMARY_GREEN);
-  background: var(--PRIMARY_GREEN_10);
-  border-left: 1px solid var(--PRIMARY_GREEN);
+  color: var(--TEXT_PRIMARY);
+  background: var(--BASE_DARK_3);
+  border-left: 1px solid var(--TEXT_PRIMARY);
   border-radius: 0;
   white-space: nowrap;
   flex-shrink: 0;
