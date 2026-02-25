@@ -1,25 +1,25 @@
 .v2-equity {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   background: var(--BASE_DARK_1);
   border: 1px solid var(--BASE_DARK_4);
   padding: 0;
 }
 
 .v2-equity > *:not(.v2-section-label) {
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .v2-equity > *:last-child {
-  padding-bottom: 16px;
+  padding-bottom: 10px;
 }
 
 .v2-equity-stats {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  margin-top: -16px;
+  margin-top: -10px;
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
@@ -30,7 +30,7 @@
   justify-content: center;
   gap: 4px;
   height: 68px;
-  padding: 0 16px;
+  padding: 0 10px;
   border-top: 1px solid var(--BASE_DARK_4);
   border-bottom: 1px solid var(--BASE_DARK_4);
   border-left: 1px solid var(--BASE_DARK_4);

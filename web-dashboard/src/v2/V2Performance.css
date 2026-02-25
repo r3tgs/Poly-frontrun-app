@@ -1,19 +1,19 @@
 .v2-perf {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   background: var(--BASE_DARK_1);
   border: 1px solid var(--BASE_DARK_4);
   padding: 0;
 }
 
 .v2-perf > *:not(.v2-section-label) {
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .v2-perf > *:last-child {
-  padding-bottom: 16px;
+  padding-bottom: 10px;
 }
 
 .v2-perf-header {

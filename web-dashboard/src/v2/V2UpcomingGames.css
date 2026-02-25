@@ -8,12 +8,12 @@
 }
 
 .v2-ug > *:not(.v2-section-label) {
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .v2-ug > *:last-child {
-  padding-bottom: 16px;
+  padding-bottom: 10px;
 }
 
 .v2-ug-search {
@@ -22,7 +22,7 @@
   height: 36px;
   border-bottom: 1px solid var(--BASE_DARK_4);
   border-left: 1px solid var(--BASE_DARK_4);
-  padding: 0 8px;
+  padding: 0 10px;
   gap: 8px;
   margin-top: -12px;
 }
@@ -127,7 +127,7 @@
 .v2-ug-empty {
   background: var(--BASE_DARK_3);
   border-radius: 0;
-  padding: 20px 16px;
+  padding: 10px;
   font-size: 13px;
   color: var(--TEXT_SECONDARY);
   font-weight: 400;
@@ -154,7 +154,7 @@
 .v2-ug-game {
   background: var(--BASE_DARK_3);
   border-radius: 0;
-  padding: 10px 12px;
+  padding: 10px;
   display: flex;
   align-items: center;
   gap: 10px;

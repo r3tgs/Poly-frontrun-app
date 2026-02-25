@@ -1,19 +1,19 @@
 .v2-rolling {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   background: var(--BASE_DARK_1);
   border: 1px solid var(--BASE_DARK_4);
   padding: 0;
 }
 
 .v2-rolling > *:not(.v2-section-label) {
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .v2-rolling > *:last-child {
-  padding-bottom: 16px;
+  padding-bottom: 10px;
 }
 
 .v2-rolling-container {
