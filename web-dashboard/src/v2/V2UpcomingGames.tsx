@@ -153,7 +153,7 @@ export function V2UpcomingGames() {
           <input
             ref={inputRef}
             className="v2-ug-input"
-            placeholder="Search city..."
+            placeholder="Add city..."
             value={inputVal}
             onChange={e => handleInput(e.target.value)}
             onKeyDown={e => {
