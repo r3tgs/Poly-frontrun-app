@@ -5,10 +5,6 @@
   border: 1px solid var(--BASE_DARK_4);
 }
 
-.v2-delays > .v2-section-label {
-  margin: 0;
-}
-
 .v2-delays-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
