@@ -38,9 +38,10 @@
   align-items: center;
   gap: 4px;
   height: 19px;
-  padding: 0 6px;
+  padding: 0 4px 0 6px;
   font-size: 12px;
   font-weight: 400;
+  line-height: 19px;
   color: var(--TEXT_PRIMARY);
   background: var(--BASE_DARK_3);
   border-left: 1px solid var(--TEXT_PRIMARY);
@@ -59,8 +60,8 @@
 }
 
 .v2-ug-chip-x-icon {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
 }
 
 .v2-ug-chip-x:hover .v2-ug-chip-x-icon {
