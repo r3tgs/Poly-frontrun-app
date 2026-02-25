@@ -58,16 +58,14 @@ export function V2EquityCurve({ pnlHistory, stats }: V2EquityCurveProps) {
                 maximumFractionDigits: 2,
               })}
             </span>
-            {todayPnl !== 0 && (
-              <span className="v2-equity-today-badge">
-                {todayPnl >= 0 ? '+' : '-'}$
-                {Math.abs(todayPnl).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}{' '}
-                today
-              </span>
-            )}
+            <span className={`v2-equity-today-badge${todayPnl === 0 ? ' v2-equity-today-zero' : todayPnl < 0 ? ' v2-equity-today-neg' : ''}`}>
+              {todayPnl >= 0 ? '+' : '-'}$
+              {Math.abs(todayPnl).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}{' '}
+              today
+            </span>
           </div>
         </div>
         <div className="v2-equity-stat">

@@ -69,6 +69,12 @@
   white-space: nowrap;
 }
 
+.v2-equity-today-zero {
+  color: var(--TEXT_SECONDARY);
+  background: var(--BASE_DARK_3);
+  border-left: 1px solid var(--TEXT_SECONDARY);
+}
+
 .v2-equity-chart {
   border-radius: 0;
   overflow: hidden;
