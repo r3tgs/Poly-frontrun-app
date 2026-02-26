@@ -35,7 +35,7 @@ type PriceHistData = { homeTicker: string; awayTicker: string; homePoints: Price
 function computePnlHistory(trades: TradeEntry[]): PnlHistory {
   const history: PnlHistory = {};
 
-  // FIFO matching for sells without tradePnl
+  // FIFO matching — primary source of truth; stored tradePnl used only as fallback
   const positions = new Map<string, { totalCost: number; contracts: number; avgPrice: number }>();
   const sorted = [...trades].sort((a, b) => a.timestamp - b.timestamp);
 
@@ -45,7 +45,8 @@ function computePnlHistory(trades: TradeEntry[]): PnlHistory {
     if (!history[key]) history[key] = { realized: 0, spent: 0, tradeCount: 0 };
     history[key].tradeCount++;
 
-    const posKey = `${trade.team}::${trade.homeTitle ?? ''}::${trade.awayTitle ?? ''}`;
+    // Use tokenId (most specific) if present, otherwise fall back to team+market titles.
+    const posKey = trade.tokenId ?? `${trade.team}::${trade.homeTitle ?? ''}::${trade.awayTitle ?? ''}`;
 
     if (trade.action === 'buy') {
       const cost = trade.contracts * trade.price + (trade.fee ?? 0);
@@ -60,18 +61,20 @@ function computePnlHistory(trades: TradeEntry[]): PnlHistory {
         positions.set(posKey, { totalCost: cost, contracts: trade.contracts, avgPrice: cost / trade.contracts });
       }
     } else if (trade.action === 'sell') {
-      let pnl = trade.tradePnl;
-      if (pnl == null) {
-        const pos = positions.get(posKey);
-        if (pos && pos.contracts > 0) {
-          const net = trade.contracts * trade.price - (trade.fee ?? 0);
-          pnl = net - trade.contracts * pos.avgPrice;
-          pos.contracts -= trade.contracts;
-          pos.totalCost = pos.contracts > 0 ? pos.contracts * pos.avgPrice : 0;
-          if (pos.contracts <= 0) positions.delete(posKey);
-        }
+      const pos = positions.get(posKey);
+      if (pos && pos.contracts > 0) {
+        // FIFO is always preferred — computed fresh from raw trade data.
+        // Always update the position so subsequent sells use the correct remaining cost basis.
+        const net = trade.contracts * trade.price - (trade.fee ?? 0);
+        const fifoPnl = net - trade.contracts * pos.avgPrice;
+        pos.contracts -= trade.contracts;
+        pos.totalCost = pos.contracts > 0 ? pos.contracts * pos.avgPrice : 0;
+        if (pos.contracts <= 0) positions.delete(posKey);
+        history[key].realized += fifoPnl;
+      } else if (trade.tradePnl != null) {
+        // No FIFO position found (e.g. posKey mismatch) — fall back to stored server value.
+        history[key].realized += trade.tradePnl;
       }
-      if (pnl != null) history[key].realized += pnl;
     }
   }
   return history;
@@ -194,6 +197,7 @@ function useBotData() {
             timestamp: d.timestamp ?? Date.now(),
             sim: d.sim ?? false,
             tradePnl: d.tradePnl,
+            tokenId: d.tokenId,
           };
           setTrades(prev => [trade, ...prev].slice(0, 500));
 

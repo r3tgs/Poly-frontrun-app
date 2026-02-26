@@ -8,7 +8,7 @@ const log = createLogger("KalshiTrades");
 const WS_URL = "wss://api.elections.kalshi.com/trade-api/ws/v2";
 const WS_PATH = "/trade-api/ws/v2";
 const RECONNECT_MS = 2_000;
-/** Remove own-trade records older than this to avoid memory leaks. */
+/** How long to keep fill records and recent trade entries for late-fill matching. */
 const OWN_TRADE_TTL_MS = 60_000;
 
 type TradeListener = (entry: KalshiTradeEntry) => void;
@@ -31,6 +31,11 @@ export class TradeStream {
 
   // trade_id → { timestamp, action } from the private fill channel.
   private ownTradeIds = new Map<string, { ts: number; action: "buy" | "sell"; side: "yes" | "no" }>();
+
+  // Buffer of recently dispatched trade entries — used for late-fill re-emission.
+  // When a fill event arrives after the matching trade event was already dispatched
+  // (the common case on Kalshi), we re-emit the entry with isOwn=true.
+  private recentTrades = new Map<string, KalshiTradeEntry>();
 
   constructor(
     private readonly apiKey: string,
@@ -148,7 +153,17 @@ export class TradeStream {
         const ownSide: "yes" | "no" = side === "no" ? "no" : "yes";
         this.ownTradeIds.set(trade_id, { ts: Date.now(), action: act, side: ownSide });
         this.cleanupOwnTradeIds();
-        log.debug(`Own fill: trade_id=${trade_id} action=${act} side=${ownSide}`);
+        log.info(`Own fill: trade_id=${trade_id} action=${act} side=${ownSide}`);
+
+        // If the matching trade event already arrived (race: trade before fill),
+        // re-emit it now with isOwn=true so the dashboard gets corrected.
+        const existing = this.recentTrades.get(trade_id);
+        if (existing && !existing.isOwn) {
+          const updated: KalshiTradeEntry = { ...existing, isOwn: true, action: act, ownSide };
+          this.recentTrades.set(trade_id, updated);
+          log.info(`Late-fill re-emit: trade_id=${trade_id} — updating dashboard to isOwn=true`);
+          this.listeners.forEach((fn) => fn(updated));
+        }
       }
       return;
     }
@@ -177,6 +192,10 @@ export class TradeStream {
         ownSide: ownInfo?.side,
       };
 
+      // Buffer this entry so a late fill can re-emit it with isOwn=true.
+      this.recentTrades.set(trade_id, entry);
+      this.cleanupRecentTrades();
+
       this.listeners.forEach((fn) => fn(entry));
     }
   }
@@ -189,6 +208,13 @@ export class TradeStream {
     const cutoff = Date.now() - OWN_TRADE_TTL_MS;
     for (const [id, { ts }] of this.ownTradeIds) {
       if (ts < cutoff) this.ownTradeIds.delete(id);
+    }
+  }
+
+  private cleanupRecentTrades(): void {
+    const cutoff = Date.now() - OWN_TRADE_TTL_MS;
+    for (const [id, entry] of this.recentTrades) {
+      if (entry.timestamp < cutoff) this.recentTrades.delete(id);
     }
   }
 

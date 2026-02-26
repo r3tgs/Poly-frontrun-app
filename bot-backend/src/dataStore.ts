@@ -13,8 +13,8 @@ interface PersistedState {
   defaultTradeSize: number;
 }
 
-const MAX_TRADES = 500;
-const MAX_OWN_FEED = 200;
+const MAX_TRADES = 2000;
+const MAX_OWN_FEED = 300;
 
 export class DataStore {
   private state: PersistedState;
@@ -42,7 +42,11 @@ export class DataStore {
 
   private save(): void {
     try {
-      fs.writeFileSync(DATA_FILE, JSON.stringify(this.state));
+      // Atomic write: write to a temp file then rename so a crash mid-write
+      // never leaves a corrupted/truncated dashboard-state.json.
+      const tmp = DATA_FILE + ".tmp";
+      fs.writeFileSync(tmp, JSON.stringify(this.state));
+      fs.renameSync(tmp, DATA_FILE);
     } catch {}
   }
 

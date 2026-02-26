@@ -52,6 +52,8 @@ export interface TradeEntry {
   sim?: boolean;
   /** Realized P&L for this sell trade (net proceeds minus cost basis, after fees). Only set for sells. */
   tradePnl?: number;
+  /** Platform-specific token/ticker ID used for reliable FIFO P&L matching */
+  tokenId?: string;
 }
 
 export interface LogEntry {

@@ -42,7 +42,7 @@ function computeFrontendPnl(trades: TradeEntry[]): Map<string, number> {
   const positions = new Map<string, { totalCost: number; contracts: number; avgPrice: number }>();
 
   for (const trade of sorted) {
-    const key = `${trade.team}::${trade.homeTitle ?? ''}::${trade.awayTitle ?? ''}`;
+    const key = trade.tokenId ?? `${trade.team}::${trade.homeTitle ?? ''}::${trade.awayTitle ?? ''}`;
     if (trade.action === 'buy') {
       const cost = trade.contracts * trade.price + (trade.fee ?? 0);
       const ex = positions.get(key);
@@ -101,9 +101,10 @@ function TradeRow({ trade, fallbackPnl }: { trade: TradeEntry; fallbackPnl?: num
   const feeDisplay = trade.fee != null ? ` · $${trade.fee.toFixed(2)} fee` : '';
   const latencyDisplay = trade.latencyMs != null ? ` · ${trade.latencyMs}ms` : '';
 
-  // Per-trade financial summary — use backend value if present, else frontend FIFO computation
+  // Per-trade financial summary — prefer FIFO (computed fresh from raw data); fall back to
+  // stored tradePnl only when FIFO has no position match (e.g. posKey mismatch).
   const buyCost = isBuy ? trade.contracts * trade.price + (trade.fee ?? 0) : null;
-  const effectivePnl = !isBuy ? (trade.tradePnl ?? fallbackPnl) : null;
+  const effectivePnl = !isBuy ? (fallbackPnl ?? trade.tradePnl) : null;
   const tradePnlDisplay = effectivePnl != null
     ? effectivePnl >= 0
       ? `+$${effectivePnl.toFixed(2)}`

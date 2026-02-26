@@ -83,7 +83,7 @@ export class PnLTracker {
     contracts: number,
     price: number,
     fee = 0,
-  ): void {
+  ): number | undefined {
     const gross = contracts * price;
     const net = gross - fee;
     this.totalReceived += net;
@@ -93,25 +93,28 @@ export class PnLTracker {
     const pos = this.positions.get(tokenId);
     if (pos) {
       const costBasis = contracts * pos.avgBuyPrice;
-      this.realizedPnl += net - costBasis;
+      const tradePnl = net - costBasis;
+      this.realizedPnl += tradePnl;
       pos.contracts -= contracts;
       pos.totalCost -= costBasis;
 
       if (pos.contracts <= 0) {
         this.positions.delete(tokenId);
       }
+
+      log.info(
+        `SELL recorded: ${contracts} @ ${price.toFixed(4)} - $${fee.toFixed(2)} fee = $${net.toFixed(2)} net  ` +
+          `realized P&L: $${this.realizedPnl.toFixed(2)}`,
+      );
+      return tradePnl;
     } else {
       // No tracked buy — can't compute P&L without cost basis.
       // Record the trade but don't fabricate profit.
       log.warn(
         `SELL recorded with no tracked buy position for ${tokenId} — P&L not updated (unknown cost basis)`,
       );
+      return undefined;
     }
-
-    log.info(
-      `SELL recorded: ${contracts} @ ${price.toFixed(4)} - $${fee.toFixed(2)} fee = $${net.toFixed(2)} net  ` +
-        `realized P&L: $${this.realizedPnl.toFixed(2)}`,
-    );
   }
 
   getSnapshot(currentPrices?: Map<string, number>): PnLSnapshot {

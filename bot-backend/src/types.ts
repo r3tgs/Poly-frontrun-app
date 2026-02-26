@@ -201,6 +201,8 @@ export interface StoredTrade {
   timestamp: number;
   sim?: boolean;
   tradePnl?: number;
+  /** Platform-specific token/ticker ID used for reliable FIFO P&L matching (e.g. "NBA-LAL::YES") */
+  tokenId?: string;
 }
 
 /** Sent once to a dashboard immediately after it registers, carrying the full
@@ -275,6 +277,8 @@ export interface TradeUpdateMessage {
     sim?: boolean;
     /** Realized P&L for this individual sell trade (net proceeds minus cost basis). Only set for sells. */
     tradePnl?: number;
+    /** Platform-specific token/ticker ID for FIFO P&L matching */
+    tokenId?: string;
   };
 }
 

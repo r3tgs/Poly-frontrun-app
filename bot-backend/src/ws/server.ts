@@ -462,6 +462,32 @@ export function startWebSocketServer(
   // Persistent store — survives page refreshes and is shared across all devices.
   const dataStore = new DataStore(config.defaultBuySize);
 
+  // Seed the in-memory PnL tracker from the persisted trade history so that
+  // sells executed after a server restart still have a cost basis to compute
+  // tradePnl against.
+  //
+  // IMPORTANT: replay both buys AND sells (in timestamp order) so the tracker's
+  // open-position state is correct. Replaying only buys caused a bug where a
+  // previous buy on the same tokenId inflated the position, contaminating the
+  // avgBuyPrice used for the next sell's tradePnl calculation.
+  {
+    const { trades: storedTrades } = dataStore.getState();
+    const sorted = [...storedTrades].sort((a, b) => a.timestamp - b.timestamp);
+    let buysSeeded = 0;
+    for (const t of sorted) {
+      if (!t.tokenId) continue; // skip pre-tokenId trades — can't match without it
+      if (t.action === "buy") {
+        pnl.recordBuy(t.tokenId, t.team, t.contracts, t.price, t.fee ?? 0);
+        buysSeeded++;
+      } else if (t.action === "sell") {
+        pnl.recordSell(t.tokenId, t.contracts, t.price, t.fee ?? 0); // discard return — seeding only
+      }
+    }
+    if (buysSeeded > 0) {
+      log.info(`Seeded PnL tracker: replayed ${sorted.filter(t => t.tokenId).length} trade(s) to restore open positions`);
+    }
+  }
+
   // Last market set by the dashboard — re-sent to any phone that (re)connects.
   const globalMarket: { current: MarketConfig | null } = { current: null };
 
@@ -833,6 +859,7 @@ async function handleMessage(
           platform: "kalshi",
           timestamp: buyTs,
           sim: isSim,
+          tokenId,
         };
         dataStore.addTrade(storedBuy);
       }
@@ -851,6 +878,7 @@ async function handleMessage(
           latencyMs: result.latencyMs,
           error: result.error,
           sim: isSim,
+          tokenId,
         },
       };
       broadcast(wss, update);
@@ -891,8 +919,7 @@ async function handleMessage(
       const sellTs = Date.now();
       let tradePnl: number | undefined;
       if (result.success && result.price && result.size) {
-        const pnlResult = pnl.recordSell(tokenId, result.size, result.price, result.fee ?? 0);
-        if (pnlResult != null) tradePnl = pnlResult;
+        tradePnl = pnl.recordSell(tokenId, result.size, result.price, result.fee ?? 0);
         pnl.printSummary();
         broadcastPnlToDashboards(clients, pnl);
         const storedSell: StoredTrade = {
@@ -910,6 +937,7 @@ async function handleMessage(
           timestamp: sellTs,
           sim: isSim,
           tradePnl,
+          tokenId,
         };
         dataStore.addTrade(storedSell);
       }
@@ -929,6 +957,7 @@ async function handleMessage(
           error: result.error,
           sim: isSim,
           tradePnl,
+          tokenId,
         },
       };
       broadcast(wss, sellUpdate);
