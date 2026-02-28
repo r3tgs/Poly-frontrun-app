@@ -142,10 +142,10 @@ export function V2Performance({
 
   return (
     <div className="v2-perf">
-      <h2 className="v2-section-label">MONTHLY PERFORMANCE</h2>
-      <div className="v2-perf-header">
+      <h2 className="v2-section-label v2-perf-title">
+        MONTHLY PERFORMANCE
         <span className="v2-perf-month">{monthLabel}</span>
-      </div>
+      </h2>
       <div className="v2-perf-top-row">
         <StatsRow stats={stats} />
         <div className="v2-perf-toggle">

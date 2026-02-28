@@ -16,19 +16,20 @@
   padding-bottom: 10px;
 }
 
-.v2-perf-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.v2-perf-title {
+  justify-content: space-between;
+  padding-right: 0;
 }
 
 .v2-perf-month {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--TEXT_PRIMARY);
-  padding: 4px 10px;
-  border: 1px solid var(--BASE_DARK_4);
-  border-radius: 0;
+  padding: 0 14px;
+  border-left: 1px solid var(--BASE_DARK_4);
+  align-self: stretch;
+  display: flex;
+  align-items: center;
 }
 
 .v2-perf-top-row {
