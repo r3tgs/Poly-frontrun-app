@@ -57,7 +57,10 @@ export function V2RollingPerformance({ pnlHistory }: { pnlHistory: PnlHistory })
       if (monDow === 0) {
         const month = cursor.getMonth();
         if (month !== lastMonth) {
-          monthLabels.push({ month: MONTHS[month], col: weekIdx });
+          const lastCol = monthLabels.length > 0 ? monthLabels[monthLabels.length - 1].col : -4;
+          if (weekIdx - lastCol >= 3) {
+            monthLabels.push({ month: MONTHS[month], col: weekIdx });
+          }
           lastMonth = month;
         }
       }
