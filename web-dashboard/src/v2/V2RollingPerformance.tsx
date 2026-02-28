@@ -60,8 +60,8 @@ export function V2RollingPerformance({ pnlHistory }: { pnlHistory: PnlHistory })
           const lastCol = monthLabels.length > 0 ? monthLabels[monthLabels.length - 1].col : -4;
           if (weekIdx - lastCol >= 3) {
             monthLabels.push({ month: MONTHS[month], col: weekIdx });
+            lastMonth = month;
           }
-          lastMonth = month;
         }
       }
 
