@@ -30,7 +30,7 @@
 }
 
 .v2-rolling-day {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--TEXT_SECONDARY);
   display: flex;
@@ -57,7 +57,7 @@
 
 .v2-rolling-month {
   position: absolute;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--TEXT_SECONDARY);
   white-space: nowrap;
