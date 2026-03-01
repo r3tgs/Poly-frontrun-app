@@ -260,7 +260,7 @@ export default function V2App() {
 
             <div className="v2-col-center">
               <V2RollingPerformance pnlHistory={pnlHistory} />
-              <V2Performance stats={stats} calendarData={calendarData} />
+              <V2Performance calendarData={calendarData} />
               <V2SourceDelays delays={mockSourceDelays} />
             </div>
 

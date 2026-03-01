@@ -1,10 +1,8 @@
-import { useState } from 'react';
-import type { DayData, PerformanceStats, Period } from '../types';
+import type { DayData } from '../types';
 import chevronIcon from './assets/PM Chevron Icon.svg';
 import './V2Performance.css';
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-const PERIODS: Period[] = ['Month', 'Week', 'Day'];
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -14,58 +12,6 @@ function formatPnlCell(value: number): string {
   if (value === 0) return '$0';
   const prefix = value > 0 ? '+$' : '-$';
   return `${prefix}${Math.abs(value).toFixed(2)}`;
-}
-
-function formatProfit(value: number): string {
-  const sign = value >= 0 ? '+' : '';
-  return `${sign}$${value.toFixed(2)}`;
-}
-
-function StatsRow({ stats }: { stats: PerformanceStats }) {
-  return (
-    <div className="v2-perf-stats">
-      <div className="v2-perf-stat-item">
-        <span className="v2-perf-stat-label">Realized P&L</span>
-        <div className="v2-perf-stat-row">
-          <span
-            className="v2-perf-stat-value"
-            style={{ color: stats.totalProfit >= 0 ? 'var(--PRIMARY_GREEN)' : 'var(--PRIMARY_RED)' }}
-          >
-            {formatProfit(stats.totalProfit)}
-          </span>
-          {stats.profitChange != null && stats.profitChange !== 0 && (
-            <span className="v2-perf-stat-change">
-              <img src={chevronIcon} alt="" className="v2-perf-chevron" />
-              {stats.profitChange}%
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="v2-perf-stat-divider" />
-      <div className="v2-perf-stat-item">
-        <span className="v2-perf-stat-label">ROI</span>
-        <div className="v2-perf-stat-row">
-          <span
-            className="v2-perf-stat-value"
-            style={{ color: stats.roi >= 0 ? 'var(--PRIMARY_GREEN)' : 'var(--PRIMARY_RED)' }}
-          >
-            {stats.roi >= 0 ? '+' : ''}{stats.roi.toFixed(1)}%
-          </span>
-          {stats.roiChange != null && stats.roiChange !== 0 && (
-            <span className="v2-perf-stat-change">
-              <img src={chevronIcon} alt="" className="v2-perf-chevron" />
-              {stats.roiChange}%
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="v2-perf-stat-divider" />
-      <div className="v2-perf-stat-item">
-        <span className="v2-perf-stat-label">Total Trades</span>
-        <span className="v2-perf-stat-value">{stats.totalBets}</span>
-      </div>
-    </div>
-  );
 }
 
 function CalendarHeatmap({ data }: { data: DayData[] }) {
@@ -130,13 +76,10 @@ function CalendarHeatmap({ data }: { data: DayData[] }) {
 }
 
 export function V2Performance({
-  stats,
   calendarData,
 }: {
-  stats: PerformanceStats;
   calendarData: DayData[];
 }) {
-  const [period, setPeriod] = useState<Period>('Month');
   const now = new Date();
   const monthLabel = `${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`;
 
@@ -149,20 +92,6 @@ export function V2Performance({
           <img src={chevronIcon} alt="" className="v2-perf-month-chevron" />
         </span>
       </h2>
-      <div className="v2-perf-top-row">
-        <StatsRow stats={stats} />
-        <div className="v2-perf-toggle">
-          {PERIODS.map((p) => (
-            <button
-              key={p}
-              className={`v2-perf-toggle-btn ${period === p ? 'v2-perf-toggle-active' : ''}`}
-              onClick={() => setPeriod(p)}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
       <CalendarHeatmap data={calendarData} />
     </div>
   );
