@@ -7,14 +7,6 @@
   padding: 0;
 }
 
-.v2-perf > *:not(.v2-section-label) {
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
-.v2-perf > *:last-child {
-  padding-bottom: 10px;
-}
 
 .v2-perf > .v2-perf-title {
   justify-content: space-between;
@@ -46,7 +38,7 @@
   flex-direction: column;
   gap: 0;
   align-self: stretch;
-  padding: 0 !important;
+  padding: 0;
 }
 
 .v2-cal-header {
@@ -69,13 +61,12 @@
 .v2-cal-grid {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 10px;
+  gap: 0;
 }
 
 .v2-cal-row {
   display: flex;
-  gap: 4px;
+  gap: 0;
 }
 
 .v2-cal-cell {
