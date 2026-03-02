@@ -61,12 +61,12 @@
 .v2-cal-grid {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 1px;
 }
 
 .v2-cal-row {
   display: flex;
-  gap: 0;
+  gap: 1px;
 }
 
 .v2-cal-cell {
