@@ -1,7 +1,7 @@
 .v2-perf {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   background: var(--BASE_DARK_1);
   border: 1px solid var(--BASE_DARK_4);
   padding: 0;
@@ -44,14 +44,14 @@
 .v2-cal {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
   align-self: stretch;
+  padding: 0 !important;
 }
 
 .v2-cal-header {
   display: flex;
   height: 36px;
-  border-top: 1px solid var(--BASE_DARK_4);
   border-bottom: 1px solid var(--BASE_DARK_4);
 }
 
@@ -70,6 +70,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding: 10px;
 }
 
 .v2-cal-row {
