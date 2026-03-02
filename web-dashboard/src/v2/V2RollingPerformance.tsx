@@ -92,7 +92,7 @@ export function V2RollingPerformance({ pnlHistory }: { pnlHistory: PnlHistory })
         <div className="v2-rolling-scroll">
           <div className="v2-rolling-months">
             {monthLabels.map((m, i) => (
-              <span key={i} className="v2-rolling-month" style={{ left: m.col * 15 }}>
+              <span key={i} className="v2-rolling-month" style={{ left: `${(m.col / weeks.length) * 100}%` }}>
                 {m.month}
               </span>
             ))}
