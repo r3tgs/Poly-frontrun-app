@@ -1,0 +1,290 @@
+.v2-ug {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--BASE_DARK_1);
+  border: 1px solid var(--BASE_DARK_4);
+  padding: 0;
+}
+
+.v2-ug > *:not(.v2-section-label) {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.v2-ug > *:last-child {
+  padding-bottom: 10px;
+}
+
+.v2-ug-search {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  border-bottom: 1px solid var(--BASE_DARK_4);
+  border-left: 1px solid var(--BASE_DARK_4);
+  padding: 0 10px;
+  gap: 8px;
+  margin-top: -12px;
+}
+
+.v2-ug-search-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.v2-ug-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 19px;
+  padding: 0 4px 0 6px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 19px;
+  color: var(--TEXT_PRIMARY);
+  background: var(--BASE_DARK_3);
+  border-left: 1px solid var(--TEXT_PRIMARY);
+  border-radius: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.v2-ug-chip-x {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.v2-ug-chip-x-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.v2-ug-chip-x:hover .v2-ug-chip-x-icon {
+  filter: brightness(1.5);
+}
+
+.v2-ug-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 80px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.v2-ug-input {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: var(--TEXT_WHITE);
+  font-family: inherit;
+  padding: 0;
+}
+.v2-ug-input::placeholder { color: var(--TEXT_SECONDARY); }
+
+.v2-ug-suggest {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 180px;
+  background: var(--BASE_DARK_3);
+  border: 1px solid var(--BASE_DARK_4);
+  border-radius: 0;
+  overflow: hidden;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.v2-ug-suggest-item {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--TEXT_PRIMARY);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+.v2-ug-suggest-item:hover { background: var(--BASE_DARK_4); color: var(--TEXT_WHITE); }
+
+.v2-ug-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.v2-ug-empty {
+  background: var(--BASE_DARK_3);
+  border-radius: 0;
+  padding: 10px;
+  font-size: 13px;
+  color: var(--TEXT_SECONDARY);
+  font-weight: 400;
+  text-align: center;
+}
+
+.v2-ug-error { color: var(--PRIMARY_RED); }
+
+.v2-ug-day {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.v2-ug-day-label {
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 0 2px;
+}
+
+.v2-ug-day-prefix {
+  color: var(--TEXT_SECONDARY);
+}
+
+.v2-ug-day-date {
+  color: var(--TEXT_PRIMARY);
+}
+
+.v2-ug-game {
+  background: var(--BASE_DARK_2);
+  border-radius: 0;
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.v2-ug-game-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.v2-ug-game-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.v2-ug-game-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.v2-ug-sport-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+
+.v2-ug-league-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 19px;
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 400;
+  background: var(--BASE_DARK_4);
+  border-radius: 0;
+  white-space: nowrap;
+}
+
+.v2-ug-league-nhl {
+  color: #12D4FF;
+  border-left: 1px solid #12D4FF;
+  background: var(--PRIMARY_BLUE_10);
+}
+
+.v2-ug-league-nba {
+  color: #FF8F2C;
+  border-left: 1px solid #FF8F2C;
+  background: var(--PRIMARY_ORANGE_10);
+}
+
+.v2-ug-league-mls {
+  color: #FFFF00;
+  border-left: 1px solid #FFFF00;
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.v2-ug-game-bottom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 32px;
+}
+
+.v2-ug-team {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--TEXT_PRIMARY);
+}
+
+.v2-ug-vs {
+  font-size: 14px;
+  color: var(--TEXT_SECONDARY);
+}
+
+.v2-ug-datetime {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.v2-ug-date {
+  color: var(--TEXT_SECONDARY);
+  font-weight: 400;
+}
+
+.v2-ug-time {
+  color: var(--TEXT_PRIMARY);
+  font-weight: 400;
+}
+
+.v2-ug-tickets {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--PRIMARY_GREEN_70);
+  text-decoration: none;
+}
+
+.v2-ug-tickets:hover {
+  color: var(--PRIMARY_GREEN);
+}
+
+.v2-ug-ticket-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.v2-ug-tickets:hover .v2-ug-ticket-icon {
+  opacity: 1;
+}

@@ -1,0 +1,110 @@
+.v2-perf {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--BASE_DARK_1);
+  border: 1px solid var(--BASE_DARK_4);
+  padding: 0;
+}
+
+
+.v2-perf > .v2-perf-title {
+  justify-content: space-between;
+  padding-right: 0;
+}
+
+.v2-perf-month {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--TEXT_PRIMARY);
+  padding: 0 10px 0 14px;
+  border-left: 1px solid var(--BASE_DARK_4);
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.v2-perf-month-chevron {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+}
+
+/* Calendar */
+.v2-cal {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-self: stretch;
+  padding: 0;
+}
+
+.v2-cal-header {
+  display: flex;
+  height: 36px;
+  border-bottom: 1px solid var(--BASE_DARK_4);
+}
+
+.v2-cal-weekday {
+  flex: 1 0 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--TEXT_SECONDARY);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.v2-cal-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.v2-cal-row {
+  display: flex;
+  gap: 2px;
+}
+
+.v2-cal-cell {
+  position: relative;
+  flex: 1 0 0;
+  border-radius: 0;
+  min-height: 76px;
+}
+
+.v2-cal-pos-lo { background-color: var(--PRIMARY_GREEN_10); }
+.v2-cal-pos-hi { background-color: var(--PRIMARY_GREEN_20); }
+.v2-cal-neg-lo { background-color: var(--PRIMARY_RED_10); }
+.v2-cal-neg-hi { background-color: var(--PRIMARY_RED_20); }
+.v2-cal-zero   { background-color: var(--BASE_DARK_2); }
+.v2-cal-dimmed { opacity: 0.4; }
+
+.v2-cal-day {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--TEXT_SECONDARY);
+  line-height: 1;
+}
+
+.v2-cal-day-pos { color: var(--PRIMARY_GREEN); }
+.v2-cal-day-neg { color: var(--PRIMARY_RED); }
+
+.v2-cal-pnl {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.v2-cal-pnl-pos  { color: var(--PRIMARY_GREEN); }
+.v2-cal-pnl-neg  { color: var(--PRIMARY_RED); }
+.v2-cal-pnl-zero { color: var(--TEXT_SECONDARY); }

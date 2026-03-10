@@ -1,0 +1,93 @@
+.v2-equity {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--BASE_DARK_1);
+  border: 1px solid var(--BASE_DARK_4);
+  padding: 0;
+}
+
+.v2-equity > *:not(.v2-section-label) {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.v2-equity > *:last-child {
+  padding-bottom: 10px;
+}
+
+.v2-equity-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  margin-top: -10px;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.v2-equity-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  height: 68px;
+  padding: 0 10px;
+  border-top: 1px solid var(--BASE_DARK_4);
+  border-bottom: 1px solid var(--BASE_DARK_4);
+  border-left: 1px solid var(--BASE_DARK_4);
+  margin-top: -1px;
+}
+
+.v2-equity-stat-label {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--TEXT_PRIMARY);
+}
+
+.v2-equity-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.v2-equity-stat-value {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--TEXT_WHITE);
+}
+
+.v2-equity-today-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 19px;
+  padding: 0 6px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--PRIMARY_GREEN);
+  background: var(--PRIMARY_GREEN_10);
+  border-left: 1px solid var(--PRIMARY_GREEN);
+  border-radius: 0;
+  white-space: nowrap;
+}
+
+.v2-equity-today-zero {
+  color: var(--TEXT_SECONDARY);
+  background: var(--BASE_DARK_3);
+  border-left: 1px solid var(--TEXT_SECONDARY);
+}
+
+.v2-equity-chart {
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.v2-equity-empty {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--TEXT_SECONDARY);
+  font-size: 14px;
+  font-weight: 400;
+  background: var(--BASE_DARK_3);
+  border-radius: 0;
+}
